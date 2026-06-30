@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Notes</title>
-    <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../css/navigation.css">
-    <link rel="stylesheet" href="../css/notes.css">
+    <title>Journal</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/navigation.css">
+    <link rel="stylesheet" href="css/journal.css">
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -33,66 +33,74 @@
           </form>
         </div>
         <div class="nav-links">
-          <a class="nav-link" href="index.html">Home</a>
+          <a class="nav-link " href="index.html">Home</a>
           <a class="nav-link" href="quests.html">Quests</a>
           <a class="nav-link" href="stats.html">Stats</a>
-          <a class="nav-link" href="codex.html">Codex</a> 
-          <a class="nav-link" href="journal.html">Journal</a>
-          <a class="nav-link active" href="notes.html">Notes</a>
+          <a class="nav-link" href="codex.html">Codex</a>
+          <a class="nav-link active" href="journal.html">Journal</a>
+          <a class="nav-link" href="notes.html">Notes</a>
         </div>
         <div class="right-placeholder"></div>
       </nav>
     </header>
-   <main class="notes-page">
+    <main class="journal-page">
 
-    <h2>Notes</h2>
+    <section class="journal-header">
 
-    <div class="notes-grid">
+        <h2>Journal</h2>
 
-        <!-- Left Side -->
+        <p>
+            Record your thoughts, victories, setbacks, and lessons.
+        </p>
 
-        <section class="notes-editor">
+    </section>
 
-            <h3>Create Note</h3>
+    <section class="journal-layout">
+
+        <!-- Left -->
+
+        <div class="journal-editor">
+
+            <h3>New Entry</h3>
 
             <input
-                id="noteTitle"
                 type="text"
-                placeholder="Title"
+                id="journalTitle"
+                placeholder="Entry title..."
             >
 
             <textarea
-                id="noteContent"
-                placeholder="Write your note..."
+                id="journalContent"
+                placeholder="Write today's journal..."
             ></textarea>
 
-            <button id="saveNoteBtn">
-                Save Note
+            <button id="saveJournalBtn">
+                Save Entry
             </button>
 
-        </section>
+        </div>
 
-        <!-- Right Side -->
+        <!-- Right -->
 
-        <section class="notes-history">
+        <div class="journal-history">
 
-            <h3>My Notes</h3>
+            <h3>Previous Entries</h3>
 
-            <input
-                id="noteSearch"
-                type="text"
-                placeholder="Search..."
-            >
+            <div id="journalEntries">
 
-            <div id="notesContainer">
+                <p class="empty-text">
+
+                    No journal entries yet.
+
+                </p>
 
             </div>
 
-        </section>
+        </div>
 
-    </div>
+    </section>
 
-</main>
-    <script src="../js/notes.js"></script>
+    </main>
+    <script src="js/journal.js"></script>
   </body>
 </html>
