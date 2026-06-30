@@ -1,0 +1,60 @@
+.navigation{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:12px 20px;
+
+}
+
+.search-container{
+
+    flex:1;
+
+}
+
+.nav-links{
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    gap:10px;
+
+}
+
+.right-placeholder{
+
+    flex:1;
+
+}
+
+.nav-link{
+
+    padding:8px 18px;
+
+    border-radius:8px;
+
+    font-weight:bold;
+
+}
+
+.nav-link:hover,
+.nav-link.active{
+
+    background:black;
+
+    color:white;
+
+}
+
+#search-box{
+
+    width:220px;
+
+}

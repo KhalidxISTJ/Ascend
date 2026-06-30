@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+  <!-- HEAD -->
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=yes"
+    />
+    <title>Home</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/navigation.css">
+    <link rel="stylesheet" href="../css/profile.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Space+Grotesk:wght@300..700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <!-- BODY -->
+  <body>
+    <!-- PAGE TITLE -->
+    <header>
+      <h1>Welcome to <span class="ascend">Ascend</span></h1>
+      <hr />
+
+      <!-- NAVIGATION -->
+      <nav class="navigation">
+        <div class="search-container">
+          <form method="get">
+            <input
+              id="search-box"
+              type="text"
+              name="Search-box"
+              placeholder="Search"
+              autocomplete="on"
+            />
+            <button type="submit">Search</button>
+          </form>
+        </div>
+        <div class="nav-links">
+          <a class="nav-link active" href="index.html">Home</a>
+          <a class="nav-link" href="quests.html">Quests</a>
+          <a class="nav-link" href="stats.html">Stats</a>
+           <a class="nav-link " href="codex.html">Codex</a>
+          <a class="nav-link" href="journal.html">Journal</a>
+          <a class="nav-link" href="notes.html">Notes</a>
+        </div>
+        <div class="right-placeholder"></div>
+      </nav>
+    </header>
+    <main>
+
+    <section class="dashboard">
+
+        <div class="profile-panel">
+
+            <div class="profile-left">
+
+                <img
+                    src="../Images/Luffy Crying.png"
+                    alt="Profile Picture"
+                    id="profile-img"
+                    class="profile-picture"
+                >
+
+                <form class="profile-form" id="profile-form">
+
+                    <input
+                        type="file"
+                        id="profile-picture"
+                    >
+
+                    <input
+                        type="text"
+                        id="name"
+                        placeholder="Enter your name"
+                    >
+
+                    <button type="submit">Save</button>
+
+                </form>
+
+            </div>
+
+            <div class="profile-right">
+
+                <div class="stat-card" id="display-name">
+                    Name:
+                </div>
+
+                <div class="stat-card" id="level">
+                    Level:
+                </div>
+
+                <div class="stat-card xp-card">
+
+                    <strong>XP</strong>
+
+                    <span id="xp-number">0</span>
+
+                    <div class="xp-track">
+
+                        <div
+                            class="xp-fill"
+                            id="xp-fill">
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div
+                    class="stat-card"
+                    id="activeQuestCount">
+
+                    Active Quests: 0
+
+                </div>
+
+                <div
+                    class="stat-card"
+                    id="completedQuestCount">
+
+                    Completed Quests: 0
+
+                </div>
+
+                <div
+                    class="stat-card"
+                    id="completionRate">
+
+                    Completion: 0%
+
+                </div>
+
+                <div
+                    class="stat-card"
+                    id="codexCardCount">
+
+                    Codex Cards: 0
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="home-grid">
+
+            <div class="home-card">
+
+                <h3>🎯 Current Quest</h3>
+
+                <p id="current-quest">
+
+                    No active quest.
+
+                </p>
+
+            </div>
+
+            <div class="home-card">
+
+                <h3>⏱ Timer</h3>
+
+                <p id="timer">
+
+                    Coming Soon
+
+                </p>
+
+            </div>
+
+            <div class="home-card">
+
+                <h3>🔥 Streak</h3>
+
+                <p id="streak">
+
+                    Coming Soon
+
+                </p>
+
+            </div>
+
+            <div class="home-card">
+
+                <h3>📊 Overview</h3>
+
+                <p>
+
+                    Character stats will move to the
+                    Stats page.
+
+                </p>
+
+            </div>
+
+        </div>
+
+        <button id="resetGameBtn">
+
+            Factory Reset
+
+        </button>
+
+    </section>
+
+    </main>
+    <script src="../js/player.js"></script>
+    <script src="../js/dashboard.js"></script>
+  </body>
+</html>

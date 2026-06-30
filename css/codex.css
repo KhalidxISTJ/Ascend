@@ -1,0 +1,220 @@
+/* ==========================================
+   CODEX
+========================================== */
+
+.codex-grid{
+
+    display:grid;
+
+    grid-template-columns:2fr 1fr;
+
+    grid-template-areas:
+        "study study"
+        "controls addcard"
+        "bulk bulk";
+
+    gap:24px;
+
+    width:min(1200px,95%);
+
+    margin:30px auto;
+
+}
+
+.codex-panel{
+
+    background:rgba(255,255,255,.88);
+
+    border:2px solid black;
+
+    border-radius:16px;
+
+    padding:24px;
+
+    box-shadow:0 8px 20px rgba(0,0,0,.15);
+
+}
+
+.study-panel{
+
+    grid-area:study;
+
+}
+
+.controls-panel{
+
+    grid-area:controls;
+
+}
+
+.add-card-panel{
+
+    grid-area:addcard;
+
+}
+
+.bulk-panel{
+
+    grid-area:bulk;
+
+}
+
+.card-counter-container{
+
+    text-align:center;
+
+    margin-bottom:20px;
+
+    font-weight:bold;
+
+}
+
+.card-container{
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    gap:20px;
+
+}
+
+.flip-card{
+
+    width:420px;
+
+    height:240px;
+
+    perspective:1200px;
+
+    cursor:pointer;
+
+}
+
+.flip-inner{
+
+    position:relative;
+
+    width:100%;
+
+    height:100%;
+
+    transition:transform .6s;
+
+    transform-style:preserve-3d;
+
+}
+
+.flip-card.flipped .flip-inner{
+
+    transform:rotateY(180deg);
+
+}
+
+.flip-front,
+.flip-back{
+
+    position:absolute;
+
+    inset:0;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    text-align:center;
+
+    padding:20px;
+
+    background:white;
+
+    border:2px solid black;
+
+    border-radius:14px;
+
+    backface-visibility:hidden;
+
+    font-size:1.2rem;
+
+}
+
+.flip-back{
+
+    transform:rotateY(180deg);
+
+    background:#f3f3f3;
+
+}
+
+#prevBtn,
+#nextBtn{
+
+    width:50px;
+
+    height:50px;
+
+    border-radius:50%;
+
+}
+
+.add-card-panel input,
+.add-card-panel select,
+.bulk-panel textarea{
+
+    width:100%;
+
+    margin-bottom:12px;
+
+}
+
+.bulk-panel textarea{
+
+    min-height:180px;
+
+}
+
+#testArea{
+
+    margin-top:25px;
+
+    padding:20px;
+
+    border:2px dashed black;
+
+    border-radius:12px;
+
+}
+
+@media(max-width:900px){
+
+    .codex-grid{
+
+        grid-template-columns:1fr;
+
+        grid-template-areas:
+
+        "study"
+        "controls"
+        "addcard"
+        "bulk";
+
+    }
+
+    .card-container{
+
+        flex-direction:column;
+
+    }
+
+    .flip-card{
+
+        width:100%;
+        max-width:380px;
+
+    }
+
+}

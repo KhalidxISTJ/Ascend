@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+   <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stats</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/navigation.css">
+    <link rel="stylesheet" href="../css/codex.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Space+Grotesk:wght@300..700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header>
+      <h1>Welcome to <span class="ascend">Ascend</span></h1>
+      <hr />
+      <!-- NAVIGATION -->
+      <nav class="navigation">
+        <div class="search-container">
+          <form method="get">
+            <input
+              id="search-box"
+              type="text"
+              name="Search-box"
+              placeholder="Search"
+              autocomplete="on"
+            />
+            <button type="submit">Search</button>
+          </form>
+        </div>
+        <div class="nav-links">
+          <a class="nav-link " href="index.html">Home</a>
+          <a class="nav-link" href="quests.html">Quests</a>
+          <a class="nav-link" href="stats.html">Stats</a>
+          <a class="nav-link active" href="codex.html">Codex</a>
+          <a class="nav-link" href="journal.html">Journal</a>
+          <a class="nav-link" href="notes.html">Notes</a>
+        </div>
+        <div class="right-placeholder"></div>
+      </nav>
+    </header>
+   <main>
+
+    <h2>Codex</h2>
+
+    <div class="codex-grid">
+
+        <!-- ========================= -->
+        <!-- STUDY PANEL -->
+        <!-- ========================= -->
+        <section class="codex-panel study-panel">
+
+            <h3>Study</h3>
+
+            <div class="card-counter-container">
+
+                <span id="cardCounter">
+                    Card 1 / 1
+                </span>
+
+            </div>
+
+            <div class="card-container">
+
+                <button id="prevBtn">&lt;</button>
+
+                <div class="flip-card" id="flipCard">
+
+                    <div class="flip-inner">
+
+                        <div
+                            class="flip-front"
+                            id="cardFront"
+                        ></div>
+
+                        <div
+                            class="flip-back"
+                            id="cardBack"
+                        ></div>
+
+                    </div>
+
+                </div>
+
+                <button id="nextBtn">&gt;</button>
+
+            </div>
+
+            <div id="testArea" class="hidden">
+
+                <hr>
+
+                <h3>Test Mode</h3>
+
+                <p id="testQuestion"></p>
+
+                <div id="testAnswers"></div>
+
+            </div>
+
+        </section>
+
+        <!-- ========================= -->
+        <!-- CONTROLS -->
+        <!-- ========================= -->
+
+        <section class="codex-panel controls-panel">
+
+            <h3>Controls</h3>
+
+            <label>
+
+                Filter
+
+                <select id="filterSelect">
+
+                    <option>All</option>
+                    <option>Programming</option>
+                    <option>Islam</option>
+                    <option>College</option>
+                    <option>Life</option>
+
+                </select>
+
+            </label>
+
+            <br><br>
+
+            <button id="testModeBtn">
+
+                Test Mode
+
+            </button>
+
+        </section>
+
+        <!-- ========================= -->
+        <!-- ADD CARD -->
+        <!-- ========================= -->
+
+        <section class="codex-panel add-card-panel">
+
+            <h3>Add Card</h3>
+
+            <input
+
+                id="frontInput"
+
+                type="text"
+
+                placeholder="Question"
+
+            >
+
+            <br><br>
+
+            <input
+
+                id="backInput"
+
+                type="text"
+
+                placeholder="Answer"
+
+            >
+
+            <br><br>
+
+            <select id="sectionSelect">
+
+                <option>Programming</option>
+                <option>Islam</option>
+                <option>College</option>
+                <option>Life</option>
+
+            </select>
+
+            <br><br>
+
+            <button id="addCardBtn">
+
+                Add Card
+
+            </button>
+
+            <button id="deleteCardBtn">
+
+                Delete Card
+
+            </button>
+
+        </section>
+
+        <!-- ========================= -->
+        <!-- BULK IMPORT -->
+        <!-- ========================= -->
+
+        <section class="codex-panel bulk-panel">
+
+            <h3>Bulk Import</h3>
+
+            <textarea
+
+                id="bulkCardInput"
+
+                placeholder="Question | Answer&#10;"
+
+            ></textarea>
+
+            <br><br>
+
+            <button id="bulkAddBtn">
+
+                Bulk Add
+
+            </button>
+
+        </section>
+
+    </div>
+
+</main>
+<script src="../js/player.js"></script>
+<script src="../js/codex.js"></script>
+</body>
+
+</html>
+document.addEventListener("DOMContentLoaded", function() {
+    
+});

@@ -1,0 +1,247 @@
+.notes-page{
+
+    max-width:1400px;
+    margin:auto;
+    padding:40px;
+
+}
+
+.notes-grid{
+
+    display:grid;
+    grid-template-columns:1fr 1.4fr;
+    gap:30px;
+
+}
+
+/* ==========================
+   PANELS
+========================== */
+
+.notes-editor,
+.notes-history{
+
+    background:#181818;
+    border:1px solid #2f2f2f;
+    border-radius:18px;
+    padding:25px;
+
+}
+
+.notes-editor{
+
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+
+}
+
+.notes-history{
+
+    height:700px;
+    display:flex;
+    flex-direction:column;
+
+}
+
+/* ==========================
+   HEADINGS
+========================== */
+
+h2{
+
+    color:white;
+    margin-bottom:25px;
+
+}
+
+h3{
+
+    color:white;
+    margin-bottom:20px;
+
+}
+
+/* ==========================
+   INPUTS
+========================== */
+
+.notes-editor input,
+.notes-editor textarea,
+#noteSearch{
+
+    background:#222;
+    color:white;
+    border:1px solid #333;
+    border-radius:10px;
+    padding:12px;
+    font-size:15px;
+
+}
+
+.notes-editor input::placeholder,
+.notes-editor textarea::placeholder,
+#noteSearch::placeholder{
+
+    color:#8b8b8b;
+
+}
+
+.notes-editor textarea{
+
+    min-height:300px;
+    resize:vertical;
+
+}
+
+/* ==========================
+   SAVE BUTTON
+========================== */
+
+#saveNoteBtn{
+
+    padding:12px;
+
+    background:#2d5cff;
+
+    color:white;
+
+    border:none;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+}
+
+#saveNoteBtn:hover{
+
+    background:#416cff;
+
+}
+
+/* ==========================
+   NOTES LIST
+========================== */
+
+#notesContainer{
+
+    flex:1;
+
+    overflow-y:auto;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:15px;
+
+    padding-right:6px;
+
+}
+
+/* Scrollbar */
+
+#notesContainer::-webkit-scrollbar{
+
+    width:8px;
+
+}
+
+#notesContainer::-webkit-scrollbar-thumb{
+
+    background:#333;
+
+    border-radius:10px;
+
+}
+
+/* ==========================
+   NOTE CARD
+========================== */
+
+.note-card{
+
+    background:#1f1f1f;
+
+    border:1px solid #303030;
+
+    border-radius:15px;
+
+    padding:18px;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+    color:white;
+
+}
+
+.note-card:hover{
+
+    border-color:#5f7cff;
+
+    transform:translateY(-2px);
+
+}
+
+/* ==========================
+   NOTE TITLE
+========================== */
+
+.note-title{
+
+    color:white;
+
+    font-size:20px;
+
+    font-weight:700;
+
+    margin:0 0 10px 0;
+
+}
+
+/* ==========================
+   NOTE PREVIEW
+========================== */
+
+.note-preview{
+
+    color:#bdbdbd;
+
+    line-height:1.5;
+
+    margin:0 0 15px 0;
+
+}
+
+/* ==========================
+   DELETE BUTTON
+========================== */
+
+.note-card button{
+
+    padding:8px 14px;
+
+    background:#a72d2d;
+
+    color:white;
+
+    border:none;
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+}
+
+.note-card button:hover{
+
+    background:#d63a3a;
+
+}

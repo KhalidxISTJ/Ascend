@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quests</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/navigation.css">
+    <link rel="stylesheet" href="../css/quests.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Space+Grotesk:wght@300..700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header>
+      <h1>Welcome to <span class="ascend">Ascend</span></h1>
+      <hr />
+      <!-- NAVIGATION -->
+      <nav class="navigation">
+        <div class="search-container">
+          <form method="get">
+            <input
+              id="search-box"
+              type="text"
+              name="Search-box"
+              placeholder="Search"
+              autocomplete="on"
+            />
+            <button type="submit">Search</button>
+          </form>
+        </div>
+        <div class="nav-links">
+          <a class="nav-link" href="index.html">Home</a>
+          <a class="nav-link active" href="quests.html">Quests</a>
+          <a class="nav-link" href="stats.html">Stats</a>
+          <a class="nav-link " href="codex.html">Codex</a>
+          <a class="nav-link" href="journal.html">Journal</a>
+          <a class="nav-link" href="notes.html">Notes</a>
+        </div>
+        <div class="right-placeholder"></div>
+      </nav>
+    </header>
+    <main>
+      <h2>Quest System</h2>
+
+      <div class="quest-layout">
+        <!-- CREATE QUEST -->
+        <section class="quest-creator">
+          <h3>Create Quest</h3>
+
+          <input
+            type="text"
+            id="questInput"
+            placeholder="Enter a new quest..."
+          />
+
+          <select id="questType">
+            <option value="Faith">Faith</option>
+            <option value="Mind">Mind</option>
+            <option value="Body">Body</option>
+            <option value="Craft">Craft</option>
+            <option value="Social">Social</option>
+          </select>
+
+          <select id="questDifficulty">
+            <option value="Easy">Easy</option>
+            <option value="Medium">Medium</option>
+            <option value="Hard">Hard</option>
+          </select>
+
+          <select id="questRecurring">
+            <option value="none">None</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+          </select>
+          <input
+            type="time"
+            id="questTime"
+          />
+          <button id="addQuestBtn">Add Quest</button>
+        </section>
+
+        <!-- ACTIVE QUESTS -->
+        <section class="active-quests">
+          <h3>Active Quests</h3>
+          <ul id="questList"></ul>
+        </section>
+
+        <!-- COMPLETED QUESTS -->
+        <section class="completed-quests">
+          <h3>Completed Quests</h3>
+          <ul id="completedQuestList"></ul>
+        </section>
+      </div>
+
+      <!-- STATS -->
+      <section class="quest-stats">
+        <h3>Stats</h3>
+
+        <p>Level: <span id="levelDisplay">0</span></p>
+
+        <p>XP: <span id="xpDisplay">0</span></p>
+
+        <div class="xp-bar">
+          <div id="xpFill"></div>
+        </div>
+
+        <p>Active Quests: <span id="activeQuestCount">0</span></p>
+
+        <p>Completed Quests: <span id="completedQuestCount">0</span></p>
+      </section>
+    </main>
+    <script src="../js/player.js"></script>
+    <script src="../js/quests.js"></script>
+  </body>
+</html>
