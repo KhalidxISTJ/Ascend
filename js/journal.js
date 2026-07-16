@@ -23,25 +23,15 @@ let editingEntry = null;
 // ==========================
 
 function saveJournal() {
-
-    localStorage.setItem(
-        "journalEntries",
-        JSON.stringify(journal)
-    );
-
+  localStorage.setItem("journalEntries", JSON.stringify(journal));
 }
 
 function loadJournal() {
+  const savedJournal = localStorage.getItem("journalEntries");
 
-    const savedJournal =
-        localStorage.getItem("journalEntries");
-
-    if (savedJournal) {
-
-        journal = JSON.parse(savedJournal);
-
-    }
-
+  if (savedJournal) {
+    journal = JSON.parse(savedJournal);
+  }
 }
 
 loadJournal();
@@ -51,67 +41,57 @@ loadJournal();
 // ==========================
 
 function renderJournal() {
+  if (!journalEntries) return;
 
-    if (!journalEntries) return;
+  journalEntries.innerHTML = "";
 
-    journalEntries.innerHTML = "";
+  if (journal.length === 0) {
+    journalEntries.innerHTML =
+      "<p class='empty-text'>No journal entries yet.</p>";
 
-    if (journal.length === 0) {
+    return;
+  }
 
-        journalEntries.innerHTML =
-        "<p class='empty-text'>No journal entries yet.</p>";
+  for (const entry of journal) {
+    const card = document.createElement("div");
 
-        return;
+    card.className = "journal-card";
 
-    }
-
-    for (const entry of journal) {
-
-        const card = document.createElement("div");
-
-        card.className = "journal-card";
-
-        card.innerHTML = `
+    card.innerHTML = `
             <h4>${entry.title}</h4>
             <small>${entry.date}</small>
             <p>${entry.content}</p>
         `;
 
-        const editBtn = document.createElement("button");
-        editBtn.textContent = "Edit";
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "Edit";
 
-        editBtn.onclick = function () {
+    editBtn.onclick = function () {
+      editingEntry = entry;
 
-            editingEntry = entry;
+      titleInput.value = entry.title;
 
-            titleInput.value = entry.title;
+      contentInput.value = entry.content;
 
-            contentInput.value = entry.content;
+      saveJournalBtn.textContent = "Save Changes";
+    };
 
-            saveJournalBtn.textContent = "Save Changes";
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "Delete";
 
-        };
+    deleteBtn.onclick = function () {
+      journal = journal.filter((j) => j !== entry);
 
-        const deleteBtn = document.createElement("button");
-        deleteBtn.textContent = "Delete";
+      saveJournal();
 
-        deleteBtn.onclick = function () {
+      renderJournal();
+    };
 
-            journal = journal.filter(j => j !== entry);
+    card.appendChild(editBtn);
+    card.appendChild(deleteBtn);
 
-            saveJournal();
-
-            renderJournal();
-
-        };
-
-        card.appendChild(editBtn);
-        card.appendChild(deleteBtn);
-
-        journalEntries.appendChild(card);
-
-    }
-
+    journalEntries.appendChild(card);
+  }
 }
 
 renderJournal();
@@ -121,52 +101,37 @@ renderJournal();
 // ==========================
 
 if (saveJournalBtn) {
+  saveJournalBtn.onclick = function () {
+    if (titleInput.value.trim() === "" || contentInput.value.trim() === "") {
+      return;
+    }
 
-    saveJournalBtn.onclick = function () {
+    if (editingEntry) {
+      editingEntry.title = titleInput.value;
 
-        if (
-            titleInput.value.trim() === "" ||
-            contentInput.value.trim() === ""
-        ) {
-            return;
-        }
+      editingEntry.content = contentInput.value;
 
-        if (editingEntry) {
+      editingEntry.date = new Date().toLocaleDateString();
 
-            editingEntry.title = titleInput.value;
+      editingEntry = null;
 
-            editingEntry.content = contentInput.value;
+      saveJournalBtn.textContent = "Save Entry";
+    } else {
+      journal.unshift({
+        title: titleInput.value,
 
-            editingEntry.date =
-                new Date().toLocaleDateString();
+        content: contentInput.value,
 
-            editingEntry = null;
+        date: new Date().toLocaleDateString(),
+      });
+    }
 
-            saveJournalBtn.textContent =
-                "Save Entry";
+    saveJournal();
 
-        } else {
+    titleInput.value = "";
 
-            journal.unshift({
+    contentInput.value = "";
 
-                title: titleInput.value,
-
-                content: contentInput.value,
-
-                date: new Date().toLocaleDateString()
-
-            });
-
-        }
-
-        saveJournal();
-
-        titleInput.value = "";
-
-        contentInput.value = "";
-
-        renderJournal();
-
-    };
-
+    renderJournal();
+  };
 }

@@ -1,220 +1,312 @@
 /* ==========================================
-   CODEX
+   CODEX V2
 ========================================== */
 
-.codex-grid{
+.codex-container {
+  width: min(1300px, 95%);
+  margin: 30px auto;
 
-    display:grid;
-
-    grid-template-columns:2fr 1fr;
-
-    grid-template-areas:
-        "study study"
-        "controls addcard"
-        "bulk bulk";
-
-    gap:24px;
-
-    width:min(1200px,95%);
-
-    margin:30px auto;
-
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
-.codex-panel{
+/* ==========================================
+   SHARED PANEL
+========================================== */
 
-    background:rgba(255,255,255,.88);
+.study-workspace,
+.bulk-panel {
+  background: rgba(255, 255, 255, 0.9);
 
-    border:2px solid black;
+  border: 2px solid black;
 
-    border-radius:16px;
+  border-radius: 18px;
 
-    padding:24px;
+  padding: 24px;
 
-    box-shadow:0 8px 20px rgba(0,0,0,.15);
-
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
-.study-panel{
+/* ==========================================
+   STUDY
+========================================== */
 
-    grid-area:study;
+.study-workspace h3 {
+  margin-bottom: 24px;
 
+  text-align: center;
 }
 
-.controls-panel{
+.study-content {
+  display: grid;
 
-    grid-area:controls;
+  grid-template-columns: 260px 1fr 320px;
 
+  gap: 30px;
+
+  align-items: start;
 }
 
-.add-card-panel{
+/* ==========================================
+   CONTROLS
+========================================== */
 
-    grid-area:addcard;
+.folders-panel {
+  display: flex;
 
+  flex-direction: column;
+
+  gap: 16px;
 }
 
-.bulk-panel{
-
-    grid-area:bulk;
-
+.controls-panel h4 {
+  margin-bottom: 8px;
 }
 
-.card-counter-container{
+.controls-panel select {
+  width: 100%;
 
-    text-align:center;
-
-    margin-bottom:20px;
-
-    font-weight:bold;
-
+  padding: 10px;
 }
 
-.card-container{
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    gap:20px;
-
+.controls-panel button {
+  padding: 12px;
 }
 
-.flip-card{
-
-    width:420px;
-
-    height:240px;
-
-    perspective:1200px;
-
-    cursor:pointer;
-
+.study-area {
+  flex: 1;
 }
 
-.flip-inner{
-
-    position:relative;
-
-    width:100%;
-
-    height:100%;
-
-    transition:transform .6s;
-
-    transform-style:preserve-3d;
-
+#folderBreadcrumb {
+  margin-bottom: 24px;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
-.flip-card.flipped .flip-inner{
+#folderView {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 
-    transform:rotateY(180deg);
+.folder-panel h4 {
+  margin: 18px 0 10px;
+}
 
+#folderList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.folder-panel hr {
+  margin: 18px 0;
+}
+/* ==========================================
+   STUDY PANEL
+========================================== */
+
+.study-panel {
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+}
+
+.card-counter-container {
+  margin-bottom: 20px;
+
+  font-weight: bold;
+}
+
+.card-container {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 20px;
+
+  width: 100%;
+}
+
+.flip-card {
+  width: 420px;
+  aspect-ratio: 1/1;
+
+  perspective: 1200px;
+  cursor: pointer;
+}
+
+.flip-inner {
+  position: relative;
+
+  width: 100%;
+
+  height: 100%;
+
+  transition: transform 0.6s;
+
+  transform-style: preserve-3d;
+}
+
+.flip-card.flipped .flip-inner {
+  transform: rotateY(180deg);
 }
 
 .flip-front,
-.flip-back{
+.flip-back {
+  position: absolute;
 
-    position:absolute;
+  inset: 0;
 
-    inset:0;
+  display: flex;
 
-    display:flex;
+  justify-content: center;
 
-    justify-content:center;
+  align-items: center;
 
-    align-items:center;
+  text-align: center;
 
-    text-align:center;
+  padding: 24px;
 
-    padding:20px;
+  border-radius: 16px;
 
-    background:white;
+  border: 2px solid black;
 
-    border:2px solid black;
+  background: white;
 
-    border-radius:14px;
+  font-size: 1.25rem;
 
-    backface-visibility:hidden;
-
-    font-size:1.2rem;
-
+  backface-visibility: hidden;
 }
 
-.flip-back{
+.flip-back {
+  transform: rotateY(180deg);
 
-    transform:rotateY(180deg);
-
-    background:#f3f3f3;
-
+  background: #f5f5f5;
 }
 
 #prevBtn,
-#nextBtn{
+#nextBtn {
+  width: 55px;
 
-    width:50px;
+  height: 55px;
 
-    height:50px;
+  border-radius: 50%;
 
-    border-radius:50%;
+  font-size: 20px;
+}
 
+.hidden {
+  display: none;
+}
+
+/* ==========================================
+   ADD CARD
+========================================== */
+
+.add-card-panel {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 14px;
 }
 
 .add-card-panel input,
-.add-card-panel select,
-.bulk-panel textarea{
+.add-card-panel select {
+  width: 100%;
 
-    width:100%;
-
-    margin-bottom:12px;
-
+  padding: 10px;
 }
 
-.bulk-panel textarea{
-
-    min-height:180px;
-
+.add-card-panel button {
+  padding: 12px;
 }
 
-#testArea{
+/* ==========================================
+   TEST AREA
+========================================== */
 
-    margin-top:25px;
+#testArea {
+  width: 100%;
 
-    padding:20px;
+  margin-top: 30px;
 
-    border:2px dashed black;
+  padding: 20px;
 
-    border-radius:12px;
+  border: 2px dashed black;
 
+  border-radius: 12px;
 }
 
-@media(max-width:900px){
+/* ==========================================
+   BULK IMPORT
+========================================== */
 
-    .codex-grid{
+.bulk-panel {
+  display: flex;
 
-        grid-template-columns:1fr;
+  flex-direction: column;
 
-        grid-template-areas:
+  gap: 16px;
+}
 
-        "study"
-        "controls"
-        "addcard"
-        "bulk";
+.bulk-panel textarea {
+  width: 100%;
 
-    }
+  min-height: 220px;
 
-    .card-container{
+  resize: vertical;
 
-        flex-direction:column;
+  padding: 14px;
+}
 
-    }
+.bulk-panel button {
+  width: 220px;
 
-    .flip-card{
+  align-self: flex-end;
 
-        width:100%;
-        max-width:380px;
+  padding: 12px;
+}
 
-    }
+/* ==========================================
+   MOBILE
+========================================== */
 
+@media (max-width: 1000px) {
+  .study-content {
+    grid-template-columns: 1fr;
+  }
+
+  .controls-panel {
+    order: 1;
+  }
+
+  .study-panel {
+    order: 2;
+  }
+
+  .add-card-panel {
+    order: 3;
+  }
+
+  .bulk-panel button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 700px) {
+  .card-container {
+    flex-direction: column;
+  }
+
+  .flip-card {
+    height: 250px;
+  }
 }

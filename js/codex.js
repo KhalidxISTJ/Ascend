@@ -4,39 +4,11 @@
 // =====================================================
 
 // ---------- Storage ----------
-let cards = [];
+function getCurrentCards() {
+  return currentFolder.cards;
+}
 
 let testCards = [];
-
-const savedCards = localStorage.getItem("codexCards");
-console.log("filterSelect:", document.getElementById("filterSelect"));
-console.log("sectionSelect:", document.getElementById("sectionSelect"));
-
-if (savedCards) {
-
-    cards = JSON.parse(savedCards);
-
-} else {
-
-    cards = [
-
-        {
-            front: "What is Flexbox?",
-            back: "A CSS layout system used for alignment and spacing.",
-            section: "Programming"
-        },
-
-        {
-            front: "What is Recursion?",
-            back: "A function that calls itself.",
-            section: "Programming"
-        }
-
-    ];
-
-    saveCards();
-
-}
 
 // ---------- State ----------
 
@@ -64,10 +36,6 @@ const frontInput = document.getElementById("frontInput");
 
 const backInput = document.getElementById("backInput");
 
-const sectionSelect = document.getElementById("sectionSelect");
-
-const filterSelect = document.getElementById("filterSelect");
-
 const addCardBtn = document.getElementById("addCardBtn");
 
 const deleteCardBtn = document.getElementById("deleteCardBtn");
@@ -84,103 +52,276 @@ const testQuestion = document.getElementById("testQuestion");
 
 const testAnswers = document.getElementById("testAnswers");
 
+const folderList = document.getElementById("folderList");
+
+const addFolderBtn = document.getElementById("addFolderBtn");
+
+const deleteFolderBtn = document.getElementById("deleteFolderBtn");
+
+const renameFolderBtn = document.getElementById("renameFolderBtn");
+
+const exportCodexBtn = document.getElementById("exportCodexBtn");
+
+const importCodexBtn = document.getElementById("importCodexBtn");
+
+const importCodexInput = document.getElementById("importCodexInput");
+
+const editCardBtn = document.getElementById("editCardBtn");
+
 let correctAnswers = 0;
 
 let wrongAnswers = 0;
 
+let editingCard = null;
+
+addFolderBtn.addEventListener("click", function () {
+  const name = prompt("Folder name:");
+
+  if (!name) {
+    return;
+  }
+
+  currentFolder.children.push({
+    name: name,
+    children: [],
+    cards: [],
+  });
+  saveFolders();
+  renderFolders();
+});
+
+if (renameFolderBtn) {
+  renameFolderBtn.addEventListener("click", function () {
+    if (currentFolder === rootFolder) {
+      alert("You can't rename the Root folder.");
+      return;
+    }
+
+    const newName = prompt("New folder name:", currentFolder.name);
+
+    if (!newName) {
+      return;
+    }
+
+    currentFolder.name = newName.trim();
+
+    saveFolders();
+    renderFolders();
+    updateBreadcrumb();
+  });
+}
+
+if (deleteFolderBtn) {
+  deleteFolderBtn.addEventListener("click", function () {
+    if (currentFolder === rootFolder) {
+      alert("You can't delete the Root folder.");
+      return;
+    }
+
+    if (
+      !confirm(
+        `Delete folder "${currentFolder.name}"?\n\nThis will permanently delete this folder and everything inside it.`,
+      )
+    ) {
+      return;
+    }
+
+    const parentFolder = folderHistory[folderHistory.length - 1];
+
+    const index = parentFolder.children.indexOf(currentFolder);
+
+    if (index !== -1) {
+      parentFolder.children.splice(index, 1);
+    }
+
+    currentFolder = parentFolder;
+
+    folderHistory.pop();
+
+    saveFolders();
+    renderFolders();
+    render();
+    updateBreadcrumb();
+  });
+}
+
+if (exportCodexBtn) {
+  exportCodexBtn.addEventListener("click", function () {
+    const exportData = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      app: "Ascend Codex",
+      data: rootFolder,
+    };
+
+    const data = JSON.stringify(exportData, null, 2);
+
+    const blob = new Blob([data], {
+      type: "application/json",
+    });
+
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+
+    a.href = url;
+
+    const today = new Date().toISOString().slice(0, 10);
+
+    a.download = `ascend-codex-v1-${today}.json`;
+
+    a.click();
+
+    URL.revokeObjectURL(url);
+  });
+}
+
+if (importCodexBtn) {
+  importCodexBtn.addEventListener("click", function () {
+    importCodexInput.click();
+  });
+}
+
+if (importCodexInput) {
+  importCodexInput.addEventListener("change", function (event) {
+    const file = event.target.files[0];
+
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function () {
+      try {
+        const backup = JSON.parse(reader.result);
+
+        if (backup.app !== "Ascend Codex") {
+          alert("Invalid Codex backup.");
+          return;
+        }
+
+        if (backup.version !== 1) {
+          alert("Unsupported backup version.");
+          return;
+        }
+
+        if (
+          !confirm("Importing will replace your current Codex.\n\nContinue?")
+        ) {
+          return;
+        }
+
+        rootFolder = backup.data;
+        currentFolder = rootFolder;
+        folderHistory = [];
+
+        saveFolders();
+
+        renderFolders();
+        render();
+        updateBreadcrumb();
+
+        alert("Codex imported successfully!");
+      } catch (err) {
+        alert("Failed to import backup.");
+        console.error(err);
+      }
+
+      importCodexInput.value = "";
+    };
+
+    reader.readAsText(file);
+  });
+}
+
+if (editCardBtn) {
+  editCardBtn.addEventListener("click", function () {
+    updateFilteredCards();
+
+    if (filteredCards.length === 0) {
+      return;
+    }
+
+    editingCard = filteredCards[currentIndex];
+
+    frontInput.value = editingCard.front;
+    backInput.value = editingCard.back;
+
+    addCardBtn.textContent = "Save Changes";
+  });
+}
 // ---------- Save ----------
 
-function saveCards() {
+function saveFolders() {
+  localStorage.setItem("codexFolders", JSON.stringify(rootFolder));
+}
 
-    localStorage.setItem(
+function renderFolders() {
+  folderList.innerHTML = "";
 
-        "codexCards",
+  for (const folder of currentFolder.children) {
+    const button = document.createElement("button");
 
-        JSON.stringify(cards)
+    button.textContent = "📁 " + folder.name;
 
-    );
+    button.addEventListener("click", function () {
+      folderHistory.push(currentFolder);
 
+      currentFolder = folder;
+
+      renderFolders();
+      render();
+      updateBreadcrumb();
+    });
+
+    folderList.appendChild(button);
+  }
 }
 
 // ---------- Filter ----------
 
 function updateFilteredCards() {
+  filteredCards = [...getCurrentCards()];
 
-    // If filterSelect doesn't exist, show all cards
-    if (!filterSelect) {
-        filteredCards = [...cards];
-        return;
-    }
+  if (currentIndex >= filteredCards.length) {
+    currentIndex = filteredCards.length - 1;
+  }
 
-    if (filterSelect.value === "All") {
-
-        filteredCards = [...cards];
-
-    } else {
-
-        filteredCards = cards.filter(function(card){
-
-            return card.section === filterSelect.value;
-
-        });
-
-    }
-
-    if (currentIndex >= filteredCards.length) {
-
-        currentIndex = filteredCards.length - 1;
-
-    }
-
-    if (currentIndex < 0) {
-
-        currentIndex = 0;
-
-    }
-
+  if (currentIndex < 0) {
+    currentIndex = 0;
+  }
 }
 
 // ---------- Render ----------
 
 function render() {
+  if (!frontEl || !backEl || !cardCounter) {
+    return; // exit if elements don't exist
+  }
 
-       if (!frontEl || !backEl || !cardCounter) {
-        return; // exit if elements don't exist
-    }
+  updateFilteredCards();
 
-    updateFilteredCards();
+  if (filteredCards.length === 0) {
+    frontEl.textContent = "No Cards";
 
-    if (filteredCards.length === 0) {
+    backEl.textContent = "Add a card.";
 
-        frontEl.textContent = "No Cards";
+    cardCounter.textContent = "0 / 0";
 
-        backEl.textContent = "Add a card.";
+    return;
+  }
 
-        cardCounter.textContent = "0 / 0";
+  const currentCard = filteredCards[currentIndex];
 
-        return;
+  frontEl.textContent = "[" + currentCard.section + "] " + currentCard.front;
 
-    }
+  backEl.textContent = currentCard.back;
 
-    const currentCard = filteredCards[currentIndex];
+  cardCounter.textContent =
+    "Card " + (currentIndex + 1) + " / " + filteredCards.length;
 
-    frontEl.textContent =
-        "[" + currentCard.section + "] " +
-        currentCard.front;
+  card.classList.remove("flipped");
 
-    backEl.textContent =
-        currentCard.back;
-
-    cardCounter.textContent =
-        "Card " +
-        (currentIndex + 1) +
-        " / " +
-        filteredCards.length;
-
-    card.classList.remove("flipped");
-
-    flipped = false;
-
+  flipped = false;
 }
 // =====================================================
 // ASCEND CODEX V2
@@ -191,211 +332,164 @@ function render() {
 // ---------- Navigation ----------
 
 function nextCard() {
+  if (filteredCards.length === 0) {
+    return;
+  }
 
-    if (filteredCards.length === 0) {
-        return;
-    }
+  if (currentIndex < filteredCards.length - 1) {
+    currentIndex++;
 
-    if (currentIndex < filteredCards.length - 1) {
-
-        currentIndex++;
-
-        render();
-
-    }
-
+    render();
+  }
 }
 
 function previousCard() {
+  if (filteredCards.length === 0) {
+    return;
+  }
 
-    if (filteredCards.length === 0) {
-        return;
-    }
+  if (currentIndex > 0) {
+    currentIndex--;
 
-    if (currentIndex > 0) {
-
-        currentIndex--;
-
-        render();
-
-    }
-
+    render();
+  }
 }
 
 // ---------- Flip Card ----------
 
 if (card) {
-    if (card) {
-    card.addEventListener("click", function() {
-        // ...
-    });
+  card.addEventListener("click", function () {
+    if (filteredCards.length === 0) {
+      return;
     }
 
+    flipped = !flipped;
 
-
-    card.addEventListener("click", function () {
-
-        if (filteredCards.length === 0) {
-            return;
-        }
-
-        flipped = !flipped;
-
-        card.classList.toggle("flipped");
-
-    });
-
+    card.classList.toggle("flipped");
+  });
 }
 
 // ---------- Add Card ----------
 
-if (addCardBtn){
-    
-    addCardBtn.addEventListener("click", function () {
-
+if (addCardBtn) {
+  addCardBtn.addEventListener("click", function () {
     const front = frontInput.value.trim();
-
     const back = backInput.value.trim();
 
+    if (editingCard) {
+      editingCard.front = front;
+      editingCard.back = back;
+
+      editingCard = null;
+
+      addCardBtn.textContent = "Add Card";
+
+      saveFolders();
+      render();
+
+      frontInput.value = "";
+      backInput.value = "";
+
+      return;
+    }
     if (front === "" || back === "") {
+      alert("Please fill in both fields.");
 
-        alert("Please fill in both fields.");
-
-        return;
-
+      return;
     }
 
     const newCard = {
-
-        front: front,
-
-        back: back,
-
-        section: sectionSelect.value
-
+      front: front,
+      back: back,
     };
 
-    cards.push(newCard);
+    getCurrentCards().push(newCard);
 
-    saveCards();
+    saveFolders();
 
     frontInput.value = "";
 
     backInput.value = "";
 
     render();
-
-});
+  });
 }
-
 
 // ---------- Delete Card ----------
 
 if (deleteCardBtn) {
-
-    deleteCardBtn.addEventListener("click", function () {
-
+  deleteCardBtn.addEventListener("click", function () {
     updateFilteredCards();
 
     if (filteredCards.length === 0) {
-
-        return;
-
+      return;
     }
 
     const currentCard = filteredCards[currentIndex];
 
-    cards = cards.filter(function(card){
+    const currentCards = getCurrentCards();
 
-        return card !== currentCard;
+    const index = currentCards.indexOf(currentCard);
 
-    });
+    if (index !== -1) {
+      currentCards.splice(index, 1);
+      currentIndex = Math.max(0, currentIndex - 1);
+    }
 
-    saveCards();
+    saveFolders();
 
     render();
-
-});
+  });
 }
-
 
 // ---------- Bulk Import ----------
 
 if (bulkAddBtn) {
-
-    bulkAddBtn.addEventListener("click", function () {
-
+  bulkAddBtn.addEventListener("click", function () {
     const lines = bulkInput.value.split("\n");
 
     for (const line of lines) {
+      if (line.trim() === "") {
+        continue;
+      }
 
-        if (line.trim() === "") {
-            continue;
-        }
+      const parts = line.split("|");
 
-        const parts = line.split("|");
+      if (parts.length < 2) {
+        continue;
+      }
 
-        if (parts.length < 2) {
-            continue;
-        }
-
-        cards.push({
-
-            front: parts[0].trim(),
-
-            back: parts[1].trim(),
-
-            section: sectionSelect.value
-
-        });
-
+      getCurrentCards().push({
+        front: parts[0].trim(),
+        back: parts[1].trim(),
+      });
     }
 
-    saveCards();
+    saveFolders();
 
     bulkInput.value = "";
 
     render();
-
-});
+  });
 }
-
-
-// ---------- Filter ----------
-
-if (filterSelect) {
-
-    filterSelect.addEventListener("change", function(){
-
-    currentIndex = 0;
-
-    render();
-
-});
-}
-
 
 // ---------- Buttons ----------
 
 if (nextBtn) {
-    
-    nextBtn.addEventListener("click", nextCard);
+  nextBtn.addEventListener("click", nextCard);
 }
 
 if (prevBtn) {
-    
-    prevBtn.addEventListener("click", previousCard);
+  prevBtn.addEventListener("click", previousCard);
 }
 // ---------- Test Mode ----------
 
 if (testModeBtn) {
-
-    testModeBtn.addEventListener("click", function () {
-
+  testModeBtn.addEventListener("click", function () {
     updateFilteredCards();
 
     if (filteredCards.length === 0) {
-        return;
+      return;
     }
 
     testArea.classList.remove("hidden");
@@ -403,7 +497,7 @@ if (testModeBtn) {
     testCards = [...filteredCards];
 
     testCards.sort(function () {
-    return Math.random() - 0.5;
+      return Math.random() - 0.5;
     });
 
     currentIndex = 0;
@@ -411,118 +505,95 @@ if (testModeBtn) {
     wrongAnswers = 0;
 
     startTest();
-
-});
+  });
 }
 
-
-
 function startTest() {
+  const currentCard = testCards[currentIndex];
 
-    const currentCard = testCards[currentIndex];
+  const answers = [];
 
-    const answers = [];
+  answers.push(currentCard.back);
 
-    answers.push(currentCard.back);
-
-    while (answers.length < 4) {
-        const randomIndex = Math.floor(Math.random() * testCards.length);
-        const randomCard = testCards[randomIndex];
-        if (randomCard !== currentCard && !answers.includes(randomCard.back)
-        ) {
-        answers.push(randomCard.back);
-        }   
-
+  const answerCount = Math.min(4, testCards.length);
+  while (answers.length < answerCount) {
+    const randomIndex = Math.floor(Math.random() * testCards.length);
+    const randomCard = testCards[randomIndex];
+    if (randomCard !== currentCard && !answers.includes(randomCard.back)) {
+      answers.push(randomCard.back);
     }
+  }
 
-    answers.sort(function () {
-        return Math.random() - 0.5;
-    });
+  answers.sort(function () {
+    return Math.random() - 0.5;
+  });
 
-    testQuestion.textContent = currentCard.front;
-    testAnswers.innerHTML = "";
+  testQuestion.textContent = currentCard.front;
+  testAnswers.innerHTML = "";
 
-    for (const answer of answers) {
+  for (const answer of answers) {
+    const button = document.createElement("button");
 
-        const button = document.createElement("button");
+    button.textContent = answer;
+    if (answer === currentCard.back) {
+      button.dataset.correct = "true";
+    } else {
+      button.dataset.correct = "false";
+    }
+    button.addEventListener("click", function () {
+      if (answer === currentCard.back) {
+        correctAnswers++;
+        addXP(1);
 
-        button.textContent = answer;
-        if (answer === currentCard.back) {
-            addXP(1);
-            button.dataset.correct = "true";
-        } else {
-            removeXP(1);
-            button.dataset.correct = "false";
+        button.style.backgroundColor = "green";
+        button.style.color = "white";
+      } else {
+        wrongAnswers++;
+        removeXP(1);
+
+        button.style.backgroundColor = "red";
+        button.style.color = "white";
+      }
+
+      const allButtons = testAnswers.querySelectorAll("button");
+
+      for (const btn of allButtons) {
+        btn.disabled = true;
+
+        if (btn.dataset.correct === "true") {
+          btn.style.backgroundColor = "green";
+          btn.style.color = "white";
         }
+      }
 
-        button.addEventListener("click", function () {
-            if (answer === currentCard.back) {
-
-                correctAnswers++;
-                button.style.backgroundColor = "green";
-                button.style.color = "white";
-
-            } 
-            else {
-
-                wrongAnswers++;
-                button.style.backgroundColor = "red";
-                button.style.color = "white";
-
-            }
-            
-            const allButtons = testAnswers.querySelectorAll("button");
-
-        for (const btn of allButtons) {
-
-            btn.disabled = true;
-
-            if (btn.dataset.correct === "true") {
-
-                btn.style.backgroundColor = "green";
-                btn.style.color = "white";
-
-            }
-
-        }
-
-        setTimeout(function () {
-
+      setTimeout(function () {
         currentIndex++;
 
         if (currentIndex >= testCards.length) {
-
-            showResults();
-
+          showResults();
         } else {
-
-            startTest();
-
+          startTest();
         }
+      }, 1000);
+    });
 
-            }, 1000);
-
-        });
-
-        testAnswers.appendChild(button);
-
-    }
-
+    testAnswers.appendChild(button);
+  }
 }
 
 function showResults() {
+  const totalQuestions = correctAnswers + wrongAnswers;
 
-    const totalQuestions = correctAnswers + wrongAnswers;
+  const accuracy =
+    totalQuestions === 0
+      ? 0
+      : Math.round((correctAnswers / totalQuestions) * 100);
 
-    const accuracy = totalQuestions === 0
-    ? 0
-    : Math.round((correctAnswers / totalQuestions) * 100);
+  const xpEarned = correctAnswers;
+  const xpLost = wrongAnswers;
+  const netXP = xpEarned - xpLost;
 
-    const xpEarned = correctAnswers;
-    const xpLost = wrongAnswers;
-    const netXP = xpEarned - xpLost;
-
-    testQuestion.innerHTML = `
+  testQuestion.innerHTML = `
         <h2>🏆 Test Complete!</h2>
 
         <p><strong>Questions:</strong> ${totalQuestions}</p>
@@ -542,28 +613,27 @@ function showResults() {
         <p><strong>⭐ Net XP: ${netXP >= 0 ? "+" : ""}${netXP}</strong></p>
 
     ${
-        accuracy === 100
+      accuracy === 100
         ? "<h3>🔥 Perfect Score!</h3>"
         : accuracy >= 90
-        ? "<h3>Excellent!</h3>"
-        : accuracy >= 75
-        ? "<h3>Good Job!</h3>"
-        : "<h3>Keep Practicing!</h3>"
+          ? "<h3>Excellent!</h3>"
+          : accuracy >= 75
+            ? "<h3>Good Job!</h3>"
+            : "<h3>Keep Practicing!</h3>"
     }
         `;
 
-        testAnswers.innerHTML = "";
+  testAnswers.innerHTML = "";
 
-        const restartButton = document.createElement("button");
+  const restartButton = document.createElement("button");
 
-        restartButton.textContent = "Restart Test";
+  restartButton.textContent = "Restart Test";
 
-        restartButton.addEventListener("click", function () {
+  restartButton.addEventListener("click", function () {
+    testCards = [...filteredCards];
 
-        testCards = [...filteredCards];
-
-        testCards.sort(function () {
-        return Math.random() - 0.5;
+    testCards.sort(function () {
+      return Math.random() - 0.5;
     });
 
     currentIndex = 0;
@@ -571,13 +641,79 @@ function showResults() {
     wrongAnswers = 0;
 
     startTest();
-    });
+  });
 
-    testAnswers.appendChild(restartButton);
+  testAnswers.appendChild(restartButton);
+}
 
+document.getElementById("backBtn").addEventListener("click", function () {
+  if (folderHistory.length === 0) {
+    return;
+  }
+
+  currentFolder = folderHistory.pop();
+
+  renderFolders();
+  render();
+  updateBreadcrumb();
+});
+
+const savedFolders = localStorage.getItem("codexFolders");
+let rootFolder;
+
+if (savedFolders) {
+  rootFolder = JSON.parse(savedFolders);
+} else {
+  rootFolder = {
+    name: "Root",
+    cards: [],
+    children: [
+      {
+        name: "School",
+        cards: [],
+        children: [],
+      },
+      {
+        name: "Coding",
+        cards: [],
+        children: [],
+      },
+      {
+        name: "Quran",
+        cards: [],
+        children: [],
+      },
+    ],
+  };
+
+  saveFolders();
+}
+
+let currentFolder = rootFolder;
+console.log(currentFolder);
+let folderHistory = [];
+
+function updateBreadcrumb() {
+  const breadcrumb = document.getElementById("folderBreadcrumb");
+
+  if (!breadcrumb) return;
+
+  const names = ["Root"];
+
+  for (const folder of folderHistory) {
+    if (folder !== rootFolder) {
+      names.push(folder.name);
+    }
+  }
+
+  if (currentFolder !== rootFolder) {
+    names.push(currentFolder.name);
+  }
+
+  breadcrumb.textContent = "📁 " + names.join(" > ");
 }
 // ---------- Initialize ----------
 
 render();
-
-    
+renderFolders();
+updateBreadcrumb();

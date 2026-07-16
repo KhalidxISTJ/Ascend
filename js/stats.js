@@ -2,11 +2,12 @@
 // QUESTS
 // =======================
 
-const completedQuests = quests.filter(q => q.completed).length;
+const completedQuests = quests.filter((q) => q.completed).length;
 
-const activeQuests = quests.filter(q => !q.completed).length;
+const activeQuests = quests.filter((q) => !q.completed).length;
 
-const completionRate = quests.length === 0 ? 0 : Math.round((completedQuests / quests.length) * 100);
+const completionRate =
+  quests.length === 0 ? 0 : Math.round((completedQuests / quests.length) * 100);
 
 const codexCards = JSON.parse(localStorage.getItem("codexCards")) || [];
 // =======================
@@ -21,4 +22,5 @@ document.getElementById("codexCardTotal").textContent = codexCards.length;
 
 document.getElementById("completedQuestCard").textContent = completedQuests;
 
-document.getElementById("completionRateCard").textContent = completionRate + "%";
+document.getElementById("completionRateCard").textContent =
+  completionRate + "%";

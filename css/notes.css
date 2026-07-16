@@ -1,17 +1,13 @@
-.notes-page{
-
-    max-width:1400px;
-    margin:auto;
-    padding:40px;
-
+.notes-page {
+  max-width: 1400px;
+  margin: auto;
+  padding: 40px;
 }
 
-.notes-grid{
-
-    display:grid;
-    grid-template-columns:1fr 1.4fr;
-    gap:30px;
-
+.notes-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 30px;
 }
 
 /* ==========================
@@ -19,47 +15,37 @@
 ========================== */
 
 .notes-editor,
-.notes-history{
-
-    background:#181818;
-    border:1px solid #2f2f2f;
-    border-radius:18px;
-    padding:25px;
-
+.notes-history {
+  background: #181818;
+  border: 1px solid #2f2f2f;
+  border-radius: 18px;
+  padding: 25px;
 }
 
-.notes-editor{
-
-    display:flex;
-    flex-direction:column;
-    gap:15px;
-
+.notes-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
-.notes-history{
-
-    height:700px;
-    display:flex;
-    flex-direction:column;
-
+.notes-history {
+  height: 700px;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ==========================
    HEADINGS
 ========================== */
 
-h2{
-
-    color:white;
-    margin-bottom:25px;
-
+h2 {
+  color: white;
+  margin-bottom: 25px;
 }
 
-h3{
-
-    color:white;
-    margin-bottom:20px;
-
+h3 {
+  color: white;
+  margin-bottom: 20px;
 }
 
 /* ==========================
@@ -68,180 +54,152 @@ h3{
 
 .notes-editor input,
 .notes-editor textarea,
-#noteSearch{
-
-    background:#222;
-    color:white;
-    border:1px solid #333;
-    border-radius:10px;
-    padding:12px;
-    font-size:15px;
-
+#noteSearch {
+  background: #222;
+  color: white;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 15px;
 }
 
 .notes-editor input::placeholder,
 .notes-editor textarea::placeholder,
-#noteSearch::placeholder{
-
-    color:#8b8b8b;
-
+#noteSearch::placeholder {
+  color: #8b8b8b;
 }
 
-.notes-editor textarea{
-
-    min-height:300px;
-    resize:vertical;
-
+.notes-editor textarea {
+  min-height: 300px;
+  resize: vertical;
 }
 
 /* ==========================
    SAVE BUTTON
 ========================== */
 
-#saveNoteBtn{
+#saveNoteBtn {
+  padding: 12px;
 
-    padding:12px;
+  background: #2d5cff;
 
-    background:#2d5cff;
+  color: white;
 
-    color:white;
+  border: none;
 
-    border:none;
+  border-radius: 10px;
 
-    border-radius:10px;
+  cursor: pointer;
 
-    cursor:pointer;
-
-    transition:.2s;
-
+  transition: 0.2s;
 }
 
-#saveNoteBtn:hover{
-
-    background:#416cff;
-
+#saveNoteBtn:hover {
+  background: #416cff;
 }
 
 /* ==========================
    NOTES LIST
 ========================== */
 
-#notesContainer{
+#notesContainer {
+  flex: 1;
 
-    flex:1;
+  overflow-y: auto;
 
-    overflow-y:auto;
+  display: flex;
 
-    display:flex;
+  flex-direction: column;
 
-    flex-direction:column;
+  gap: 15px;
 
-    gap:15px;
-
-    padding-right:6px;
-
+  padding-right: 6px;
 }
 
 /* Scrollbar */
 
-#notesContainer::-webkit-scrollbar{
-
-    width:8px;
-
+#notesContainer::-webkit-scrollbar {
+  width: 8px;
 }
 
-#notesContainer::-webkit-scrollbar-thumb{
+#notesContainer::-webkit-scrollbar-thumb {
+  background: #333;
 
-    background:#333;
-
-    border-radius:10px;
-
+  border-radius: 10px;
 }
 
 /* ==========================
    NOTE CARD
 ========================== */
 
-.note-card{
+.note-card {
+  background: #1f1f1f;
 
-    background:#1f1f1f;
+  border: 1px solid #303030;
 
-    border:1px solid #303030;
+  border-radius: 15px;
 
-    border-radius:15px;
+  padding: 18px;
 
-    padding:18px;
+  cursor: pointer;
 
-    cursor:pointer;
+  transition: 0.2s;
 
-    transition:.2s;
-
-    color:white;
-
+  color: white;
 }
 
-.note-card:hover{
+.note-card:hover {
+  border-color: #5f7cff;
 
-    border-color:#5f7cff;
-
-    transform:translateY(-2px);
-
+  transform: translateY(-2px);
 }
 
 /* ==========================
    NOTE TITLE
 ========================== */
 
-.note-title{
+.note-title {
+  color: white;
 
-    color:white;
+  font-size: 20px;
 
-    font-size:20px;
+  font-weight: 700;
 
-    font-weight:700;
-
-    margin:0 0 10px 0;
-
+  margin: 0 0 10px 0;
 }
 
 /* ==========================
    NOTE PREVIEW
 ========================== */
 
-.note-preview{
+.note-preview {
+  color: #bdbdbd;
 
-    color:#bdbdbd;
+  line-height: 1.5;
 
-    line-height:1.5;
-
-    margin:0 0 15px 0;
-
+  margin: 0 0 15px 0;
 }
 
 /* ==========================
    DELETE BUTTON
 ========================== */
 
-.note-card button{
+.note-card button {
+  padding: 8px 14px;
 
-    padding:8px 14px;
+  background: #a72d2d;
 
-    background:#a72d2d;
+  color: white;
 
-    color:white;
+  border: none;
 
-    border:none;
+  border-radius: 8px;
 
-    border-radius:8px;
+  cursor: pointer;
 
-    cursor:pointer;
-
-    transition:.2s;
-
+  transition: 0.2s;
 }
 
-.note-card button:hover{
-
-    background:#d63a3a;
-
+.note-card button:hover {
+  background: #d63a3a;
 }

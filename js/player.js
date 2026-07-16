@@ -9,130 +9,93 @@ const profileImage = document.getElementById("profile-img");
 const profileImageInput = document.getElementById("profile-picture");
 
 if (profileImage && profileImageInput) {
+  profileImage.addEventListener("click", function () {
+    profileImageInput.click();
+  });
 
-    profileImage.addEventListener("click", function () {
-
-        profileImageInput.click();
-
-    });
-
-    if (profileImageInput) {
-
+  if (profileImageInput) {
     profileImageInput.addEventListener("change", function () {
+      const file = profileImageInput.files[0];
 
-        const file = profileImageInput.files[0];
+      if (!file) {
+        return;
+      }
 
-        if (!file) {
-            return;
-        }
+      const reader = new FileReader();
 
-        const reader = new FileReader();
+      reader.onload = function (event) {
+        playerData.profileImage = event.target.result;
 
-        reader.onload = function (event) {
+        savePlayer();
 
-            playerData.profileImage = event.target.result;
+        profileImage.src = playerData.profileImage;
+      };
 
-            savePlayer();
-
-            profileImage.src = playerData.profileImage;
-
-        };
-
-        reader.readAsDataURL(file);
-
+      reader.readAsDataURL(file);
     });
-
-}
-
+  }
 }
 
 let playerData = {
-    name: "",
-    level: 0,
-    xp: 0,
-    profileImage: "",
-    lastResetDate: ""
+  name: "",
+  level: 0,
+  xp: 0,
+  profileImage: "",
+  lastResetDate: "",
 };
 
 function savePlayer() {
-
-    localStorage.setItem(
-        "playerData",
-        JSON.stringify(playerData)
-    );
-
+  localStorage.setItem("playerData", JSON.stringify(playerData));
 }
 
 function loadPlayer() {
+  const savedPlayer = localStorage.getItem("playerData");
 
-    const savedPlayer = localStorage.getItem("playerData");
-
-    if (savedPlayer) {
-
-        playerData = JSON.parse(savedPlayer);
-
-    }
-
+  if (savedPlayer) {
+    playerData = JSON.parse(savedPlayer);
+  }
 }
 
 loadPlayer();
 
-
-
 function updateUI() {
-    
-    
+  if (levelElement) levelElement.textContent = "Level: " + playerData.level;
 
-    if (levelElement)
-        levelElement.textContent = "Level: " + playerData.level;
+  if (xpNumberSpan) xpNumberSpan.textContent = playerData.xp;
 
-    if (xpNumberSpan)
-        xpNumberSpan.textContent = playerData.xp;
-
-    if (xpFill)
-        xpFill.style.width = playerData.xp + "%";
-    
+  if (xpFill) xpFill.style.width = playerData.xp + "%";
 }
 
 function addXP(amount) {
+  playerData.xp += amount;
 
-    playerData.xp += amount;
+  while (playerData.xp >= 100) {
+    playerData.level++;
+    playerData.xp -= 100;
+  }
 
-    while (playerData.xp >= 100) {
+  savePlayer();
 
-        playerData.level++;
-        playerData.xp -= 100;
-
-    }
-
-    savePlayer();
-
-    updateUI();
-
+  updateUI();
 }
 
 function removeXP(amount) {
+  playerData.xp -= amount;
 
-    playerData.xp -= amount;
+  if (playerData.xp < 0) {
+    playerData.xp = 0;
+  }
 
-    if (playerData.xp < 0) {
+  savePlayer();
 
-        playerData.xp = 0;
-
-    }
-
-    savePlayer();
-
-    updateUI();
+  updateUI();
 }
 
 loadPlayer();
 updateUI();
 
 if (profileImage && playerData.profileImage) {
-
-    profileImage.src = playerData.profileImage;
-
+  profileImage.src = playerData.profileImage;
 }
 // TEST
 // addXP(10);
@@ -148,33 +111,25 @@ const displayName = document.getElementById("display-name");
 const profileForm = document.getElementById("profile-form");
 
 if (displayName) {
-    displayName.textContent = "Name: " + playerData.name;
+  displayName.textContent = "Name: " + playerData.name;
 }
 
 if (profileForm && nameInput) {
+  profileForm.addEventListener("submit", function (event) {
+    event.preventDefault();
 
-    profileForm.addEventListener("submit", function (event) {
+    console.log("Profile form submitted");
 
-        event.preventDefault();
-        
-        console.log("Profile form submitted");
+    const newName = nameInput.value.trim();
 
-        const newName = nameInput.value.trim();
+    if (newName !== "") {
+      playerData.name = newName;
 
-        if (newName !== "") {
+      savePlayer();
 
-            playerData.name = newName;
-
-            savePlayer();
-
-            if (displayName) {
-
+      if (displayName) {
         displayName.textContent = "Name: " + playerData.name;
-
+      }
     }
-
-        }
-
-    });
-
+  });
 }
