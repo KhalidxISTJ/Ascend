@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/navigation.css" />
     <link rel="stylesheet" href="css/profile.css" />
-    <link rel="stylesheet" href="css/dashboard.css" />
+    <link rel="stylesheet" href="css/home.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -99,24 +99,61 @@
         </div>
 
         <div class="home-grid">
+          <!-- Current Quest -->
           <div class="home-card">
             <h3>🎯 Current Quest</h3>
 
-            <p id="current-quest">No active quest.</p>
+            <div id="current-quest" class="current-quest">No active quest.</div>
+
+            <div class="quest-actions">
+              <button id="completeCurrentQuest" hidden>Complete</button>
+              <button id="skipCurrentQuest" hidden>Skip</button>
+            </div>
           </div>
 
+          <!-- Overdue -->
           <div class="home-card">
-            <h3>⏱ Timer</h3>
+            <h3>🔴 Overdue</h3>
 
-            <p id="timer">Coming Soon</p>
+            <div id="overdueQuests" class="quest-list">
+              <p class="empty-state">No overdue quests.</p>
+            </div>
           </div>
 
+          <!-- Upcoming -->
+          <div class="home-card">
+            <h3>🟡 Upcoming</h3>
+
+            <div id="upcomingQuests" class="quest-list">
+              <p class="empty-state">Nothing upcoming.</p>
+            </div>
+          </div>
+
+          <!-- Timer -->
+          <div class="home-card">
+            <h3>⏱ Focus Timer</h3>
+
+            <div id="timerStatus" class="timer-status">⚪ Ready</div>
+
+            <h2 id="timerDisplay">00:00:00</h2>
+
+            <input type="number" id="timerMinutes" min="1" value="25" />
+
+            <div class="timer-buttons">
+              <button id="startTimer">Start</button>
+              <button id="pauseTimer">Pause</button>
+              <button id="resetTimer">Reset</button>
+            </div>
+          </div>
+
+          <!-- Streak -->
           <div class="home-card">
             <h3>🔥 Streak</h3>
 
             <p id="streak">Coming Soon</p>
           </div>
 
+          <!-- Overview -->
           <div class="home-card">
             <h3>📊 Overview</h3>
 
@@ -124,11 +161,17 @@
           </div>
         </div>
 
+        <div class="home-card ai-card">
+          <h3>🧠 Ascend AI</h3>
+
+          <div id="aiMessage">Welcome back.</div>
+        </div>
+
         <button id="resetGameBtn">Factory Reset</button>
       </section>
     </main>
     <script src="js/player.js"></script>
+    <script src="js/quests.js"></script>
     <script src="js/home.js"></script>
-    <script src="css/home.css"></script>
   </body>
 </html>

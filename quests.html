@@ -57,13 +57,9 @@
             placeholder="Enter a new quest..."
           />
 
-          <select id="questType">
-            <option value="Faith">Faith</option>
-            <option value="Mind">Mind</option>
-            <option value="Body">Body</option>
-            <option value="Craft">Craft</option>
-            <option value="Social">Social</option>
-          </select>
+          <select id="questCategory"></select>
+
+          <button id="addCategoryBtn" type="button">+</button>
 
           <select id="questDifficulty">
             <option value="Easy">Easy</option>
@@ -81,6 +77,8 @@
 
           <label>End Time</label>
           <input type="time" id="questEndTime" />
+          <label>Due Date</label>
+          <input type="date" id="questDueDate" />
           <label for="questPriority"></label>
 
           <select id="questPriority">
@@ -97,6 +95,17 @@
 
           <input type="text" id="questSearch" placeholder="Search quests..." />
         </div>
+        <label for="sortQuests">Sort:</label>
+
+        <select id="sortQuests">
+          <option value="date">Due Date</option>
+          <option value="priority">Priority</option>
+          <option value="category">Category</option>
+          <option value="section">Section</option>
+          <option value="difficulty">Difficulty</option>
+          <option value="name">Name (A-Z)</option>
+          <option value="created">Date Created</option>
+        </select>
 
         <!-- ACTIVE QUESTS -->
         <div class="quest-sections">
