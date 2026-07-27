@@ -156,3 +156,27 @@
 .ai-card {
   margin-top: 20px;
 }
+.header-top {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.header-top h1 {
+  margin: 0;
+}
+
+.version-badge {
+  position: absolute;
+  right: 0;
+
+  padding: 6px 14px;
+  border-radius: 999px;
+
+  border: 2px solid #222;
+  background: rgba(255, 255, 255, 0.9);
+
+  font-size: 0.9rem;
+  font-weight: 700;
+}

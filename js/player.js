@@ -8,6 +8,14 @@ const profileImage = document.getElementById("profile-img");
 
 const profileImageInput = document.getElementById("profile-picture");
 
+const APP_VERSION = "v1.0.0 Alpha";
+
+const versionElement = document.getElementById("version");
+
+if (versionElement) {
+  versionElement.textContent = APP_VERSION;
+}
+
 if (profileImage && profileImageInput) {
   profileImage.addEventListener("click", function () {
     profileImageInput.click();

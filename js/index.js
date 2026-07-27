@@ -12,8 +12,8 @@ const resetTimer = document.getElementById("resetTimer");
 const timerStatus = document.getElementById("timerStatus");
 const skipCurrentQuest = document.getElementById("skipCurrentQuest");
 const overdueQuestsElement = document.getElementById("overdueQuests");
-
 const upcomingQuestsElement = document.getElementById("upcomingQuests");
+document.getElementById("version").textContent = APP_VERSION;
 
 function renderQuestList(element, quests) {
   if (quests.length === 0) {

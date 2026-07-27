@@ -669,17 +669,7 @@ if (savedFolders) {
     cards: [],
     children: [
       {
-        name: "School",
-        cards: [],
-        children: [],
-      },
-      {
-        name: "Coding",
-        cards: [],
-        children: [],
-      },
-      {
-        name: "Quran",
+        name: "Folder",
         cards: [],
         children: [],
       },
