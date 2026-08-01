@@ -25,6 +25,7 @@ document.getElementById("completionRateCard").textContent =
 
 let currentSkill = null;
 let navigationStack = [];
+let editingDescription = false;
 
 function findSkillById(nodes, id) {
   for (const node of nodes) {
@@ -126,7 +127,7 @@ function openSkill(id) {
 function renderInspector() {
   const inspector = document.querySelector(".inspector-panel");
 
-  sidebar.innerHTML = "";
+  inspector.innerHTML = "";
 
   if (navigationStack.length > 1) {
     const back = document.createElement("div");
@@ -135,42 +136,111 @@ function renderInspector() {
 
     back.onclick = goBack;
 
-    sidebar.appendChild(back);
+    inspector.appendChild(back);
   }
 
-  currentSkill.children.forEach((child) => {
-    const card = document.createElement("div");
+  const title = document.createElement("h2");
 
-    card.className = "stats-card stat-selectable";
+  title.textContent = currentSkill.name;
 
-    card.innerHTML = `
-  <h3>${child.name}</h3>
+  inspector.appendChild(title);
+  if (currentSkill.id === "root") {
+    const info = document.createElement("p");
 
-  <button class="rename-btn">
-    ✏️
-  </button>
+    info.textContent = "Select a skill to view details.";
 
-  <button class="delete-btn">
-    🗑
-  </button>
-`;
+    inspector.appendChild(info);
 
-    card.onclick = (e) => {
-      if (e.target.tagName === "BUTTON") return;
+    return;
+  }
+  const level = document.createElement("p");
 
-      openSkill(child.id);
+  level.textContent = `Level: ${currentSkill.level}`;
+
+  inspector.appendChild(level);
+
+  const xp = document.createElement("p");
+
+  xp.textContent = `XP: ${currentSkill.xp}`;
+
+  inspector.appendChild(xp);
+  const descriptionLabel = document.createElement("h3");
+
+  descriptionLabel.textContent = "Description";
+
+  inspector.appendChild(descriptionLabel);
+
+  if (editingDescription) {
+    const descriptionInput = document.createElement("textarea");
+
+    inspector.appendChild(descriptionInput);
+
+    const saveDescriptionBtn = document.createElement("button");
+
+    saveDescriptionBtn.textContent = "Save";
+
+    saveDescriptionBtn.onclick = () => {
+      currentSkill.description = descriptionInput.value;
+
+      saveSkillTree();
+
+      editingDescription = false;
+
+      renderInspector();
     };
 
-    card.querySelector(".rename-btn").onclick = () => {
-      renameSkill(child.id);
+    inspector.appendChild(saveDescriptionBtn);
+  } else {
+    const descriptionText = document.createElement("p");
+
+    descriptionText.textContent = currentSkill.description || "No description.";
+
+    inspector.appendChild(descriptionText);
+
+    const editDescriptionBtn = document.createElement("button");
+
+    editDescriptionBtn.textContent = "Edit Description";
+
+    editDescriptionBtn.onclick = () => {
+      editingDescription = true;
+
+      renderInspector();
     };
 
-    card.querySelector(".delete-btn").onclick = () => {
-      deleteSkill(child.id);
+    inspector.appendChild(editDescriptionBtn);
+  }
+
+  const renameBtn = document.createElement("button");
+
+  renameBtn.textContent = "Rename";
+
+  renameBtn.onclick = () => {
+    renameSkill(currentSkill.id);
+  };
+
+  inspector.appendChild(renameBtn);
+
+  const addChildBtn = document.createElement("button");
+
+  addChildBtn.textContent = "+ Add Child";
+
+  addChildBtn.onclick = () => {
+    addChildSkill(currentSkill);
+  };
+
+  inspector.appendChild(addChildBtn);
+
+  if (currentSkill.id !== "root") {
+    const deleteBtn = document.createElement("button");
+
+    deleteBtn.textContent = "Delete";
+
+    deleteBtn.onclick = () => {
+      deleteSkill(currentSkill.id);
     };
 
-    inspector.appendChild(card);
-  });
+    inspector.appendChild(deleteBtn);
+  }
 }
 function goBack() {
   navigationStack.pop();
@@ -183,8 +253,11 @@ function goBack() {
 navigationStack = [
   {
     id: "root",
-    children: skillTree,
     name: "Character Stats",
+    level: 1,
+    xp: 0,
+    description: "Your overall character progression.",
+    children: skillTree,
   },
 ];
 
@@ -234,12 +307,55 @@ function renderRoadmap() {
 
   roadmapCanvas.appendChild(svg);
 
+  const parentX = roadmapCanvas.clientWidth / 2;
+  const parentY = 40;
+
+  const parentNode = document.createElement("div");
+  parentNode.className = "roadmap-node";
+
+  parentNode.style.left = `${parentX}px`;
+  parentNode.style.top = `${parentY}px`;
+
+  roadmapCanvas.appendChild(parentNode);
+
+  const parentLabel = document.createElement("div");
+
+  parentLabel.className = "roadmap-label";
+  parentLabel.textContent = currentSkill.name;
+
+  parentLabel.style.left = `${parentX}px`;
+  parentLabel.style.top = `${parentY + 35}px`;
+
+  roadmapCanvas.appendChild(parentLabel);
+  parentNode.classList.add("current-node");
+
   currentSkill.children.forEach((child, index) => {
     const node = document.createElement("div");
 
     node.className = "roadmap-node";
-    const x = 120 + index * 120;
+    const spacing = 140;
+    const totalWidth = (currentSkill.children.length - 1) * spacing;
+
+    const startX = roadmapCanvas.clientWidth / 2 - totalWidth / 2;
+
+    const x = startX + index * spacing;
     const y = 120;
+
+    const parentX = roadmapCanvas.clientWidth / 2;
+    const parentY = 40;
+
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+
+    line.setAttribute("x1", parentX);
+    line.setAttribute("y1", parentY);
+
+    line.setAttribute("x2", x);
+    line.setAttribute("y2", y);
+
+    line.setAttribute("stroke", "#444");
+    line.setAttribute("stroke-width", "3");
+
+    svg.appendChild(line);
 
     node.style.left = `${x}px`;
     node.style.top = `${y}px`;
@@ -263,18 +379,12 @@ function renderRoadmap() {
     roadmapCanvas.appendChild(label);
   });
 }
-
-addRoadmapNodeBtn.onclick = function () {
-  if (!currentSkill) {
-    alert("Select a stat first.");
-    return;
-  }
-
+function addChildSkill(parentSkill) {
   const name = prompt("Skill name:");
 
   if (!name) return;
 
-  currentSkill.children.push({
+  parentSkill.children.push({
     id: crypto.randomUUID(),
     name,
     description: "",
@@ -287,6 +397,14 @@ addRoadmapNodeBtn.onclick = function () {
 
   renderInspector();
   renderRoadmap();
+}
+addRoadmapNodeBtn.onclick = function () {
+  if (!currentSkill) {
+    alert("Select a stat first.");
+    return;
+  }
+
+  addChildSkill(currentSkill);
 };
 function migrateSkills(nodes) {
   nodes.forEach((skill) => {

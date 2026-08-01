@@ -258,3 +258,7 @@
 
   pointer-events: none;
 }
+.current-node {
+  background: #4caf50;
+  border-color: #2e7d32;
+}
