@@ -1,6 +1,5 @@
 const activeQuestCount = document.getElementById("activeQuestCount");
 const completedQuestCount = document.getElementById("completedQuestCount");
-const codexCardCount = document.getElementById("codexCardCount");
 const completionRate = document.getElementById("completionRate");
 const completeCurrentQuest = document.getElementById("completeCurrentQuest");
 const currentQuestElement = document.getElementById("current-quest");
@@ -75,8 +74,6 @@ function skipQuest(quest) {
 }
 function updateDashboard() {
   const quests = JSON.parse(localStorage.getItem("quests")) || [];
-  const cards = JSON.parse(localStorage.getItem("codexCards")) || [];
-
   const mission = getCurrentMission();
 
   // =====================
@@ -119,8 +116,6 @@ function updateDashboard() {
   // =====================
   // Codex
   // =====================
-
-  codexCardCount.textContent = `Codex Cards: ${cards.length}`;
 }
 
 completeCurrentQuest.onclick = function () {
@@ -198,7 +193,8 @@ resetTimer.onclick = function () {
   clearInterval(timer);
   running = false;
 
-  timeLeft = Number(timerMinutes.value) * 60;
+  timeLeft = Number(timerMinutes.value) * 0;
+  timerMinutes.value = 0;
 
   updateTimerDisplay();
   updateTimerButtons();

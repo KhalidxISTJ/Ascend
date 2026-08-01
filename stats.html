@@ -4,34 +4,38 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Stats</title>
+
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/navigation.css" />
     <link rel="stylesheet" href="css/stats.css" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Space+Grotesk:wght@300..700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Space+Grotesk:wght@300..700&display=swap"
       rel="stylesheet"
     />
   </head>
+
   <body>
     <header>
       <h1>Welcome to <span class="ascend">Ascend</span></h1>
       <hr />
-      <!-- NAVIGATION -->
+
       <nav class="navigation">
         <div class="search-container">
-          <form method="get">
+          <form>
             <input
               id="search-box"
               type="text"
-              name="Search-box"
               placeholder="Search"
               autocomplete="on"
             />
-            <button type="submit">Search</button>
+            <button>Search</button>
           </form>
         </div>
+
         <div class="nav-links">
           <a class="nav-link" href="index.html">Home</a>
           <a class="nav-link" href="quests.html">Quests</a>
@@ -40,37 +44,37 @@
           <a class="nav-link" href="journal.html">Journal</a>
           <a class="nav-link" href="notes.html">Notes</a>
         </div>
+
         <div class="right-placeholder"></div>
       </nav>
     </header>
+
     <main class="stats-page">
       <h2>Character Stats</h2>
 
-      <section class="stats-grid">
-        <div class="stats-card">
-          <h3>Faith</h3>
-          <p id="faithLevel">Level 0</p>
+      <section class="stats-layout">
+        <!-- LEFT SIDE -->
+        <div class="roadmap-panel">
+          <div class="panel-header">
+            <div>
+              <h2 id="roadmapTitle">Character Stats</h2>
+              <p id="breadcrumb">Select a stat...</p>
+            </div>
+
+            <button id="addRoadmapNodeBtn">+ Add Skill</button>
+          </div>
+
+          <div class="roadmap-container">
+            <div id="roadmapCanvas" class="roadmap-canvas">
+              <p class="empty-tree">
+                Select a stat on the left to view its roadmap.
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div class="stats-card">
-          <h3>Mind</h3>
-          <p id="mindLevel">Level 0</p>
-        </div>
-
-        <div class="stats-card">
-          <h3>Body</h3>
-          <p id="bodyLevel">Level 0</p>
-        </div>
-
-        <div class="stats-card">
-          <h3>Craft</h3>
-          <p id="craftLevel">Level 0</p>
-        </div>
-
-        <div class="stats-card">
-          <h3>Social</h3>
-          <p id="socialLevel">Level 0</p>
-        </div>
+        <!-- RIGHT SIDE -->
+        <div class="inspector-panel"></div>
       </section>
 
       <h2>Progress</h2>
@@ -95,15 +99,12 @@
           <h3>Completion Rate</h3>
           <p id="completionRateCard">0%</p>
         </div>
-
-        <div class="stats-card">
-          <h3>Codex Cards</h3>
-          <p id="codexCardTotal">0</p>
-        </div>
       </section>
     </main>
+
     <script src="js/player.js"></script>
     <script src="js/quests.js"></script>
+    <script src="js/skillTree.js"></script>
     <script src="js/stats.js"></script>
   </body>
 </html>
