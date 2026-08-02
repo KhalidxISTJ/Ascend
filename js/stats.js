@@ -27,34 +27,6 @@ let currentSkill = null;
 let navigationStack = [];
 let editingDescription = false;
 
-function findSkillById(nodes, id) {
-  for (const node of nodes) {
-    if (node.id === id) {
-      return node;
-    }
-
-    const found = findSkillById(node.children, id);
-
-    if (found) {
-      return found;
-    }
-  }
-
-  return null;
-}
-function findParent(nodes, id) {
-  for (const node of nodes) {
-    if (node.children.some((child) => child.id === id)) {
-      return node;
-    }
-
-    const found = findParent(node.children, id);
-
-    if (found) return found;
-  }
-
-  return null;
-}
 function renameSkill(id) {
   const skill = findSkillById(skillTree, id);
 
@@ -112,6 +84,7 @@ function deleteSkill(id) {
   renderInspector();
   renderRoadmap();
 }
+
 function openSkill(id) {
   const skill = findSkillById(skillTree, id);
 
@@ -131,6 +104,7 @@ function renderInspector() {
 
   if (navigationStack.length > 1) {
     const back = document.createElement("div");
+
     back.className = "stats-card stat-selectable";
     back.textContent = "← Back";
 
@@ -141,31 +115,61 @@ function renderInspector() {
 
   const title = document.createElement("h2");
 
+  title.className = "inspector-title";
   title.textContent = currentSkill.name;
 
   inspector.appendChild(title);
+
   if (currentSkill.id === "root") {
     const info = document.createElement("p");
 
+    info.className = "inspector-description";
     info.textContent = "Select a skill to view details.";
 
     inspector.appendChild(info);
 
     return;
   }
+
   const level = document.createElement("p");
 
+  level.className = "inspector-stat";
   level.textContent = `Level: ${currentSkill.level}`;
 
   inspector.appendChild(level);
 
-  const xp = document.createElement("p");
+  const xpContainer = document.createElement("div");
 
-  xp.textContent = `XP: ${currentSkill.xp}`;
+  xpContainer.className = "xp-container";
 
-  inspector.appendChild(xp);
+  const xpBar = document.createElement("div");
+
+  xpBar.className = "xp-bar";
+
+  const xpFill = document.createElement("div");
+
+  xpFill.className = "xp-fill";
+
+  const requiredXP = currentSkill.level * 100;
+
+  xpFill.style.width = `${(currentSkill.xp / requiredXP) * 100}%`;
+
+  xpBar.appendChild(xpFill);
+
+  const xpText = document.createElement("p");
+
+  xpText.className = "xp-text";
+
+  xpText.textContent = `${currentSkill.xp} / ${requiredXP} XP`;
+
+  xpContainer.appendChild(xpBar);
+  xpContainer.appendChild(xpText);
+
+  inspector.appendChild(xpContainer);
+
   const descriptionLabel = document.createElement("h3");
 
+  descriptionLabel.className = "inspector-heading";
   descriptionLabel.textContent = "Description";
 
   inspector.appendChild(descriptionLabel);
@@ -173,11 +177,14 @@ function renderInspector() {
   if (editingDescription) {
     const descriptionInput = document.createElement("textarea");
 
+    descriptionInput.className = "description-input";
+    descriptionInput.value = currentSkill.description || "";
+
     inspector.appendChild(descriptionInput);
 
     const saveDescriptionBtn = document.createElement("button");
 
-    saveDescriptionBtn.textContent = "Save";
+    saveDescriptionBtn.textContent = "Save Description";
 
     saveDescriptionBtn.onclick = () => {
       currentSkill.description = descriptionInput.value;
@@ -193,6 +200,7 @@ function renderInspector() {
   } else {
     const descriptionText = document.createElement("p");
 
+    descriptionText.className = "inspector-description";
     descriptionText.textContent = currentSkill.description || "No description.";
 
     inspector.appendChild(descriptionText);
@@ -210,6 +218,12 @@ function renderInspector() {
     inspector.appendChild(editDescriptionBtn);
   }
 
+  const buttonGroup = document.createElement("div");
+
+  buttonGroup.className = "inspector-actions";
+
+  inspector.appendChild(buttonGroup);
+
   const renameBtn = document.createElement("button");
 
   renameBtn.textContent = "Rename";
@@ -218,7 +232,7 @@ function renderInspector() {
     renameSkill(currentSkill.id);
   };
 
-  inspector.appendChild(renameBtn);
+  buttonGroup.appendChild(renameBtn);
 
   const addChildBtn = document.createElement("button");
 
@@ -228,19 +242,17 @@ function renderInspector() {
     addChildSkill(currentSkill);
   };
 
-  inspector.appendChild(addChildBtn);
+  buttonGroup.appendChild(addChildBtn);
 
-  if (currentSkill.id !== "root") {
-    const deleteBtn = document.createElement("button");
+  const deleteBtn = document.createElement("button");
 
-    deleteBtn.textContent = "Delete";
+  deleteBtn.textContent = "Delete";
 
-    deleteBtn.onclick = () => {
-      deleteSkill(currentSkill.id);
-    };
+  deleteBtn.onclick = () => {
+    deleteSkill(currentSkill.id);
+  };
 
-    inspector.appendChild(deleteBtn);
-  }
+  buttonGroup.appendChild(deleteBtn);
 }
 function goBack() {
   navigationStack.pop();
@@ -390,9 +402,13 @@ function addChildSkill(parentSkill) {
     description: "",
     level: 1,
     xp: 0,
+
+    completed: false,
+    unlocked: true,
+    icon: "",
+    prerequisite: null,
     children: [],
   });
-
   saveSkillTree();
 
   renderInspector();
@@ -422,6 +438,33 @@ function migrateSkills(nodes) {
 
     if (!skill.children) {
       skill.children = [];
+    }
+    if (skill.completed === undefined) {
+      skill.completed = false;
+    }
+
+    if (skill.unlocked === undefined) {
+      skill.unlocked = true;
+    }
+
+    if (!skill.icon) {
+      skill.icon = "";
+    }
+
+    if (skill.completed === undefined) {
+      skill.completed = false;
+    }
+
+    if (skill.unlocked === undefined) {
+      skill.unlocked = true;
+    }
+
+    if (!skill.icon) {
+      skill.icon = "";
+    }
+
+    if (skill.prerequisite === undefined) {
+      skill.prerequisite = null;
     }
 
     migrateSkills(skill.children);

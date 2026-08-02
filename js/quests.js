@@ -785,21 +785,22 @@ function completeQuest(quest) {
 // =====================
 
 function giveQuestXP(quest) {
-  if (typeof addXP !== "function") {
-    return;
-  }
-
   const rewards = {
     Easy: 10,
-
     Medium: 25,
-
     Hard: 50,
-
     Extreme: 100,
   };
 
-  addXP(rewards[quest.difficulty] || 10);
+  const reward = rewards[quest.difficulty] || 10;
+
+  addXP(reward);
+
+  const skill = findSkillByName(skillTree, quest.type);
+
+  if (skill) {
+    addSkillXP(skill, reward);
+  }
 }
 
 // =====================
