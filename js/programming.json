@@ -1,0 +1,26 @@
+{
+  "name": "Programming",
+  "description": "Learn software development.",
+  "children": [
+    {
+      "name": "HTML"
+    },
+    {
+      "name": "CSS"
+    },
+    {
+      "name": "JavaScript",
+      "children": [
+        {
+          "name": "Variables"
+        },
+        {
+          "name": "Functions"
+        },
+        {
+          "name": "Objects"
+        }
+      ]
+    }
+  ]
+}

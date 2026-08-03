@@ -76,7 +76,19 @@
         <!-- RIGHT SIDE -->
         <div class="inspector-panel"></div>
       </section>
+      <section class="ai-generator">
+        <h2>✨ AI Roadmap Generator</h2>
 
+        <input
+          id="roadmapPrompt"
+          type="text"
+          placeholder="What do you want to master?"
+        />
+
+        <button id="generateRoadmapBtn">Generate Roadmap</button>
+
+        <pre id="aiOutput"></pre>
+      </section>
       <h2>Progress</h2>
 
       <section class="stats-grid">
@@ -99,12 +111,21 @@
           <h3>Completion Rate</h3>
           <p id="completionRateCard">0%</p>
         </div>
+        <input type="file" id="roadmapFile" accept=".json" hidden />
+
+        <button id="importRoadmapBtn">📂 Import Roadmap</button>
       </section>
     </main>
 
     <script src="js/player.js"></script>
     <script src="js/quests.js"></script>
     <script src="js/skillTree.js"></script>
+
+    <script src="js/roadmap.js"></script>
+    <script src="js/inspector.js"></script>
+    <script src="js/importer.js"></script>
+    <script src="js/roadmap-ai.js"></script>
+
     <script src="js/stats.js"></script>
   </body>
 </html>

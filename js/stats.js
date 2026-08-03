@@ -1,3 +1,4 @@
+console.log("🚀 ASCEND SERVER BUILD 9999");
 // =======================
 // QUESTS
 // =======================
@@ -10,6 +11,19 @@ const roadmapTitle = document.getElementById("roadmapTitle");
 const breadcrumb = document.getElementById("breadcrumb");
 const roadmapCanvas = document.getElementById("roadmapCanvas");
 const addRoadmapNodeBtn = document.getElementById("addRoadmapNodeBtn");
+
+const generateRoadmapBtn = document.getElementById("generateRoadmapBtn");
+console.log(generateRoadmapBtn);
+const roadmapPrompt = document.getElementById("roadmapPrompt");
+const aiOutput = document.getElementById("aiOutput");
+
+generateRoadmapBtn.onclick = async () => {
+  alert("Button clicked!");
+
+  const prompt = roadmapPrompt.value.trim();
+
+  console.log("Prompt:", prompt);
+};
 // =======================
 // PLAYER
 // =======================
@@ -474,3 +488,105 @@ function migrateSkills(nodes) {
 migrateSkills(skillTree);
 saveSkillTree();
 console.log(layoutTree(currentSkill));
+
+const testImportBtn = document.getElementById("testImportBtn");
+
+if (testImportBtn) {
+  testImportBtn.onclick = () => {
+    importRoadmap({
+      name: "Programming",
+      description: "Learn to build software.",
+      children: [
+        {
+          name: "HTML",
+          children: [],
+        },
+        {
+          name: "CSS",
+          children: [],
+        },
+        {
+          name: "JavaScript",
+          children: [
+            {
+              name: "Variables",
+              children: [],
+            },
+            {
+              name: "Functions",
+              children: [],
+            },
+            {
+              name: "Objects",
+              children: [],
+            },
+          ],
+        },
+      ],
+    });
+
+    renderRoadmap();
+  };
+}
+const importBtn = document.getElementById("importRoadmapBtn");
+const roadmapFile = document.getElementById("roadmapFile");
+
+importBtn.onclick = () => {
+  roadmapFile.click();
+};
+
+roadmapFile.onchange = (event) => {
+  const file = event.target.files[0];
+
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    try {
+      const json = JSON.parse(reader.result);
+
+      importRoadmap(json);
+
+      renderRoadmap();
+
+      alert("Roadmap imported!");
+    } catch (err) {
+      alert("Invalid roadmap JSON.");
+      console.error(err);
+      generateRoadmapBtn.disabled = false;
+      aiOutput.textContent = "❌ " + err.message;
+    }
+  };
+
+  reader.readAsText(file);
+};
+
+// =======================
+// AI
+// =======================
+
+generateRoadmapBtn.onclick = async () => {
+  const prompt = roadmapPrompt.value.trim();
+
+  console.log("Sending request...");
+  aiOutput.textContent = "🧠 Thinking...";
+  generateRoadmapBtn.disabled = true;
+  const res = await fetch("http://localhost:3000/generate-roadmap", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ prompt }),
+  });
+
+  console.log("Response received");
+
+  const data = await res.json();
+  generateRoadmapBtn.disabled = false;
+  aiOutput.textContent = data.response;
+
+  console.log(data);
+
+  aiOutput.textContent = data.response;
+};
