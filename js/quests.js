@@ -1219,6 +1219,7 @@ function getTodayProgress() {
 
 function updateDashboard() {
   const mission = getCurrentMission();
+  console.log("Dashboard mission:", mission);
 
   console.log("MISSION:", mission);
   const todays = getTodaysQuests();

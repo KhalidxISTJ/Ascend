@@ -126,7 +126,8 @@ completeCurrentQuest.onclick = function () {
   }
 
   completeQuest(mission);
-
+  console.log("Mission after complete:", mission);
+  console.log("Current mission after complete:", getCurrentMission());
   updateDashboard();
 };
 
