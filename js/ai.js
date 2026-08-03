@@ -5,7 +5,7 @@ async function test() {
     console.log("Testing Ollama...");
 
     const response = await ollama.chat({
-      model: "gemma4:12b",
+      model: "qwen2.5:3b",
       messages: [
         {
           role: "user",

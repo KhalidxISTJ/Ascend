@@ -17,13 +17,6 @@ console.log(generateRoadmapBtn);
 const roadmapPrompt = document.getElementById("roadmapPrompt");
 const aiOutput = document.getElementById("aiOutput");
 
-generateRoadmapBtn.onclick = async () => {
-  alert("Button clicked!");
-
-  const prompt = roadmapPrompt.value.trim();
-
-  console.log("Prompt:", prompt);
-};
 // =======================
 // PLAYER
 // =======================
@@ -568,6 +561,10 @@ roadmapFile.onchange = (event) => {
 
 generateRoadmapBtn.onclick = async () => {
   const prompt = roadmapPrompt.value.trim();
+  if (!prompt) {
+    alert("Please enter a topic.");
+    return;
+  }
 
   console.log("Sending request...");
   aiOutput.textContent = "🧠 Thinking...";
@@ -587,6 +584,4 @@ generateRoadmapBtn.onclick = async () => {
   aiOutput.textContent = data.response;
 
   console.log(data);
-
-  aiOutput.textContent = data.response;
 };
