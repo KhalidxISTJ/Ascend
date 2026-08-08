@@ -1,25 +1,3 @@
-.ai-page {
-  width: min(1600px, 95%);
-  height: calc(100vh - 120px);
-
-  margin: 30px auto;
-
-  display: grid;
-
-  grid-template-columns: 260px 1fr 320px;
-
-  gap: 20px;
-}
-.ai-sidebar,
-.ai-chat,
-.ai-context {
-  background: rgba(255, 255, 255, 0.9);
-
-  border-radius: 15px;
-
-  padding: 20px;
-}
-
 /* ==========================================
    AI DRAWER
 ========================================== */
@@ -27,67 +5,195 @@
 .ai-drawer {
   position: fixed;
 
-  top: 70px;
-  right: -420px;
+  top: 20px;
+  right: -430px;
 
-  width: 400px;
-  height: calc(100vh - 70px);
+  width: 420px;
+  height: calc(100vh - 40px);
 
   display: flex;
   flex-direction: column;
 
   background: #ffffff;
 
-  border-left: 1px solid #e5e7eb;
+  border-radius: 20px 0 0 20px;
 
-  box-shadow: -8px 0 25px rgba(0, 0, 0, 0.15);
+  box-shadow: -12px 0 40px rgba(0, 0, 0, 0.15);
 
   transition: right 0.3s ease;
 
   z-index: 9999;
+
+  overflow: hidden;
 }
 
 .ai-drawer.open {
   right: 0;
 }
 
+/* ==========================================
+   HEADER
+========================================== */
+
 .ai-drawer-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  padding: 24px;
 
-  height: 70px;
+  border-bottom: 1px solid #ececec;
 
-  padding: 0 20px;
-
-  border-bottom: 1px solid #e5e7eb;
-
-  flex-shrink: 0;
+  background: white;
 }
+
+.ai-drawer-header h2 {
+  font-size: 1.8rem;
+
+  font-weight: 700;
+
+  margin: 0;
+}
+
+/* ==========================================
+   CONVERSATION
+========================================== */
 
 .ai-drawer-conversation {
   flex: 1;
 
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 18px;
+
+  padding: 24px;
+
   overflow-y: auto;
 
-  padding: 20px;
+  background: #fafafa;
 }
+
+/* ==========================================
+   WELCOME
+========================================== */
+
+.ai-welcome {
+  text-align: center;
+
+  margin: 40px 0;
+}
+
+.ai-welcome h3 {
+  margin-bottom: 10px;
+
+  font-size: 1.4rem;
+}
+
+.ai-welcome p {
+  color: #666;
+
+  line-height: 1.6;
+}
+
+/* ==========================================
+   CHAT BUBBLES
+========================================== */
+
+.message {
+  max-width: 75%;
+
+  padding: 14px 18px;
+
+  border-radius: 18px;
+
+  line-height: 1.6;
+
+  word-break: break-word;
+
+  animation: fadeIn 0.2s ease;
+}
+
+.user {
+  align-self: flex-end;
+
+  background: linear-gradient(135deg, #6d4cff, #5338e6);
+
+  color: white;
+}
+
+.assistant {
+  align-self: flex-start;
+
+  background: white;
+
+  border: 1px solid #e5e5e5;
+
+  color: #222;
+}
+
+/* ==========================================
+   INPUT
+========================================== */
 
 .ai-drawer-input {
   display: flex;
 
-  gap: 10px;
+  align-items: center;
 
-  padding: 15px;
+  gap: 12px;
 
-  border-top: 1px solid #e5e7eb;
+  padding: 18px;
 
-  flex-shrink: 0;
+  background: white;
+
+  border-top: 1px solid #ececec;
 }
 
 .ai-drawer-input input {
   flex: 1;
+
+  height: 48px;
+
+  border: 1px solid #ddd;
+
+  border-radius: 14px;
+
+  padding: 0 16px;
+
+  font-size: 15px;
+
+  outline: none;
 }
+
+.ai-drawer-input input:focus {
+  border-color: #6d4cff;
+}
+
+.ai-drawer-input button {
+  width: 48px;
+  height: 48px;
+
+  border: none;
+
+  border-radius: 14px;
+
+  background: #6d4cff;
+
+  color: white;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.ai-drawer-input button:hover {
+  transform: scale(1.05);
+}
+
+/* ==========================================
+   FLOATING BUTTON
+========================================== */
+
 .ai-toggle {
   position: fixed;
 
@@ -98,51 +204,44 @@
   height: 64px;
 
   border: none;
+
   border-radius: 50%;
 
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  background: linear-gradient(135deg, #6d4cff, #5338e6);
 
   color: white;
 
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 1.3rem;
+
+  font-weight: bold;
 
   cursor: pointer;
 
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
-
-  transition: transform 0.2s ease;
+  box-shadow: 0 10px 25px rgba(109, 76, 255, 0.35);
 
   z-index: 10000;
+
+  transition: 0.25s;
 }
 
 .ai-toggle:hover {
   transform: scale(1.08);
 }
-.message {
-  max-width: 80%;
 
-  padding: 12px 16px;
+/* ==========================================
+   ANIMATION
+========================================== */
 
-  margin-bottom: 12px;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
 
-  border-radius: 18px;
+    transform: translateY(8px);
+  }
 
-  word-wrap: break-word;
-}
+  to {
+    opacity: 1;
 
-.user {
-  margin-left: auto;
-
-  background: #4f46e5;
-
-  color: white;
-}
-
-.assistant {
-  margin-right: auto;
-
-  background: #ececec;
-
-  color: #222;
+    transform: translateY(0);
+  }
 }

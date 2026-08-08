@@ -44,11 +44,16 @@ function createAIConversation() {
   conversation.className = "ai-drawer-conversation";
   conversation.id = "aiConversation";
 
-  const message = document.createElement("p");
+  const welcome = document.createElement("div");
 
-  message.textContent = "Hello! How can I help?";
+  welcome.className = "ai-welcome";
 
-  conversation.appendChild(message);
+  welcome.innerHTML = `
+    <h3>👋 Welcome to Ascend AI</h3>
+    <p>Ask me anything about your goals, roadmap, quests, or learning.</p>
+`;
+
+  conversation.appendChild(welcome);
 
   return conversation;
 }
@@ -80,6 +85,20 @@ function createAIInput() {
 function initializeAI() {
   const input = document.getElementById("aiInput");
   const button = document.getElementById("sendAIMessage");
+  function setLoading(loading) {
+    input.disabled = loading;
+    button.disabled = loading;
+
+    button.textContent = loading ? "Thinking..." : "Send";
+  }
+
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+
+      button.click();
+    }
+  });
 
   button.onclick = async () => {
     const prompt = input.value.trim();
@@ -89,26 +108,65 @@ function initializeAI() {
     addMessage(prompt, "user");
 
     input.value = "";
+    addThinkingMessage();
+    setLoading(true);
+    addThinkingMessage();
 
-    const response = await fetch("http://localhost:3000/api/ai", {
-      method: "POST",
+    try {
+      console.log("Sending request...");
 
-      headers: {
-        "Content-Type": "application/json",
-      },
+      const response = await fetch("http://localhost:3000/api/ai", {
+        method: "POST",
 
-      body: JSON.stringify({
-        prompt,
-      }),
-    });
+        headers: {
+          "Content-Type": "application/json",
+        },
 
-    const data = await response.json();
+        body: JSON.stringify({
+          prompt,
+        }),
+      });
 
-    addMessage(data.response, "assistant");
+      if (!response.ok) {
+        throw new Error(`Server returned ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      console.log("Response:", data);
+
+      removeThinkingMessage();
+
+      setLoading(false);
+
+      input.focus();
+
+      if (data.success) {
+        addMessage(data.response, "assistant");
+      } else {
+        addMessage(data.error || "Something went wrong.", "assistant");
+      }
+    } catch (err) {
+      console.error(err);
+
+      removeThinkingMessage();
+
+      setLoading(false);
+
+      addMessage("Something went wrong.", "assistant");
+
+      input.focus();
+    }
   };
 }
 function addMessage(text, role) {
   const conversation = document.getElementById("aiConversation");
+
+  const welcome = conversation.querySelector(".ai-welcome");
+
+  if (welcome) {
+    welcome.remove();
+  }
 
   const message = document.createElement("div");
 
@@ -119,4 +177,28 @@ function addMessage(text, role) {
   conversation.appendChild(message);
 
   conversation.scrollTop = conversation.scrollHeight;
+}
+function addThinkingMessage() {
+  // Remove any old thinking message first
+  removeThinkingMessage();
+
+  const conversation = document.getElementById("aiConversation");
+
+  const message = document.createElement("div");
+
+  message.className = "message assistant";
+  message.id = "thinkingMessage";
+
+  message.textContent = "Thinking...";
+
+  conversation.appendChild(message);
+
+  conversation.scrollTop = conversation.scrollHeight;
+}
+function removeThinkingMessage() {
+  const thinking = document.getElementById("thinkingMessage");
+
+  if (thinking) {
+    thinking.remove();
+  }
 }
