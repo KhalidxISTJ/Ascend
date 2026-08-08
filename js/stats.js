@@ -1,4 +1,3 @@
-console.log("🚀 ASCEND SERVER BUILD 9999");
 // =======================
 // QUESTS
 // =======================
@@ -32,7 +31,7 @@ document.getElementById("completionRateCard").textContent =
 
 let currentSkill = null;
 let navigationStack = [];
-let editingDescription = false;
+let editingSkill = false;
 
 function renameSkill(id) {
   const skill = findSkillById(skillTree, id);
@@ -104,6 +103,59 @@ function openSkill(id) {
   renderInspector();
   renderRoadmap();
 }
+function createDropdown(options, value, onChange) {
+  const select = document.createElement("select");
+
+  options.forEach((option) => {
+    const opt = document.createElement("option");
+
+    opt.value = option;
+    opt.textContent = option;
+
+    if (option === value) {
+      opt.selected = true;
+    }
+
+    select.appendChild(opt);
+  });
+
+  select.onchange = () => onChange(select.value);
+
+  return select;
+}
+function createNumberInput(value, onChange) {
+  const input = document.createElement("input");
+
+  input.type = "number";
+  input.value = value;
+
+  input.oninput = () => onChange(Number(input.value));
+
+  return input;
+}
+
+function createTextArea(value, onChange) {
+  const textarea = document.createElement("textarea");
+
+  textarea.className = "description-input";
+
+  textarea.value = value;
+
+  textarea.oninput = () => onChange(textarea.value);
+
+  return textarea;
+}
+function createTextInput(value, onChange) {
+  const input = document.createElement("input");
+
+  input.type = "text";
+
+  input.value = value;
+
+  input.oninput = () => onChange(input.value);
+
+  return input;
+}
 function renderInspector() {
   const inspector = document.querySelector(".inspector-panel");
 
@@ -173,6 +225,101 @@ function renderInspector() {
   xpContainer.appendChild(xpText);
 
   inspector.appendChild(xpContainer);
+  const statusLabel = document.createElement("h3");
+
+  statusLabel.className = "inspector-heading";
+  statusLabel.textContent = "Status";
+
+  inspector.appendChild(statusLabel);
+
+  if (editingSkill) {
+    inspector.appendChild(
+      createDropdown(
+        ["Not Started", "Learning", "Practicing", "Mastered"],
+        currentSkill.status,
+        (value) => {
+          currentSkill.status = value;
+        },
+      ),
+    );
+  } else {
+    const status = document.createElement("p");
+
+    status.className = "inspector-stat";
+    status.textContent = currentSkill.status;
+
+    inspector.appendChild(status);
+  }
+
+  const progressLabel = document.createElement("h3");
+
+  progressLabel.className = "inspector-heading";
+  progressLabel.textContent = "Progress";
+
+  inspector.appendChild(progressLabel);
+
+  if (editingSkill) {
+    inspector.appendChild(
+      createNumberInput(currentSkill.progress, (value) => {
+        currentSkill.progress = value;
+      }),
+    );
+  } else {
+    const progress = document.createElement("p");
+
+    progress.className = "inspector-stat";
+    progress.textContent = `${currentSkill.progress}%`;
+
+    inspector.appendChild(progress);
+  }
+
+  const difficultyLabel = document.createElement("h3");
+
+  difficultyLabel.className = "inspector-heading";
+  difficultyLabel.textContent = "Difficulty";
+
+  inspector.appendChild(difficultyLabel);
+
+  if (editingSkill) {
+    inspector.appendChild(
+      createDropdown(
+        ["Easy", "Medium", "Hard", "Extreme"],
+        currentSkill.difficulty,
+        (value) => {
+          currentSkill.difficulty = value;
+        },
+      ),
+    );
+  } else {
+    const difficulty = document.createElement("p");
+
+    difficulty.className = "inspector-stat";
+    difficulty.textContent = currentSkill.difficulty;
+
+    inspector.appendChild(difficulty);
+  }
+
+  const estimatedHoursLabel = document.createElement("h3");
+
+  estimatedHoursLabel.className = "inspector-heading";
+  estimatedHoursLabel.textContent = "Estimated Hours";
+
+  inspector.appendChild(estimatedHoursLabel);
+
+  if (editingSkill) {
+    inspector.appendChild(
+      createNumberInput(currentSkill.estimatedHours, (value) => {
+        currentSkill.estimatedHours = value;
+      }),
+    );
+  } else {
+    const estimatedHours = document.createElement("p");
+
+    estimatedHours.className = "inspector-stat";
+    estimatedHours.textContent = currentSkill.estimatedHours;
+
+    inspector.appendChild(estimatedHours);
+  }
 
   const descriptionLabel = document.createElement("h3");
 
@@ -181,48 +328,79 @@ function renderInspector() {
 
   inspector.appendChild(descriptionLabel);
 
-  if (editingDescription) {
-    const descriptionInput = document.createElement("textarea");
-
-    descriptionInput.className = "description-input";
-    descriptionInput.value = currentSkill.description || "";
-
-    inspector.appendChild(descriptionInput);
-
-    const saveDescriptionBtn = document.createElement("button");
-
-    saveDescriptionBtn.textContent = "Save Description";
-
-    saveDescriptionBtn.onclick = () => {
-      currentSkill.description = descriptionInput.value;
-
-      saveSkillTree();
-
-      editingDescription = false;
-
-      renderInspector();
-    };
-
-    inspector.appendChild(saveDescriptionBtn);
+  if (editingSkill) {
+    inspector.appendChild(
+      createTextArea(currentSkill.description, (value) => {
+        currentSkill.description = value;
+      }),
+    );
   } else {
-    const descriptionText = document.createElement("p");
+    const description = document.createElement("p");
 
-    descriptionText.className = "inspector-description";
-    descriptionText.textContent = currentSkill.description || "No description.";
+    description.className = "inspector-description";
+    description.textContent = currentSkill.description || "No description.";
 
-    inspector.appendChild(descriptionText);
+    inspector.appendChild(description);
+  }
 
-    const editDescriptionBtn = document.createElement("button");
+  const resourcesLabel = document.createElement("h3");
 
-    editDescriptionBtn.textContent = "Edit Description";
+  resourcesLabel.className = "inspector-heading";
+  resourcesLabel.textContent = "Resources";
 
-    editDescriptionBtn.onclick = () => {
-      editingDescription = true;
+  inspector.appendChild(resourcesLabel);
+
+  if (!editingSkill) {
+    const validResources = (currentSkill.resources || []).filter(
+      (resource) => resource.trim() !== "",
+    );
+
+    if (validResources.length === 0) {
+      const empty = document.createElement("p");
+
+      empty.className = "inspector-description";
+      empty.textContent = "No resources.";
+
+      inspector.appendChild(empty);
+    } else {
+      validResources.forEach((resource) => {
+        const p = document.createElement("p");
+
+        p.className = "inspector-stat";
+        p.textContent = "• " + resource;
+
+        inspector.appendChild(p);
+      });
+    }
+  } else {
+    currentSkill.resources.forEach((resource, index) => {
+      const nameLabel = document.createElement("h4");
+
+      nameLabel.textContent = "Name";
+
+      inspector.appendChild(nameLabel);
+
+      inspector.appendChild(
+        createTextInput(resource.name, (value) => {
+          currentSkill.resources[index].name = value;
+        }),
+      );
+    });
+
+    const addResourceBtn = document.createElement("button");
+
+    addResourceBtn.textContent = "+ Add Resource";
+
+    addResourceBtn.onclick = () => {
+      currentSkill.resources.push({
+        name: "",
+        url: "",
+      });
 
       renderInspector();
     };
 
-    inspector.appendChild(editDescriptionBtn);
+    inspector.appendChild(addResourceBtn);
   }
 
   const buttonGroup = document.createElement("div");
@@ -231,15 +409,21 @@ function renderInspector() {
 
   inspector.appendChild(buttonGroup);
 
-  const renameBtn = document.createElement("button");
+  const editBtn = document.createElement("button");
 
-  renameBtn.textContent = "Rename";
+  editBtn.textContent = editingSkill ? "Done" : "Edit";
 
-  renameBtn.onclick = () => {
-    renameSkill(currentSkill.id);
+  editBtn.onclick = () => {
+    editingSkill = !editingSkill;
+
+    if (!editingSkill) {
+      saveSkillTree();
+    }
+
+    renderInspector();
   };
 
-  buttonGroup.appendChild(renameBtn);
+  buttonGroup.appendChild(editBtn);
 
   const addChildBtn = document.createElement("button");
 
@@ -261,6 +445,7 @@ function renderInspector() {
 
   buttonGroup.appendChild(deleteBtn);
 }
+
 function goBack() {
   navigationStack.pop();
 
@@ -405,15 +590,29 @@ function addChildSkill(parentSkill) {
 
   parentSkill.children.push({
     id: crypto.randomUUID(),
+
     name,
+
     description: "",
+
     level: 1,
+
     xp: 0,
 
-    completed: false,
-    unlocked: true,
-    icon: "",
-    prerequisite: null,
+    progress: 0,
+
+    status: "Not Started",
+
+    difficulty: "Medium",
+
+    estimatedHours: 0,
+
+    resources: [],
+
+    quests: [],
+
+    notes: "",
+
     children: [],
   });
   saveSkillTree();
@@ -421,6 +620,7 @@ function addChildSkill(parentSkill) {
   renderInspector();
   renderRoadmap();
 }
+
 addRoadmapNodeBtn.onclick = function () {
   if (!currentSkill) {
     alert("Select a stat first.");
@@ -472,6 +672,32 @@ function migrateSkills(nodes) {
 
     if (skill.prerequisite === undefined) {
       skill.prerequisite = null;
+    }
+    if (!skill.resources) {
+      skill.resources = [];
+    }
+    if (skill.progress === undefined) {
+      skill.progress = 0;
+    }
+
+    if (!skill.status) {
+      skill.status = "Not Started";
+    }
+
+    if (!skill.difficulty) {
+      skill.difficulty = "Medium";
+    }
+
+    if (skill.estimatedHours === undefined) {
+      skill.estimatedHours = 0;
+    }
+
+    if (!skill.notes) {
+      skill.notes = "";
+    }
+
+    if (!skill.quests) {
+      skill.quests = [];
     }
 
     migrateSkills(skill.children);
@@ -569,7 +795,7 @@ generateRoadmapBtn.onclick = async () => {
   console.log("Sending request...");
   aiOutput.textContent = "🧠 Thinking...";
   generateRoadmapBtn.disabled = true;
-  const res = await fetch("http://localhost:3000/generate-roadmap", {
+  const res = await fetch("http://localhost:3000/api/ai", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -581,7 +807,18 @@ generateRoadmapBtn.onclick = async () => {
 
   const data = await res.json();
   generateRoadmapBtn.disabled = false;
-  aiOutput.textContent = data.response;
+  try {
+    const roadmap = JSON.parse(data.response);
+
+    console.log("Valid JSON!", roadmap);
+
+    aiOutput.textContent = JSON.stringify(roadmap, null, 2);
+  } catch (err) {
+    console.log("NOT JSON");
+
+    aiOutput.textContent = data.response;
+  }
 
   console.log(data);
 };
+createAIDrawer();

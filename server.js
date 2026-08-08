@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
+const { askAI } = require("./services/ai");
 
 const app = express();
 
@@ -11,50 +12,13 @@ app.get("/", (req, res) => {
   res.send("Ascend AI Server Running!");
 });
 
-app.post("/generate-roadmap", async (req, res) => {
-  console.log("Received request:", req.body);
-
+app.post("/api/ai", async (req, res) => {
   try {
-    console.log("Calling Ollama...");
-
-    const { data } = await axios.post("http://127.0.0.1:11434/api/generate", {
-      model: "qwen2.5:3b",
-      prompt: `
-You are creating a learning roadmap.
-
-Topic: ${req.body.prompt}
-
-Return ONLY valid JSON.
-
-Example:
-{
-  "name": "CSS",
-  "children": [
-    {
-      "name": "Selectors",
-      "children": []
-    },
-    {
-      "name": "Box Model",
-      "children": []
-    }
-  ]
-}
-
-Do not explain anything.
-Do not use markdown.
-Only return JSON.
-`,
-      stream: false,
-    });
-
-    console.log("Ollama replied!");
-
-    console.log("Success!");
+    const response = await askAI(req.body.prompt);
 
     res.json({
       success: true,
-      response: data.response,
+      response,
     });
   } catch (err) {
     console.error(err);
