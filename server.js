@@ -14,7 +14,7 @@ app.get("/", (req, res) => {
 
 app.post("/api/ai", async (req, res) => {
   try {
-    const response = await askAI(req.body.prompt);
+    const response = await askAI(req.body);
 
     res.json({
       success: true,

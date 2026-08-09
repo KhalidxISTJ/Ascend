@@ -16,41 +16,51 @@ if (versionElement) {
   versionElement.textContent = APP_VERSION;
 }
 
+// ======================
+// PROFILE IMAGE
+// ======================
+
 if (profileImage && profileImageInput) {
   profileImage.addEventListener("click", function () {
     profileImageInput.click();
   });
 
-  if (profileImageInput) {
-    profileImageInput.addEventListener("change", function () {
-      const file = profileImageInput.files[0];
+  profileImageInput.addEventListener("change", function () {
+    const file = profileImageInput.files[0];
 
-      if (!file) {
-        return;
-      }
+    if (!file) {
+      return;
+    }
 
-      const reader = new FileReader();
+    const reader = new FileReader();
 
-      reader.onload = function (event) {
-        playerData.profileImage = event.target.result;
+    reader.onload = function (event) {
+      playerData.profileImage = event.target.result;
 
-        savePlayer();
+      savePlayer();
 
-        profileImage.src = playerData.profileImage;
-      };
+      profileImage.src = playerData.profileImage;
+    };
 
-      reader.readAsDataURL(file);
-    });
-  }
+    reader.readAsDataURL(file);
+  });
 }
+
+// ======================
+// PLAYER DATA
+// ======================
 
 let playerData = {
   name: "",
-  level: 0,
+  level: 1,
   xp: 0,
   profileImage: "",
   lastResetDate: "",
 };
+
+// ======================
+// SAVE / LOAD
+// ======================
 
 function savePlayer() {
   localStorage.setItem("playerData", JSON.stringify(playerData));
@@ -61,25 +71,71 @@ function loadPlayer() {
 
   if (savedPlayer) {
     playerData = JSON.parse(savedPlayer);
+
+    // Safety for older player data
+    if (typeof playerData.level !== "number") {
+      playerData.level = 1;
+    }
+
+    if (typeof playerData.xp !== "number") {
+      playerData.xp = 0;
+    }
   }
 }
 
 loadPlayer();
 
-function updateUI() {
-  if (levelElement) levelElement.textContent = "Level: " + playerData.level;
+// ======================
+// XP SYSTEM
+// ======================
 
-  if (xpNumberSpan) xpNumberSpan.textContent = playerData.xp;
-
-  if (xpFill) xpFill.style.width = playerData.xp + "%";
+function getXPRequired(level) {
+  return Math.floor(100 * Math.pow(1.1, level - 1));
 }
 
+// ======================
+// UPDATE UI
+// ======================
+
+function updateUI() {
+  if (levelElement) {
+    levelElement.textContent = "Level: " + playerData.level;
+  }
+
+  if (xpNumberSpan) {
+    const xpRequired = getXPRequired(playerData.level);
+
+    xpNumberSpan.textContent = `${playerData.xp} / ${xpRequired} XP`;
+  }
+
+  if (xpFill) {
+    const xpRequired = getXPRequired(playerData.level);
+
+    const percentage = (playerData.xp / xpRequired) * 100;
+
+    xpFill.style.width = percentage + "%";
+  }
+}
+
+// ======================
+// ADD XP
+// ======================
+
 function addXP(amount) {
+  if (amount <= 0) {
+    return;
+  }
+
   playerData.xp += amount;
 
-  while (playerData.xp >= 100) {
+  let xpRequired = getXPRequired(playerData.level);
+
+  while (playerData.xp >= xpRequired) {
+    playerData.xp -= xpRequired;
+
     playerData.level++;
-    playerData.xp -= 100;
+
+    xpRequired = getXPRequired(playerData.level);
   }
 
   savePlayer();
@@ -87,10 +143,28 @@ function addXP(amount) {
   updateUI();
 }
 
+// ======================
+// REMOVE XP
+// ======================
+
 function removeXP(amount) {
+  if (amount <= 0) {
+    return;
+  }
+
   playerData.xp -= amount;
 
-  if (playerData.xp < 0) {
+  while (playerData.xp < 0 && playerData.level > 1) {
+    playerData.level--;
+
+    const previousLevelXP = getXPRequired(playerData.level);
+
+    playerData.xp += previousLevelXP;
+  }
+
+  // Prevent negative XP at Level 1
+  if (playerData.level <= 1 && playerData.xp < 0) {
+    playerData.level = 1;
     playerData.xp = 0;
   }
 
@@ -99,12 +173,31 @@ function removeXP(amount) {
   updateUI();
 }
 
+// ======================
+// RESET PROGRESSION
+// ======================
+
+function resetProgression() {
+  playerData.level = 1;
+  playerData.xp = 0;
+
+  savePlayer();
+
+  updateUI();
+}
+
+// ======================
+// INITIAL UI
+// ======================
+
 loadPlayer();
+
 updateUI();
 
 if (profileImage && playerData.profileImage) {
   profileImage.src = playerData.profileImage;
 }
+
 // TEST
 // addXP(10);
 

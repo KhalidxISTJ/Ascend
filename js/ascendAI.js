@@ -124,6 +124,7 @@ function initializeAI() {
 
         body: JSON.stringify({
           prompt,
+          context: getAIContext(),
         }),
       });
 
@@ -201,4 +202,9 @@ function removeThinkingMessage() {
   if (thinking) {
     thinking.remove();
   }
+}
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", createAIDrawer);
+} else {
+  createAIDrawer();
 }
