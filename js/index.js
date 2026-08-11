@@ -30,47 +30,61 @@ function renderQuestList(element, quests) {
     )
     .join("");
 }
-
+let currentQuestSkipCount = 0;
 function getCurrentMission() {
-  let todays = getTodaysQuests().filter(
-    (q) => !skippedToday.includes(q.createdAt),
-  );
-  if (todays.length === 0) {
-    skippedToday = [];
-    localStorage.setItem("skippedToday", JSON.stringify(skippedToday));
+  return getCurrentQuest(currentQuestSkipCount);
+}
 
-    todays = getTodaysQuests();
+function getQuestTimeState(quest) {
+  if (!quest) {
+    return "unknown";
   }
 
-  console.log("Sorted Today:", sortQuests([...todays]));
-  console.log("Upcoming:", getUpcomingQuests());
-  console.log("Backlog:", getBacklogQuests());
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
-  if (todays.length > 0) {
-    return sortMissionQuests(todays)[0];
+  function getTimeMinutes(time) {
+    if (!time) {
+      return null;
+    }
+
+    const [hours, minutes] = time.split(":").map(Number);
+
+    return hours * 60 + minutes;
   }
 
-  const upcoming = getUpcomingQuests();
+  const startMinutes = getTimeMinutes(quest.startTime);
+  const endMinutes = getTimeMinutes(quest.endTime);
 
-  if (upcoming.length > 0) {
-    return sortMissionQuests(upcoming)[0];
+  // No time information
+  if (startMinutes === null) {
+    return "active";
   }
 
-  const backlog = getBacklogQuests();
-
-  if (backlog.length > 0) {
-    return sortMissionQuests(backlog)[0];
+  // Quest hasn't started yet
+  if (currentMinutes < startMinutes) {
+    return "upcoming";
   }
 
-  return null;
+  // Quest has an end time and that time has passed
+  if (endMinutes !== null && currentMinutes >= endMinutes) {
+    return "overdue";
+  }
+
+  // Currently inside the scheduled window
+  return "active";
 }
 let skippedToday = JSON.parse(localStorage.getItem("skippedToday")) || [];
 function skipQuest(quest) {
-  if (!skippedToday.includes(quest.createdAt)) {
-    skippedToday.push(quest.createdAt);
+  if (!quest || quest.status === "completed") {
+    return;
   }
 
-  localStorage.setItem("skippedToday", JSON.stringify(skippedToday));
+  currentQuestSkipCount++;
+
+  updateDashboard();
+
+  window.dispatchEvent(new CustomEvent("questStateChanged"));
 }
 function updateDashboard() {
   const quests = JSON.parse(localStorage.getItem("quests")) || [];
@@ -94,9 +108,18 @@ function updateDashboard() {
     skipCurrentQuest.hidden = true;
   }
 
-  renderQuestList(overdueQuestsElement, getBacklogQuests());
+  const overdueQuests = quests.filter((quest) => {
+    return quest.status === "active" && getQuestTimeState(quest) === "overdue";
+  });
 
-  renderQuestList(upcomingQuestsElement, getUpcomingQuests());
+  renderQuestList(overdueQuestsElement, overdueQuests);
+
+  const upcoming = getUpcomingQuests();
+
+  renderQuestList(
+    upcomingQuestsElement,
+    upcoming.length > 0 ? [upcoming[0]] : [],
+  );
 
   // =====================
   // Quest Stats
@@ -126,8 +149,10 @@ completeCurrentQuest.onclick = function () {
   }
 
   completeQuest(mission);
-  console.log("Mission after complete:", mission);
-  console.log("Current mission after complete:", getCurrentMission());
+
+  // Completing a quest returns us to the real Current Quest.
+  currentQuestSkipCount = 0;
+
   updateDashboard();
 };
 
@@ -141,6 +166,10 @@ skipCurrentQuest.onclick = function () {
   updateDashboard();
 };
 updateDashboard();
+
+window.addEventListener("questStateChanged", () => {
+  updateDashboard();
+});
 
 // =====================
 // TIMER

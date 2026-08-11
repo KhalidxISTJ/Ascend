@@ -15,12 +15,25 @@ function getAIContext() {
       currentXP,
       xpRequired,
       xpRemaining,
+    },
 
-      completedQuests:
-        document.getElementById("completedQuestCard")?.textContent || null,
+    quests: {
+      all: typeof getQuestData === "function" ? getQuestData() : [],
 
-      completionRate:
-        document.getElementById("completionRateCard")?.textContent || null,
+      today: typeof getTodaysQuests === "function" ? getTodaysQuests() : [],
+
+      backlog: typeof getBacklogQuests === "function" ? getBacklogQuests() : [],
+
+      upcoming:
+        typeof getUpcomingQuests === "function" ? getUpcomingQuests() : [],
+
+      currentMission:
+        typeof getCurrentMission === "function" ? getCurrentMission() : null,
+
+      stats: typeof getQuestStats === "function" ? getQuestStats() : null,
+
+      todayProgress:
+        typeof getTodayProgress === "function" ? getTodayProgress() : null,
     },
 
     selectedSkill: window.selectedSkill || null,

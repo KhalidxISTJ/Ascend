@@ -138,21 +138,65 @@ function loadCategories() {
 // =====================
 
 function migrateQuests() {
+  let changed = false;
+
   for (const quest of quests) {
+    // =====================
+    // EXISTING DEFAULTS
+    // =====================
+
     if (!quest.section) {
       quest.section = "General";
+      changed = true;
     }
 
     if (!quest.priority) {
       quest.priority = "Medium";
+      changed = true;
     }
 
-    if (!quest.completed) {
-      quest.completed = false;
+    if (typeof quest.skippedToday !== "boolean") {
+      quest.skippedToday = false;
+      changed = true;
     }
 
     if (!quest.createdAt) {
       quest.createdAt = Date.now();
+      changed = true;
+    }
+
+    // =====================
+    // STATUS MIGRATION
+    // =====================
+
+    // Old quests may have:
+    // completed: true
+    // skipped: true
+    // or neither.
+    //
+    // New system uses:
+    // active
+    // completed
+    // skipped
+
+    if (quest.completed === true) {
+      if (quest.status !== "completed") {
+        quest.status = "completed";
+        changed = true;
+      }
+
+      quest.skippedToday = false;
+    } else {
+      if (quest.status !== "active") {
+        quest.status = "active";
+        changed = true;
+      }
+
+      quest.completed = false;
+    }
+
+    if (changed) {
+      saveQuests();
     }
   }
 }
@@ -374,19 +418,19 @@ function questMatchesSearch(quest) {
 
   const text = `
 
-  ${quest.name}
+    ${quest.name}
 
-  ${quest.type}
+    ${quest.type}
 
-  ${quest.priority}
+    ${quest.priority}
 
-  ${quest.difficulty}
+    ${quest.difficulty}
 
-  ${quest.recurring}
+    ${quest.recurring}
 
-  ${quest.section}
+    ${quest.section}
 
-  `.toLowerCase();
+    `.toLowerCase();
 
   return text.includes(searchText);
 }
@@ -491,62 +535,62 @@ function createQuestElement(quest) {
   details.innerHTML = `
 
 
-  Priority:
-  ${quest.priority}
+    Priority:
+    ${quest.priority}
 
-  <br>
-
-
-  Type:
-  ${quest.type}
+    <br>
 
 
-  <br>
+    Type:
+    ${quest.type}
 
 
-  Difficulty:
-  ${quest.difficulty}
+    <br>
 
 
-  <br>
+    Difficulty:
+    ${quest.difficulty}
 
 
-  Recurring:
-  ${quest.recurring}
+    <br>
 
 
-  <br>
+    Recurring:
+    ${quest.recurring}
 
 
-  Section:
-  ${quest.section}
+    <br>
 
 
-  <br>
+    Section:
+    ${quest.section}
 
 
-  Due:
-  ${quest.dueDate ? formatDate(quest.dueDate) : "None"}
+    <br>
 
 
-  <br>
+    Due:
+    ${quest.dueDate ? formatDate(quest.dueDate) : "None"}
 
 
-  Status:
-  ${due.text}
+    <br>
 
 
-  <br>
+    Status:
+    ${due.text}
 
 
-  🕓
-  ${formatTime(quest.startTime)}
+    <br>
 
-  -
 
-  ${formatTime(quest.endTime)}
+    🕓
+    ${formatTime(quest.startTime)}
 
-  `;
+    -
+
+    ${formatTime(quest.endTime)}
+
+    `;
 
   // BUTTON AREA
 
@@ -646,7 +690,8 @@ function createQuestObject() {
     section: currentSection,
 
     completed: false,
-
+    status: "active",
+    skippedToday: false,
     createdAt: Date.now(),
   };
 }
@@ -767,10 +812,11 @@ function deleteQuest(quest) {
 // =====================
 
 function completeQuest(quest) {
-  if (quest.completed) {
+  if (!quest || quest.status === "completed") {
     return;
   }
 
+  quest.status = "completed";
   quest.completed = true;
 
   giveQuestXP(quest);
@@ -778,6 +824,43 @@ function completeQuest(quest) {
   saveQuests();
 
   renderQuests();
+  updateDashboard();
+}
+
+function restoreQuest(quest) {
+  if (!quest || quest.status !== "skipped") {
+    return;
+  }
+
+  quest.status = "active";
+  quest.completed = false;
+
+  saveQuests();
+
+  renderQuests();
+  updateDashboard();
+}
+function skipQuest(quest) {
+  if (!quest || quest.status === "completed") {
+    return;
+  }
+
+  quest.status = "active";
+  quest.completed = false;
+  quest.skippedToday = true;
+  quest.skippedAt = Date.now();
+
+  // Refresh the quest page if it exists
+  if (typeof renderQuests === "function") {
+    renderQuests();
+  }
+
+  if (typeof updateDashboard === "function") {
+    updateDashboard();
+  }
+
+  // Tell other pages/components that the quest state changed
+  window.dispatchEvent(new CustomEvent("questStateChanged"));
 }
 
 // =====================
@@ -1069,41 +1152,98 @@ function getActiveQuests() {
 
 function getTodaysQuests() {
   const today = new Date();
-
   today.setHours(0, 0, 0, 0);
 
   return quests.filter((quest) => {
-    if (quest.completed) {
+    // Completed one-time quests are not today's active quests
+    if (quest.recurring === "none" && quest.completed) {
       return false;
     }
 
-    // Daily recurring quests are always today's quests
+    // Daily quests belong to today
     if (quest.recurring === "daily") {
       return true;
     }
 
-    // Weekly recurring quests are today's quests after reset
+    // Weekly quests belong to today
     if (quest.recurring === "weekly") {
       return true;
     }
 
-    // One-time quests with no due date belong in the backlog
-    if (!quest.dueDate) {
-      return false;
+    // One-time quests only belong to today when their due date is today
+    if (quest.dueDate) {
+      const [year, month, day] = quest.dueDate.split("-").map(Number);
+
+      const due = new Date(year, month - 1, day);
+      due.setHours(0, 0, 0, 0);
+
+      return due.getTime() === today.getTime();
     }
 
-    const [year, month, day] = quest.dueDate.split("-").map(Number);
-
-    const due = new Date(year, month - 1, day);
-
-    due.setHours(0, 0, 0, 0);
-
-    due.setHours(0, 0, 0, 0);
-
-    return due.getTime() === today.getTime();
+    return true;
   });
 }
 
+function getCurrentQuest(offset = 0) {
+  const todayQuests = getTodaysQuests();
+
+  if (todayQuests.length === 0) {
+    return null;
+  }
+
+  const priorityOrder = {
+    Critical: 4,
+    High: 3,
+    Medium: 2,
+    Low: 1,
+  };
+
+  function getStartMinutes(quest) {
+    if (!quest.startTime) {
+      return 0;
+    }
+
+    const [hours, minutes] = quest.startTime.split(":").map(Number);
+
+    return hours * 60 + minutes;
+  }
+
+  const eligible = todayQuests.filter((quest) => {
+    if (quest.completed) {
+      return false;
+    }
+
+    const timeState = getQuestTimeState(quest);
+
+    return timeState === "active" || timeState === "overdue";
+  });
+
+  if (eligible.length === 0) {
+    return null;
+  }
+
+  eligible.sort((a, b) => {
+    // 1. Earlier start time wins.
+    const timeDifference = getStartMinutes(a) - getStartMinutes(b);
+
+    if (timeDifference !== 0) {
+      return timeDifference;
+    }
+
+    // 2. Same time → higher priority wins.
+    const priorityDifference =
+      (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0);
+
+    if (priorityDifference !== 0) {
+      return priorityDifference;
+    }
+
+    // 3. Same time + priority → lower order wins.
+    return (a.order || 0) - (b.order || 0);
+  });
+
+  return eligible[offset % eligible.length] || null;
+}
 function getBacklogQuests() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -1125,73 +1265,42 @@ function getBacklogQuests() {
 }
 
 function getUpcomingQuests() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const todayQuests = getTodaysQuests();
 
-  return quests.filter((quest) => {
-    if (quest.completed || !quest.dueDate) {
+  const upcoming = todayQuests.filter((quest) => {
+    if (quest.completed) {
       return false;
     }
 
-    const [year, month, day] = quest.dueDate.split("-").map(Number);
-
-    const due = new Date(year, month - 1, day);
-
-    due.setHours(0, 0, 0, 0);
-    due.setHours(0, 0, 0, 0);
-
-    return due > today;
+    return getQuestTimeState(quest) === "upcoming";
   });
+
+  upcoming.sort((a, b) => {
+    const timeA = a.startTime || "99:99";
+    const timeB = b.startTime || "99:99";
+
+    if (timeA !== timeB) {
+      return timeA.localeCompare(timeB);
+    }
+
+    const priorityDifference =
+      (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0);
+
+    if (priorityDifference !== 0) {
+      return priorityDifference;
+    }
+
+    return (a.order || 0) - (b.order || 0);
+  });
+
+  return upcoming;
 }
 // =====================
 // CURRENT MISSION
 // =====================
 
 function getCurrentMission() {
-  const todays = getTodaysQuests();
-
-  if (todays.length > 0) {
-    return sortQuests([...todays])[0];
-  }
-
-  const upcoming = getUpcomingQuests();
-
-  if (upcoming.length > 0) {
-    return sortQuests([...upcoming])[0];
-  }
-
-  const backlog = getBacklogQuests();
-
-  if (backlog.length > 0) {
-    return sortQuests([...backlog])[0];
-  }
-
-  return null;
-}
-
-// =====================
-// QUEST STATS
-// =====================
-
-function getQuestStats() {
-  const total = quests.length;
-
-  const completed = quests.filter((q) => q.completed).length;
-
-  const active = total - completed;
-
-  const completionRate =
-    total === 0 ? 0 : Math.round((completed / total) * 100);
-
-  return {
-    total,
-
-    completed,
-
-    active,
-
-    completionRate,
-  };
+  return getCurrentQuest();
 }
 
 // =====================
@@ -1212,24 +1321,18 @@ function getTodayProgress() {
       today.length === 0 ? 0 : Math.round((completed / today.length) * 100),
   };
 }
+function getHighestPriorityToday() {
+  const today = getTodaysQuests();
 
-// =====================
-// DASHBOARD REFRESH HOOK
-// =====================
+  if (today.length === 0) {
+    return null;
+  }
 
-function updateDashboard() {
-  const mission = getCurrentMission();
-  console.log("Dashboard mission:", mission);
-
-  console.log("MISSION:", mission);
-  const todays = getTodaysQuests();
-
-  const stats = getQuestStats();
+  return [...today].sort((a, b) => {
+    return (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0);
+  })[0];
 }
 
-// Run once after loading
-
-updateDashboard();
 // =====================
 // QUEST SYSTEM — PART 6
 // FINAL CLEANUP
@@ -1320,24 +1423,14 @@ function questDebug() {
 
 function initializeQuestSystem() {
   loadQuests();
-
   loadSections();
-
   loadCategories();
-
   migrateQuests();
-
   runDailyReset();
-
   updateQuestOrder();
-
   renderSections();
-
   renderCategories();
-
   renderQuests();
-
-  updateDashboard();
 }
 
 initializeQuestSystem();
