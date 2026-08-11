@@ -314,17 +314,31 @@
 }
 
 .inspector-stat {
-  margin: 6px 0;
-
+  margin: 14px 0;
   font-size: 1rem;
+}
 
+.inspector-stat-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.9rem;
   font-weight: 600;
+  color: #555;
+}
+
+.inspector-stat-value {
+  display: block;
+  font-size: 1rem;
+  font-weight: 400;
+  color: #222;
 }
 
 .inspector-description {
-  line-height: 1.6;
+  line-height: 1.5;
 
   color: #444;
+
+  margin: 8px 0 16px;
 
   min-height: 70px;
 }
@@ -402,4 +416,111 @@
   font-weight: 600;
 
   color: #555;
+}
+/* ==========================================
+   SKILL PROGRESSION
+========================================== */
+
+.skill-progression-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin: 8px 0;
+
+  line-height: 1.4;
+}
+
+.skill-progression-row input {
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.skill-progression-row span {
+  line-height: 1.4;
+}
+/* ==========================================
+   MASTERY PROGRESSION
+========================================== */
+
+.skill-progression-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  width: 100%;
+  margin: 10px 0;
+
+  line-height: 1.4;
+  position: static;
+}
+
+.skill-progression-row input {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.skill-progression-row span {
+  display: inline-block;
+  line-height: 1.4;
+}
+
+/* Description above the progression list */
+
+.inspector-description {
+  margin-top: 8px;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+/* ==========================================
+   SKILL MASTERY
+========================================== */
+
+.skill-progression-row {
+  display: flex;
+  align-items: center;
+
+  width: 100%;
+  min-height: 42px;
+
+  margin: 6px 0;
+  padding: 0 12px;
+
+  box-sizing: border-box;
+
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+
+  background: rgba(255, 255, 255, 0.7);
+
+  cursor: pointer;
+}
+
+.skill-progression-row:hover {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.skill-progression-row input {
+  width: 17px;
+  height: 17px;
+
+  margin: 0 10px 0 0;
+
+  flex-shrink: 0;
+}
+
+.skill-progression-row span {
+  font-size: 15px;
+  line-height: 1;
+}
+
+.skill-progression-row input:disabled {
+  cursor: not-allowed;
+}
+
+.skill-progression-row:has(input:disabled) {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

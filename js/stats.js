@@ -161,6 +161,10 @@ function renderInspector() {
 
   inspector.innerHTML = "";
 
+  // =========================
+  // BACK
+  // =========================
+
   if (navigationStack.length > 1) {
     const back = document.createElement("div");
 
@@ -171,6 +175,10 @@ function renderInspector() {
 
     inspector.appendChild(back);
   }
+
+  // =========================
+  // TITLE
+  // =========================
 
   const title = document.createElement("h2");
 
@@ -189,6 +197,10 @@ function renderInspector() {
 
     return;
   }
+
+  // =========================
+  // LEVEL + XP
+  // =========================
 
   const level = document.createElement("p");
 
@@ -211,71 +223,116 @@ function renderInspector() {
 
   const requiredXP = currentSkill.level * 100;
 
-  xpFill.style.width = `${(currentSkill.xp / requiredXP) * 100}%`;
+  const xpPercent = Math.min((currentSkill.xp / requiredXP) * 100, 100);
+
+  xpFill.style.width = `${xpPercent}%`;
 
   xpBar.appendChild(xpFill);
 
   const xpText = document.createElement("p");
 
   xpText.className = "xp-text";
-
   xpText.textContent = `${currentSkill.xp} / ${requiredXP} XP`;
 
   xpContainer.appendChild(xpBar);
   xpContainer.appendChild(xpText);
 
   inspector.appendChild(xpContainer);
-  const statusLabel = document.createElement("h3");
 
-  statusLabel.className = "inspector-heading";
-  statusLabel.textContent = "Status";
+  // =========================
+  // OVERVIEW
+  // =========================
 
-  inspector.appendChild(statusLabel);
+  const overviewLabel = document.createElement("h3");
 
-  if (editingSkill) {
-    inspector.appendChild(
-      createDropdown(
-        ["Not Started", "Learning", "Practicing", "Mastered"],
-        currentSkill.status,
-        (value) => {
-          currentSkill.status = value;
-        },
-      ),
-    );
-  } else {
-    const status = document.createElement("p");
+  overviewLabel.className = "inspector-heading";
+  overviewLabel.textContent = "Overview";
 
-    status.className = "inspector-stat";
-    status.textContent = currentSkill.status;
-
-    inspector.appendChild(status);
-  }
-
-  const progressLabel = document.createElement("h3");
-
-  progressLabel.className = "inspector-heading";
-  progressLabel.textContent = "Progress";
-
-  inspector.appendChild(progressLabel);
+  inspector.appendChild(overviewLabel);
 
   if (editingSkill) {
     inspector.appendChild(
-      createNumberInput(currentSkill.progress, (value) => {
-        currentSkill.progress = value;
+      createTextArea(currentSkill.description || "", (value) => {
+        currentSkill.description = value;
       }),
     );
   } else {
-    const progress = document.createElement("p");
+    const overview = document.createElement("p");
 
-    progress.className = "inspector-stat";
-    progress.textContent = `${currentSkill.progress}%`;
+    overview.className = "inspector-description";
+    overview.textContent = currentSkill.description || "No overview yet.";
 
-    inspector.appendChild(progress);
+    inspector.appendChild(overview);
   }
 
-  const difficultyLabel = document.createElement("h3");
+  // =========================
+  // MASTERY
+  // =========================
 
-  difficultyLabel.className = "inspector-heading";
+  const masteryLabel = document.createElement("h3");
+
+  masteryLabel.className = "inspector-heading";
+  masteryLabel.textContent = "Mastery";
+
+  inspector.appendChild(masteryLabel);
+
+  const stages = [
+    ["learn", "Learn"],
+    ["understand", "Understand"],
+    ["apply", "Apply"],
+    ["explain", "Explain"],
+    ["practice", "Practice"],
+    ["master", "Master"],
+  ];
+
+  stages.forEach(([key, label], index) => {
+    const row = document.createElement("label");
+
+    row.className = "skill-progression-row";
+
+    const checkbox = document.createElement("input");
+
+    checkbox.type = "checkbox";
+    checkbox.checked = currentSkill.progression?.[key] || false;
+
+    // Lock stages until the previous stage is complete.
+    if (index > 0) {
+      const previousKey = stages[index - 1][0];
+
+      checkbox.disabled = !currentSkill.progression?.[previousKey];
+    }
+
+    checkbox.onchange = () => {
+      setSkillProgression(currentSkill, key, checkbox.checked);
+
+      renderInspector();
+    };
+
+    const text = document.createElement("span");
+
+    text.textContent = label;
+
+    row.appendChild(checkbox);
+    row.appendChild(text);
+
+    inspector.appendChild(row);
+  });
+
+  // =========================
+  // SKILL DETAILS
+  // =========================
+
+  const detailsLabel = document.createElement("h3");
+
+  detailsLabel.className = "inspector-heading";
+  detailsLabel.textContent = "Skill Details";
+
+  inspector.appendChild(detailsLabel);
+
+  // Difficulty
+
+  const difficultyLabel = document.createElement("h4");
+
   difficultyLabel.textContent = "Difficulty";
 
   inspector.appendChild(difficultyLabel);
@@ -284,7 +341,7 @@ function renderInspector() {
     inspector.appendChild(
       createDropdown(
         ["Easy", "Medium", "Hard", "Extreme"],
-        currentSkill.difficulty,
+        currentSkill.difficulty || "Medium",
         (value) => {
           currentSkill.difficulty = value;
         },
@@ -294,21 +351,22 @@ function renderInspector() {
     const difficulty = document.createElement("p");
 
     difficulty.className = "inspector-stat";
-    difficulty.textContent = currentSkill.difficulty;
+    difficulty.textContent = currentSkill.difficulty || "Not set";
 
     inspector.appendChild(difficulty);
   }
 
-  const estimatedHoursLabel = document.createElement("h3");
+  // Estimated Hours
 
-  estimatedHoursLabel.className = "inspector-heading";
+  const estimatedHoursLabel = document.createElement("h4");
+
   estimatedHoursLabel.textContent = "Estimated Hours";
 
   inspector.appendChild(estimatedHoursLabel);
 
   if (editingSkill) {
     inspector.appendChild(
-      createNumberInput(currentSkill.estimatedHours, (value) => {
+      createNumberInput(currentSkill.estimatedHours || 0, (value) => {
         currentSkill.estimatedHours = value;
       }),
     );
@@ -316,32 +374,14 @@ function renderInspector() {
     const estimatedHours = document.createElement("p");
 
     estimatedHours.className = "inspector-stat";
-    estimatedHours.textContent = currentSkill.estimatedHours;
+    estimatedHours.textContent = currentSkill.estimatedHours || "Not set";
 
     inspector.appendChild(estimatedHours);
   }
 
-  const descriptionLabel = document.createElement("h3");
-
-  descriptionLabel.className = "inspector-heading";
-  descriptionLabel.textContent = "Description";
-
-  inspector.appendChild(descriptionLabel);
-
-  if (editingSkill) {
-    inspector.appendChild(
-      createTextArea(currentSkill.description, (value) => {
-        currentSkill.description = value;
-      }),
-    );
-  } else {
-    const description = document.createElement("p");
-
-    description.className = "inspector-description";
-    description.textContent = currentSkill.description || "No description.";
-
-    inspector.appendChild(description);
-  }
+  // =========================
+  // RESOURCES
+  // =========================
 
   const resourcesLabel = document.createElement("h3");
 
@@ -350,12 +390,10 @@ function renderInspector() {
 
   inspector.appendChild(resourcesLabel);
 
-  if (!editingSkill) {
-    const validResources = (currentSkill.resources || []).filter(
-      (resource) => resource.trim() !== "",
-    );
+  const resources = currentSkill.resources || [];
 
-    if (validResources.length === 0) {
+  if (!editingSkill) {
+    if (resources.length === 0) {
       const empty = document.createElement("p");
 
       empty.className = "inspector-description";
@@ -363,26 +401,41 @@ function renderInspector() {
 
       inspector.appendChild(empty);
     } else {
-      validResources.forEach((resource) => {
+      resources.forEach((resource) => {
         const p = document.createElement("p");
 
         p.className = "inspector-stat";
-        p.textContent = "• " + resource;
+
+        if (typeof resource === "string") {
+          p.textContent = "• " + resource;
+        } else {
+          p.textContent = "• " + (resource.name || "Unnamed resource");
+        }
 
         inspector.appendChild(p);
       });
     }
   } else {
-    currentSkill.resources.forEach((resource, index) => {
+    resources.forEach((resource, index) => {
       const nameLabel = document.createElement("h4");
 
       nameLabel.textContent = "Name";
 
       inspector.appendChild(nameLabel);
 
+      const resourceName =
+        typeof resource === "string" ? resource : resource.name || "";
+
       inspector.appendChild(
-        createTextInput(resource.name, (value) => {
-          currentSkill.resources[index].name = value;
+        createTextInput(resourceName, (value) => {
+          if (typeof currentSkill.resources[index] === "string") {
+            currentSkill.resources[index] = {
+              name: value,
+              url: "",
+            };
+          } else {
+            currentSkill.resources[index].name = value;
+          }
         }),
       );
     });
@@ -392,6 +445,10 @@ function renderInspector() {
     addResourceBtn.textContent = "+ Add Resource";
 
     addResourceBtn.onclick = () => {
+      if (!currentSkill.resources) {
+        currentSkill.resources = [];
+      }
+
       currentSkill.resources.push({
         name: "",
         url: "",
@@ -402,6 +459,10 @@ function renderInspector() {
 
     inspector.appendChild(addResourceBtn);
   }
+
+  // =========================
+  // ACTIONS
+  // =========================
 
   const buttonGroup = document.createElement("div");
 
@@ -787,38 +848,118 @@ roadmapFile.onchange = (event) => {
 
 generateRoadmapBtn.onclick = async () => {
   const prompt = roadmapPrompt.value.trim();
+
   if (!prompt) {
     alert("Please enter a topic.");
     return;
   }
 
   console.log("Sending request...");
-  aiOutput.textContent = "🧠 Thinking...";
+
+  aiOutput.textContent = "🧠 Generating roadmap...";
   generateRoadmapBtn.disabled = true;
-  const res = await fetch("http://localhost:3000/api/ai", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ prompt }),
-  });
 
-  console.log("Response received");
-
-  const data = await res.json();
-  generateRoadmapBtn.disabled = false;
   try {
-    const roadmap = JSON.parse(data.response);
+    const res = await fetch("http://localhost:3000/api/ai", {
+      method: "POST",
 
-    console.log("Valid JSON!", roadmap);
+      headers: {
+        "Content-Type": "application/json",
+      },
 
-    aiOutput.textContent = JSON.stringify(roadmap, null, 2);
-  } catch (err) {
-    console.log("NOT JSON");
+      body: JSON.stringify({
+        prompt,
+        mode: "roadmap",
+      }),
+    });
 
-    aiOutput.textContent = data.response;
+    if (!res.ok) {
+      throw new Error(`Server error: ${res.status}`);
+    }
+
+    const data = await res.json();
+
+    console.log("AI response:", data);
+
+    // =========================
+    // PARSE AI ROADMAP
+    // =========================
+
+    let roadmap;
+
+    try {
+      roadmap = JSON.parse(data.response);
+    } catch (parseError) {
+      console.error("AI did not return valid JSON:", data.response);
+
+      aiOutput.textContent =
+        "❌ The AI did not return a valid roadmap.\n\n" + data.response;
+
+      return;
+    }
+
+    // =========================
+    // VALIDATE ROADMAP
+    // =========================
+
+    if (!roadmap || typeof roadmap !== "object") {
+      throw new Error("Invalid roadmap format.");
+    }
+
+    if (!roadmap.name) {
+      throw new Error("Roadmap is missing a name.");
+    }
+
+    if (!Array.isArray(roadmap.children)) {
+      roadmap.children = [];
+    }
+
+    console.log("Valid roadmap:", roadmap);
+
+    // =========================
+    // IMPORT INTO SKILL TREE
+    // =========================
+
+    const rootSkill = importRoadmap(roadmap);
+
+    // =========================
+    // UPDATE UI
+    // =========================
+
+    navigationStack = [
+      {
+        id: "root",
+        name: "Character Stats",
+        level: 1,
+        xp: 0,
+        description: "Your overall character progression.",
+        children: skillTree,
+      },
+    ];
+
+    currentSkill = navigationStack[0];
+
+    renderInspector();
+    renderRoadmap();
+
+    // =========================
+    // SHOW RESULT
+    // =========================
+
+    aiOutput.textContent =
+      `✅ Roadmap created: ${rootSkill.name}\n\n` +
+      JSON.stringify(roadmap, null, 2);
+
+    // Clear input
+    roadmapPrompt.value = "";
+
+    console.log("Roadmap successfully imported:", rootSkill);
+  } catch (error) {
+    console.error("Roadmap generation failed:", error);
+
+    aiOutput.textContent = "❌ Failed to generate roadmap.\n\n" + error.message;
+  } finally {
+    generateRoadmapBtn.disabled = false;
   }
-
-  console.log(data);
 };
 createAIDrawer();

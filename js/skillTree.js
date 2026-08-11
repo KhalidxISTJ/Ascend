@@ -5,6 +5,14 @@ let skillTree = [
     description: "Develop and strengthen your faith.",
     level: 1,
     xp: 0,
+    progression: {
+      learn: false,
+      understand: false,
+      apply: false,
+      explain: false,
+      practice: false,
+      master: false,
+    },
     children: [],
   },
   {
@@ -13,6 +21,14 @@ let skillTree = [
     description: "Develop knowledge, thinking, and mental skills.",
     level: 1,
     xp: 0,
+    progression: {
+      learn: false,
+      understand: false,
+      apply: false,
+      explain: false,
+      practice: false,
+      master: false,
+    },
     children: [],
   },
   {
@@ -21,6 +37,14 @@ let skillTree = [
     description: "Develop physical health, fitness, and discipline.",
     level: 1,
     xp: 0,
+    progression: {
+      learn: false,
+      understand: false,
+      apply: false,
+      explain: false,
+      practice: false,
+      master: false,
+    },
     children: [],
   },
   {
@@ -29,6 +53,14 @@ let skillTree = [
     description: "Develop useful skills and create things.",
     level: 1,
     xp: 0,
+    progression: {
+      learn: false,
+      understand: false,
+      apply: false,
+      explain: false,
+      practice: false,
+      master: false,
+    },
     children: [],
   },
   {
@@ -37,6 +69,14 @@ let skillTree = [
     description: "Develop communication and relationships.",
     level: 1,
     xp: 0,
+    progression: {
+      learn: false,
+      understand: false,
+      apply: false,
+      explain: false,
+      practice: false,
+      master: false,
+    },
     children: [],
   },
 ];
@@ -50,6 +90,73 @@ if (savedSkillTree) {
 function saveSkillTree() {
   localStorage.setItem("skillTree", JSON.stringify(skillTree));
 }
+
+function initializeSkillProgression(nodes) {
+  nodes.forEach((skill) => {
+    if (!skill.progression) {
+      skill.progression = {
+        learn: false,
+        understand: false,
+        apply: false,
+        explain: false,
+        practice: false,
+        master: false,
+      };
+    }
+
+    if (!skill.children) {
+      skill.children = [];
+    }
+
+    initializeSkillProgression(skill.children);
+  });
+}
+
+initializeSkillProgression(skillTree);
+saveSkillTree();
+
+function setSkillProgression(skill, stage, completed) {
+  if (!skill || !skill.progression) {
+    return;
+  }
+
+  const stages = [
+    "learn",
+    "understand",
+    "apply",
+    "explain",
+    "practice",
+    "master",
+  ];
+
+  const stageIndex = stages.indexOf(stage);
+
+  if (stageIndex === -1) {
+    return;
+  }
+
+  // Completing a stage requires the previous stage
+  // to already be completed.
+  if (completed && stageIndex > 0) {
+    const previousStage = stages[stageIndex - 1];
+
+    if (!skill.progression[previousStage]) {
+      return;
+    }
+  }
+
+  skill.progression[stage] = completed;
+
+  // If a stage is unchecked, reset everything after it.
+  if (!completed) {
+    for (let i = stageIndex + 1; i < stages.length; i++) {
+      skill.progression[stages[i]] = false;
+    }
+  }
+
+  saveSkillTree();
+}
+
 function findSkillById(nodes, id) {
   for (const node of nodes) {
     if (node.id === id) {

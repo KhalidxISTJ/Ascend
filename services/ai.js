@@ -3,10 +3,77 @@ const ollama = require("ollama").default;
 const statsPrompt = require("./prompts/stats");
 
 async function askAI(data) {
-  const { prompt, context } = data;
+  const { prompt, context, mode } = data;
 
   const page = context?.page || "unknown";
+  // ==========================================
+  // ROADMAP GENERATOR
+  // ==========================================
 
+  if (mode === "roadmap") {
+    const roadmapPrompt = `
+You are the Ascend Roadmap Generator.
+
+Create a structured learning roadmap for the user's requested topic.
+
+USER REQUEST:
+${prompt}
+
+Return ONLY a JSON object.
+
+The JSON must follow this structure:
+
+{
+  "name": "Topic Name",
+  "description": "A concise description of the roadmap.",
+  "difficulty": "Medium",
+  "estimatedHours": 20,
+  "children": [
+    {
+      "name": "Skill Name",
+      "description": "What this skill teaches.",
+      "difficulty": "Easy",
+      "estimatedHours": 5,
+      "children": []
+    }
+  ]
+}
+
+Rules:
+
+- The root name represents the overall topic.
+- Create a logical progression from beginner to advanced.
+- Each child represents a meaningful skill.
+- Use nested children for important sub-skills.
+- Put skills in prerequisite order.
+- difficulty must be "Easy", "Medium", "Hard", or "Extreme".
+- estimatedHours must be a number.
+- children must always be an array.
+- Every skill must have name, description, difficulty, estimatedHours, and children.
+- Create approximately 4-8 major skills at each level when appropriate.
+- Do not create XP, quests, levels, or progression fields.
+- Do not write explanations outside the JSON.
+`;
+
+    const response = await ollama.chat({
+      model: "llama3.2:3b",
+
+      format: "json",
+
+      messages: [
+        {
+          role: "system",
+          content: roadmapPrompt,
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+    });
+
+    return response.message.content;
+  }
   let systemPrompt = `
 You are Ascend AI, the personal AI assistant inside Ascend.
 
@@ -91,6 +158,7 @@ DO NOT:
 
   const response = await ollama.chat({
     model: "llama3.2:3b",
+    format: "json",
 
     messages: [
       {

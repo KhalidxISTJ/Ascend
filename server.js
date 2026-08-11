@@ -14,6 +14,10 @@ app.get("/", (req, res) => {
 
 app.post("/api/ai", async (req, res) => {
   try {
+    console.log("AI REQUEST:");
+    console.log("Prompt:", req.body.prompt);
+    console.log("Mode:", req.body.mode);
+
     const response = await askAI(req.body);
 
     res.json({

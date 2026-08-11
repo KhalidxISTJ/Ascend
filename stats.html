@@ -3,13 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>Stats</title>
 
+    <!-- Main Styles -->
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/navigation.css" />
     <link rel="stylesheet" href="css/stats.css" />
     <link rel="stylesheet" href="css/ai.css" />
 
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
@@ -20,11 +23,17 @@
   </head>
 
   <body data-page="stats">
+    <!-- ==========================================
+         HEADER
+    =========================================== -->
+
     <header>
       <h1>Welcome to <span class="ascend">Ascend</span></h1>
+
       <hr />
 
       <nav class="navigation">
+        <!-- Search -->
         <div class="search-container">
           <form>
             <input
@@ -33,10 +42,12 @@
               placeholder="Search"
               autocomplete="on"
             />
-            <button>Search</button>
+
+            <button type="submit">Search</button>
           </form>
         </div>
 
+        <!-- Navigation -->
         <div class="nav-links">
           <a class="nav-link" href="index.html">Home</a>
           <a class="nav-link" href="quests.html">Quests</a>
@@ -50,21 +61,35 @@
       </nav>
     </header>
 
+    <!-- ==========================================
+         MAIN STATS PAGE
+    =========================================== -->
+
     <main class="stats-page">
+      <!-- ========================================
+           CHARACTER STATS
+      ========================================= -->
+
       <h2>Character Stats</h2>
 
       <section class="stats-layout">
-        <!-- LEFT SIDE -->
+        <!-- ======================================
+             LEFT SIDE — ROADMAP
+        ======================================= -->
+
         <div class="roadmap-panel">
+          <!-- Roadmap Header -->
           <div class="panel-header">
             <div>
               <h2 id="roadmapTitle">Character Stats</h2>
+
               <p id="breadcrumb">Select a stat...</p>
             </div>
 
-            <button id="addRoadmapNodeBtn">+ Add Skill</button>
+            <button id="addRoadmapNodeBtn" type="button">+ Add Skill</button>
           </div>
 
+          <!-- Roadmap -->
           <div class="roadmap-container">
             <div id="roadmapCanvas" class="roadmap-canvas">
               <p class="empty-tree">
@@ -74,9 +99,22 @@
           </div>
         </div>
 
-        <!-- RIGHT SIDE -->
-        <div class="inspector-panel"></div>
+        <!-- ======================================
+             RIGHT SIDE — INSPECTOR
+        ======================================= -->
+
+        <div class="inspector-panel">
+          <!--
+            Inspector content is generated dynamically
+            by inspector.js
+          -->
+        </div>
       </section>
+
+      <!-- ==========================================
+           AI ROADMAP GENERATOR
+      =========================================== -->
+
       <section class="ai-generator">
         <h2>✨ AI Roadmap Generator</h2>
 
@@ -86,48 +124,71 @@
           placeholder="What do you want to master?"
         />
 
-        <button id="generateRoadmapBtn">Send</button>
+        <button id="generateRoadmapBtn" type="button">Send</button>
 
         <pre id="aiOutput"></pre>
       </section>
+
+      <!-- ==========================================
+           PROGRESS
+      =========================================== -->
+
       <h2>Progress</h2>
 
       <section class="stats-grid">
+        <!-- Player Level -->
         <div class="stats-card">
           <h3>Player Level</h3>
           <p id="playerLevelCard">0</p>
         </div>
 
+        <!-- Current XP -->
         <div class="stats-card">
           <h3>Current XP</h3>
           <p id="playerXPCard">0</p>
         </div>
 
+        <!-- Completed Quests -->
         <div class="stats-card">
           <h3>Completed Quests</h3>
           <p id="completedQuestCard">0</p>
         </div>
 
+        <!-- Completion Rate -->
         <div class="stats-card">
           <h3>Completion Rate</h3>
           <p id="completionRateCard">0%</p>
         </div>
+
+        <!-- Import Roadmap -->
         <input type="file" id="roadmapFile" accept=".json" hidden />
 
-        <button id="importRoadmapBtn">📂 Import Roadmap</button>
+        <button id="importRoadmapBtn" type="button">📂 Import Roadmap</button>
       </section>
     </main>
 
+    <!-- ==========================================
+         JAVASCRIPT
+    =========================================== -->
+
     <script src="js/player.js"></script>
+
     <script src="js/aiContext.js"></script>
+
     <script src="js/quests.js"></script>
+
     <script src="js/skillTree.js"></script>
 
     <script src="js/roadmap.js"></script>
+
     <script src="js/inspector.js"></script>
+
     <script src="js/importer.js"></script>
+
     <script src="js/roadmap-ai.js"></script>
+
     <script src="js/ascendAI.js"></script>
+
     <script src="js/stats.js"></script>
   </body>
 </html>
