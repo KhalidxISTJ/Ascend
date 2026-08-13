@@ -3,26 +3,25 @@
 ========================================== */
 
 .stats-page {
-  width: min(1200px, 95%);
+  width: min(1500px, 98%);
   margin: 30px auto;
 }
 
 /* ==========================================
-   LAYOUT
+   MAIN LAYOUT
 ========================================== */
+
 .stats-layout {
   display: flex;
-  gap: 20px;
-  align-items: flex-start;
+  gap: 24px;
+  align-items: stretch;
 }
-.inspector-panel {
-  height: fit-content;
-  min-height: 200px;
-}
-.roadmap-panel {
-  flex: 3;
 
-  height: 700px;
+.roadmap-panel {
+  flex: 1;
+  min-width: 0;
+
+  height: 800px;
 
   display: flex;
   flex-direction: column;
@@ -39,6 +38,27 @@
   overflow: hidden;
 }
 
+.inspector-panel {
+  flex: 0 0 320px;
+
+  height: 800px;
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  background: rgba(255, 255, 255, 0.9);
+
+  border: 2px solid black;
+  border-radius: 16px;
+
+  padding: 25px;
+
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+
+  overflow-y: auto;
+}
+
 /* ==========================================
    PANEL HEADER
 ========================================== */
@@ -48,11 +68,14 @@
   justify-content: space-between;
   align-items: center;
 
+  gap: 15px;
+
   margin-bottom: 20px;
 }
 
 #breadcrumb {
   margin-top: 6px;
+
   font-weight: bold;
   color: #666;
 }
@@ -69,36 +92,17 @@
 
   font-weight: bold;
 
-  transition: 0.2s;
+  transition: box-shadow 0.2s ease;
 }
 
 #addRoadmapNodeBtn:hover {
-  transform: translateY(-2px);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.15);
 }
 
 /* ==========================================
-   ROADMAP
+   ROADMAP CANVAS
 ========================================== */
-.inspector-panel {
-  flex: 0 0 300px;
 
-  display: flex;
-  flex-direction: column;
-
-  height: 700px;
-  min-height: 0;
-
-  background: rgba(255, 255, 255, 0.9);
-
-  border: 2px solid black;
-  border-radius: 16px;
-
-  padding: 25px;
-
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
-
-  overflow-y: auto;
-}
 .roadmap-container {
   flex: 1;
 
@@ -108,11 +112,61 @@
 
   min-height: 0;
 }
-.roadmap-node {
+
+.roadmap-canvas {
+  flex: 1;
+
+  position: relative;
+
+  margin-top: 20px;
+
+  min-height: 0;
+
+  border: 2px dashed #bbb;
+  border-radius: 12px;
+
+  background: #fafafa;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ==========================================
+   EMPTY TREE
+========================================== */
+
+.empty-tree {
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  transform: translate(-50%, -50%);
+
+  width: 90%;
+
+  color: #777;
+
+  font-size: 1.2rem;
+
+  text-align: center;
+}
+
+/* ==========================================
+   ROOT ROADMAP
+========================================== */
+
+.roadmap-canvas > .roadmap-node {
   position: absolute;
 
   width: 60px;
   height: 60px;
+
+  min-width: 60px;
+  max-width: none;
+  min-height: 60px;
+
+  padding: 0;
 
   border-radius: 50%;
 
@@ -123,63 +177,260 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 
   transform: translate(-50%, -50%);
-
-  cursor: pointer;
-
-  transition:
-    transform 0.2s,
-    box-shadow 0.2s,
-    background 0.2s;
 }
 
-.roadmap-canvas {
-  flex: 1;
-
-  position: relative;
-
-  margin-top: 20px;
-
-  border: 2px dashed #bbb;
-  border-radius: 12px;
-
-  background: #fafafa;
-
-  overflow: auto;
-}
-
-.empty-tree {
-  position: absolute;
-
-  left: 50%;
-  top: 50%;
-
+.roadmap-canvas > .roadmap-node:hover {
   transform: translate(-50%, -50%);
 
-  color: #777;
-
-  font-size: 1.2rem;
-
-  text-align: center;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
-.roadmap-node:hover {
-  transform: translate(-50%, -50%) scale(1.08);
-}
+/* ==========================================
+   ROOT LABELS
+========================================== */
 
-.roadmap-label {
+.roadmap-canvas > .roadmap-label {
   position: absolute;
 
   transform: translateX(-50%);
 
   margin-top: 8px;
 
+  max-width: 140px;
+
   font-size: 0.9rem;
 
   font-weight: 600;
 
-  white-space: nowrap;
+  white-space: normal;
 
   text-align: center;
+}
+
+/* ==========================================
+   ROADMAP CONTENT
+========================================== */
+
+.roadmap-content {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 0;
+}
+
+/* ==========================================
+   LESSON
+========================================== */
+
+.roadmap-lesson {
+  width: min(1100px, 100%);
+
+  margin: 0 auto;
+
+  padding: 40px 55px 50px;
+
+  box-sizing: border-box;
+}
+
+.roadmap-divider {
+  width: 100%;
+  height: 1px;
+
+  background: currentColor;
+
+  opacity: 0.1;
+
+  margin: 10px 0 30px;
+}
+
+.roadmap-section-title {
+  margin: 0 0 20px;
+
+  font-size: 1.2rem;
+
+  font-weight: 700;
+}
+
+.roadmap-lesson-text {
+  width: 100%;
+  max-width: 1000px;
+
+  font-size: 1.08rem;
+
+  line-height: 1.9;
+
+  white-space: pre-wrap;
+
+  overflow-wrap: anywhere;
+
+  opacity: 0.9;
+}
+
+/* ==========================================
+   ROADMAP NAVIGATION
+========================================== */
+
+.roadmap-navigation {
+  width: 100%;
+
+  min-height: 430px;
+
+  padding: 35px 30px 70px;
+
+  box-sizing: border-box;
+}
+
+.roadmap-tree-wrapper {
+  width: 100%;
+
+  min-height: 320px;
+
+  overflow-x: auto;
+  overflow-y: auto;
+
+  padding: 30px 25px 60px;
+
+  box-sizing: border-box;
+
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ==========================================
+   TREE
+========================================== */
+
+.roadmap-tree {
+  position: relative;
+
+  min-width: max-content;
+  min-height: 220px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  padding: 10px 30px 40px;
+
+  box-sizing: border-box;
+}
+
+/* ==========================================
+   ROADMAP CONNECTION LINES
+========================================== */
+
+.roadmap-lines {
+  position: absolute;
+
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  pointer-events: none;
+
+  color: currentColor;
+
+  z-index: 0;
+}
+
+/* ==========================================
+   ROADMAP NODES
+========================================== */
+
+.roadmap-tree .roadmap-node {
+  position: relative;
+
+  z-index: 2;
+
+  min-width: 150px;
+  max-width: 230px;
+
+  min-height: 50px;
+
+  padding: 11px 18px;
+
+  border: 2px solid black;
+  border-radius: 12px;
+
+  background: white;
+
+  font: inherit;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  box-sizing: border-box;
+
+  overflow-wrap: anywhere;
+
+  transition:
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+.roadmap-tree .roadmap-node:hover {
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.18);
+}
+
+.roadmap-tree .roadmap-node.current-node {
+  cursor: default;
+
+  background: #4caf50;
+
+  border-color: #2e7d32;
+
+  font-weight: 700;
+}
+
+/* ==========================================
+   CHILDREN
+========================================== */
+
+.roadmap-children {
+  position: relative;
+
+  z-index: 2;
+
+  display: flex;
+
+  align-items: flex-start;
+  justify-content: center;
+
+  gap: 16px;
+
+  margin-top: 70px;
+
+  width: max-content;
+}
+
+/* ==========================================
+   LEAF NODE
+========================================== */
+
+.roadmap-leaf-message {
+  display: flex;
+  flex-direction: column;
+
+  gap: 6px;
+
+  width: min(500px, 100%);
+
+  margin: 0 auto;
+
+  padding: 18px 20px;
+
+  border: 1px dashed currentColor;
+
+  border-radius: 12px;
+
+  opacity: 0.7;
+}
+
+.roadmap-leaf-message strong {
+  opacity: 1;
 }
 
 /* ==========================================
@@ -210,8 +461,8 @@
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
 
   transition:
-    transform 0.2s,
-    box-shadow 0.2s;
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .stats-card:hover {
@@ -233,66 +484,6 @@
 }
 
 /* ==========================================
-   SCROLLBARS
-========================================== */
-
-.inspector-panel::-webkit-scrollbar,
-.roadmap-canvas::-webkit-scrollbar {
-  width: 8px;
-}
-
-.inspector-panel::-webkit-scrollbar-thumb,
-.roadmap-canvas::-webkit-scrollbar-thumb {
-  background: #888;
-
-  border-radius: 10px;
-}
-
-.inspector-panel::-webkit-scrollbar-thumb:hover,
-.roadmap-canvas::-webkit-scrollbar-thumb:hover {
-  background: #666;
-}
-.roadmap-lines {
-  position: absolute;
-
-  inset: 0;
-
-  width: 100%;
-  height: 100%;
-
-  pointer-events: none;
-}
-.current-node {
-  background: #4caf50;
-  border-color: #2e7d32;
-}
-.inspector-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-
-  margin-top: 20px;
-}
-
-.inspector-actions button {
-  padding: 10px;
-
-  border: 2px solid black;
-  border-radius: 10px;
-
-  background: white;
-
-  cursor: pointer;
-
-  font-weight: bold;
-
-  transition: 0.2s;
-}
-
-.inspector-actions button:hover {
-  transform: translateY(-2px);
-}
-/* ==========================================
    INSPECTOR
 ========================================== */
 
@@ -302,6 +493,8 @@
   font-size: 2rem;
 
   font-weight: 700;
+
+  overflow-wrap: anywhere;
 }
 
 .inspector-heading {
@@ -315,32 +508,47 @@
 
 .inspector-stat {
   margin: 14px 0;
+
   font-size: 1rem;
+
+  overflow-wrap: anywhere;
 }
 
 .inspector-stat-label {
   display: block;
+
   margin-bottom: 4px;
+
   font-size: 0.9rem;
+
   font-weight: 600;
+
   color: #555;
 }
 
 .inspector-stat-value {
   display: block;
+
   font-size: 1rem;
+
   font-weight: 400;
+
   color: #222;
+
+  overflow-wrap: anywhere;
 }
 
 .inspector-description {
+  margin-top: 8px;
+  margin-bottom: 20px;
+
   line-height: 1.5;
 
   color: #444;
 
-  margin: 8px 0 16px;
-
   min-height: 70px;
+
+  overflow-wrap: anywhere;
 }
 
 .description-input {
@@ -353,6 +561,7 @@
   padding: 10px;
 
   border: 2px solid black;
+
   border-radius: 10px;
 
   font: inherit;
@@ -360,10 +569,15 @@
   box-sizing: border-box;
 }
 
+/* ==========================================
+   INSPECTOR BUTTONS
+========================================== */
+
 .inspector-panel button {
   padding: 10px 14px;
 
   border: 2px solid black;
+
   border-radius: 10px;
 
   background: white;
@@ -372,12 +586,23 @@
 
   font-weight: bold;
 
-  transition: 0.2s;
+  transition: box-shadow 0.2s ease;
 }
 
 .inspector-panel button:hover {
-  transform: translateY(-2px);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.15);
 }
+
+.inspector-actions {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 12px;
+
+  margin-top: 20px;
+}
+
 /* ==========================================
    XP BAR
 ========================================== */
@@ -391,6 +616,7 @@
   height: 18px;
 
   border: 2px solid black;
+
   border-radius: 999px;
 
   background: #e5e5e5;
@@ -417,80 +643,28 @@
 
   color: #555;
 }
-/* ==========================================
-   SKILL PROGRESSION
-========================================== */
 
-.skill-progression-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  margin: 8px 0;
-
-  line-height: 1.4;
-}
-
-.skill-progression-row input {
-  flex-shrink: 0;
-  margin: 0;
-}
-
-.skill-progression-row span {
-  line-height: 1.4;
-}
-/* ==========================================
-   MASTERY PROGRESSION
-========================================== */
-
-.skill-progression-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  width: 100%;
-  margin: 10px 0;
-
-  line-height: 1.4;
-  position: static;
-}
-
-.skill-progression-row input {
-  flex: 0 0 auto;
-  width: 16px;
-  height: 16px;
-  margin: 0;
-}
-
-.skill-progression-row span {
-  display: inline-block;
-  line-height: 1.4;
-}
-
-/* Description above the progression list */
-
-.inspector-description {
-  margin-top: 8px;
-  margin-bottom: 20px;
-  line-height: 1.5;
-}
 /* ==========================================
    SKILL MASTERY
 ========================================== */
 
 .skill-progression-row {
   display: flex;
+
   align-items: center;
 
   width: 100%;
+
   min-height: 42px;
 
   margin: 6px 0;
+
   padding: 0 12px;
 
   box-sizing: border-box;
 
   border: 1px solid rgba(0, 0, 0, 0.12);
+
   border-radius: 10px;
 
   background: rgba(255, 255, 255, 0.7);
@@ -513,7 +687,10 @@
 
 .skill-progression-row span {
   font-size: 15px;
-  line-height: 1;
+
+  line-height: 1.3;
+
+  overflow-wrap: anywhere;
 }
 
 .skill-progression-row input:disabled {
@@ -522,5 +699,365 @@
 
 .skill-progression-row:has(input:disabled) {
   opacity: 0.5;
+
   cursor: not-allowed;
+}
+
+/* ==========================================
+   SCROLLBARS
+========================================== */
+
+.inspector-panel::-webkit-scrollbar,
+.roadmap-canvas::-webkit-scrollbar,
+.roadmap-tree-wrapper::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.inspector-panel::-webkit-scrollbar-thumb,
+.roadmap-canvas::-webkit-scrollbar-thumb,
+.roadmap-tree-wrapper::-webkit-scrollbar-thumb {
+  background: #888;
+
+  border-radius: 10px;
+}
+
+.inspector-panel::-webkit-scrollbar-thumb:hover,
+.roadmap-canvas::-webkit-scrollbar-thumb:hover,
+.roadmap-tree-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+/* ==========================================
+   TABLET
+========================================== */
+
+@media (max-width: 1100px) {
+  .stats-page {
+    width: 96%;
+  }
+
+  .stats-layout {
+    gap: 18px;
+  }
+
+  .inspector-panel {
+    flex-basis: 290px;
+
+    padding: 20px;
+  }
+
+  .roadmap-panel {
+    padding: 20px;
+  }
+
+  .roadmap-lesson {
+    padding-left: 35px;
+    padding-right: 35px;
+  }
+
+  .roadmap-navigation {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+
+/* ==========================================
+   TABLET / SMALL LAPTOP
+========================================== */
+
+@media (max-width: 900px) {
+  .stats-layout {
+    flex-direction: column;
+  }
+
+  .roadmap-panel {
+    width: 100%;
+
+    height: 800px;
+
+    box-sizing: border-box;
+  }
+
+  .inspector-panel {
+    flex: none;
+
+    width: 100%;
+
+    height: auto;
+
+    max-height: 650px;
+
+    box-sizing: border-box;
+  }
+
+  .roadmap-lesson {
+    width: min(900px, 100%);
+
+    padding: 35px 30px 45px;
+  }
+
+  .roadmap-navigation {
+    min-height: 400px;
+
+    padding: 30px 20px 50px;
+  }
+}
+
+/* ==========================================
+   MOBILE
+========================================== */
+
+@media (max-width: 700px) {
+  .stats-page {
+    width: 94%;
+
+    margin: 15px auto;
+  }
+
+  .stats-layout {
+    gap: 16px;
+  }
+
+  .roadmap-panel {
+    height: 720px;
+
+    padding: 12px;
+
+    border-radius: 14px;
+  }
+
+  .inspector-panel {
+    padding: 18px;
+
+    border-radius: 14px;
+
+    max-height: none;
+  }
+
+  /* Header stacks when necessary */
+
+  .panel-header {
+    flex-wrap: wrap;
+
+    align-items: flex-start;
+
+    margin-bottom: 12px;
+  }
+
+  #addRoadmapNodeBtn {
+    width: 100%;
+  }
+
+  /* Main roadmap area */
+
+  .roadmap-canvas {
+    margin-top: 10px;
+
+    border-radius: 10px;
+  }
+
+  /* Lesson */
+
+  .roadmap-lesson {
+    width: 100%;
+
+    padding: 25px 18px 35px;
+  }
+
+  .roadmap-section-title {
+    font-size: 1.1rem;
+
+    margin-bottom: 15px;
+  }
+
+  .roadmap-lesson-text {
+    font-size: 1rem;
+
+    line-height: 1.75;
+  }
+
+  /* Roadmap */
+
+  .roadmap-navigation {
+    min-height: 350px;
+
+    padding: 25px 12px 40px;
+  }
+
+  .roadmap-tree-wrapper {
+    min-height: 260px;
+
+    padding: 25px 12px 45px;
+  }
+
+  /*
+     Keep the tree horizontally scrollable.
+     This is intentional: many child nodes should
+     not be squeezed into tiny cards.
+  */
+
+  .roadmap-tree {
+    min-height: 200px;
+
+    padding-left: 25px;
+    padding-right: 25px;
+  }
+
+  .roadmap-tree .roadmap-node {
+    min-width: 125px;
+    max-width: 175px;
+
+    min-height: 46px;
+
+    padding: 9px 12px;
+
+    font-size: 0.9rem;
+  }
+
+  .roadmap-children {
+    gap: 12px;
+
+    margin-top: 60px;
+  }
+
+  /* Inspector */
+
+  .inspector-title {
+    font-size: 1.6rem;
+  }
+
+  .inspector-heading {
+    font-size: 1rem;
+  }
+
+  .inspector-stat {
+    font-size: 0.95rem;
+  }
+
+  /* Root tree */
+
+  .roadmap-canvas > .roadmap-node {
+    width: 52px;
+    height: 52px;
+
+    min-width: 52px;
+    min-height: 52px;
+  }
+
+  .roadmap-canvas > .roadmap-label {
+    max-width: 100px;
+
+    font-size: 0.8rem;
+  }
+
+  /* Stats cards */
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+
+    gap: 14px;
+  }
+
+  .stats-card {
+    padding: 20px;
+  }
+}
+
+/* ==========================================
+   SMALL PHONES
+========================================== */
+
+@media (max-width: 480px) {
+  .stats-page {
+    width: 92%;
+
+    margin: 10px auto;
+  }
+
+  .roadmap-panel {
+    height: 680px;
+
+    padding: 10px;
+  }
+
+  .inspector-panel {
+    padding: 15px;
+  }
+
+  .roadmap-lesson {
+    padding: 20px 14px 30px;
+  }
+
+  .roadmap-lesson-text {
+    font-size: 0.95rem;
+
+    line-height: 1.7;
+  }
+
+  .roadmap-navigation {
+    padding: 20px 8px 35px;
+  }
+
+  .roadmap-tree-wrapper {
+    padding: 20px 8px 35px;
+  }
+
+  .roadmap-tree .roadmap-node {
+    min-width: 110px;
+    max-width: 155px;
+
+    min-height: 44px;
+
+    padding: 8px 10px;
+
+    font-size: 0.82rem;
+  }
+
+  .roadmap-children {
+    gap: 10px;
+
+    margin-top: 55px;
+  }
+
+  .roadmap-canvas > .roadmap-node {
+    position: absolute;
+
+    width: 60px;
+    height: 60px;
+
+    min-width: 60px;
+    max-width: none;
+    min-height: 60px;
+
+    padding: 0;
+
+    border-radius: 50%;
+
+    transform: translate(-50%, -50%);
+  }
+
+  .roadmap-canvas > .roadmap-label {
+    max-width: 85px;
+
+    font-size: 0.75rem;
+  }
+
+  .inspector-title {
+    font-size: 1.4rem;
+  }
+
+  .xp-bar {
+    height: 16px;
+  }
+
+  .skill-progression-row {
+    min-height: 40px;
+
+    padding: 0 10px;
+  }
+
+  .skill-progression-row span {
+    font-size: 14px;
+  }
 }

@@ -7,6 +7,8 @@ function importRoadmap(data) {
 
       description: skill.description || "",
 
+      lessonSummary: skill.lessonSummary || "",
+
       level: 1,
 
       xp: 0,

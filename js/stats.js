@@ -103,6 +103,202 @@ function openSkill(id) {
   renderInspector();
   renderRoadmap();
 }
+// ============================================================
+// AI STREAM READER
+// ============================================================
+
+async function readAIStream(response, onChunk) {
+  if (!response.body) {
+    throw new Error("AI server did not return a readable stream.");
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+
+  let buffer = "";
+  let fullResponse = "";
+
+  while (true) {
+    const { value, done } = await reader.read();
+
+    if (done) break;
+
+    buffer += decoder.decode(value, {
+      stream: true,
+    });
+
+    const events = buffer.split("\n\n");
+
+    // Keep incomplete event for the next chunk
+    buffer = events.pop() || "";
+
+    for (const event of events) {
+      const line = event.split("\n").find((line) => line.startsWith("data:"));
+
+      if (!line) continue;
+
+      const jsonText = line.slice(5).trim();
+
+      if (!jsonText) continue;
+
+      let data;
+
+      try {
+        data = JSON.parse(jsonText);
+      } catch (error) {
+        console.warn("Could not parse stream event:", jsonText);
+        continue;
+      }
+
+      if (data.type === "chunk") {
+        const chunk = data.content || "";
+
+        fullResponse += chunk;
+
+        if (onChunk) {
+          onChunk(chunk, fullResponse);
+        }
+      }
+
+      if (data.type === "error") {
+        throw new Error(data.error || "AI generation failed.");
+      }
+
+      if (data.type === "done") {
+        return fullResponse;
+      }
+    }
+  }
+
+  return fullResponse;
+}
+async function generateSkillLesson(skill) {
+  if (!skill) return;
+
+  // Don't regenerate an existing lesson
+  if (skill.lesson) {
+    return;
+  }
+
+  const lessonText = document.querySelector(".roadmap-lesson-text");
+
+  if (lessonText) {
+    lessonText.innerHTML = `
+      <div class="lesson-loading">
+        <div class="lesson-loading-title">
+          🧠 Generating lesson...
+        </div>
+
+        <div class="lesson-stream-preview"></div>
+      </div>
+    `;
+  }
+
+  const streamPreview = lessonText?.querySelector(".lesson-stream-preview");
+
+  try {
+    const response = await fetch("http://localhost:3000/api/ai", {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify({
+        prompt: `
+Create a detailed mastery lesson for this Ascend skill:
+
+Skill: ${skill.name}
+
+Description:
+${skill.description || "No description available."}
+
+Difficulty:
+${skill.difficulty || "Medium"}
+
+Estimated Hours:
+${skill.estimatedHours || 0}
+
+The lesson should teach this skill thoroughly and support the learner's
+progression from Learn through Master.
+
+Use the skill's description and difficulty as context.
+          `.trim(),
+
+        mode: "lesson",
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status}`);
+    }
+
+    // ========================================================
+    // STREAM LESSON
+    // ========================================================
+
+    const rawLesson = await readAIStream(response, (chunk, fullResponse) => {
+      if (!streamPreview) return;
+
+      // Show the AI working in real time.
+      // The final JSON will be replaced with the
+      // formatted lesson after generation finishes.
+
+      streamPreview.textContent = fullResponse;
+
+      // Keep the newest content visible.
+      streamPreview.scrollTop = streamPreview.scrollHeight;
+    });
+
+    // ========================================================
+    // PARSE FINAL JSON
+    // ========================================================
+
+    let lesson;
+
+    try {
+      lesson = JSON.parse(rawLesson);
+    } catch (error) {
+      console.error("Invalid lesson JSON:", rawLesson);
+
+      throw new Error(
+        "AI finished generating, but returned invalid lesson JSON.",
+      );
+    }
+
+    if (!lesson || typeof lesson !== "object") {
+      throw new Error("AI returned an invalid lesson format.");
+    }
+
+    // ========================================================
+    // SAVE
+    // ========================================================
+
+    skill.lesson = lesson;
+
+    saveSkillTree();
+
+    // ========================================================
+    // RENDER FINAL LESSON
+    // ========================================================
+
+    renderRoadmap();
+
+    console.log("Lesson generated:", lesson);
+  } catch (error) {
+    console.error("Lesson generation failed:", error);
+
+    if (lessonText) {
+      lessonText.innerHTML = `
+        <div class="lesson-error">
+          ❌ Failed to generate lesson.
+          <br><br>
+          ${error.message}
+        </div>
+      `;
+    }
+  }
+}
 function createDropdown(options, value, onChange) {
   const select = document.createElement("select");
 
@@ -392,41 +588,90 @@ function renderInspector() {
 
   const resources = currentSkill.resources || [];
 
+  // =========================
+  // VIEW MODE
+  // =========================
+
   if (!editingSkill) {
     if (resources.length === 0) {
       const empty = document.createElement("p");
 
-      empty.className = "inspector-description";
-      empty.textContent = "No resources.";
+      empty.className = "inspector-empty";
+      empty.textContent = "No resources added yet.";
 
       inspector.appendChild(empty);
     } else {
       resources.forEach((resource) => {
-        const p = document.createElement("p");
+        const resourceCard = document.createElement("div");
 
-        p.className = "inspector-stat";
+        resourceCard.className = "inspector-resource";
 
-        if (typeof resource === "string") {
-          p.textContent = "• " + resource;
-        } else {
-          p.textContent = "• " + (resource.name || "Unnamed resource");
+        const resourceName =
+          typeof resource === "string"
+            ? resource
+            : resource.name || "Unnamed resource";
+
+        const resourceUrl =
+          typeof resource === "string" ? "" : resource.url || "";
+
+        // Resource name
+        const name = document.createElement("div");
+
+        name.className = "inspector-resource-name";
+        name.textContent = resourceName;
+
+        resourceCard.appendChild(name);
+
+        // URL / type
+        if (resourceUrl) {
+          const link = document.createElement("a");
+
+          link.className = "inspector-resource-link";
+          link.href = resourceUrl;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.textContent = resourceUrl;
+
+          resourceCard.appendChild(link);
         }
 
-        inspector.appendChild(p);
+        inspector.appendChild(resourceCard);
       });
     }
-  } else {
+  }
+
+  // =========================
+  // EDIT MODE
+  // =========================
+  else {
+    if (resources.length === 0) {
+      const empty = document.createElement("p");
+
+      empty.className = "inspector-empty";
+      empty.textContent = "No resources added yet.";
+
+      inspector.appendChild(empty);
+    }
+
     resources.forEach((resource, index) => {
+      const resourceContainer = document.createElement("div");
+
+      resourceContainer.className = "inspector-resource-editor";
+
+      // -------------------------
+      // NAME
+      // -------------------------
+
       const nameLabel = document.createElement("h4");
 
-      nameLabel.textContent = "Name";
+      nameLabel.textContent = "Resource Name";
 
-      inspector.appendChild(nameLabel);
+      resourceContainer.appendChild(nameLabel);
 
       const resourceName =
         typeof resource === "string" ? resource : resource.name || "";
 
-      inspector.appendChild(
+      resourceContainer.appendChild(
         createTextInput(resourceName, (value) => {
           if (typeof currentSkill.resources[index] === "string") {
             currentSkill.resources[index] = {
@@ -438,11 +683,65 @@ function renderInspector() {
           }
         }),
       );
+
+      // -------------------------
+      // URL
+      // -------------------------
+
+      const urlLabel = document.createElement("h4");
+
+      urlLabel.textContent = "URL";
+
+      resourceContainer.appendChild(urlLabel);
+
+      const resourceUrl =
+        typeof resource === "string" ? "" : resource.url || "";
+
+      resourceContainer.appendChild(
+        createTextInput(resourceUrl, (value) => {
+          if (typeof currentSkill.resources[index] === "string") {
+            currentSkill.resources[index] = {
+              name: currentSkill.resources[index],
+              url: value,
+            };
+          } else {
+            currentSkill.resources[index].url = value;
+          }
+        }),
+      );
+
+      // -------------------------
+      // REMOVE
+      // -------------------------
+
+      const removeBtn = document.createElement("button");
+
+      removeBtn.textContent = "Remove";
+
+      removeBtn.className = "resource-remove-btn";
+
+      removeBtn.onclick = () => {
+        currentSkill.resources.splice(index, 1);
+
+        saveSkillTree();
+
+        renderInspector();
+      };
+
+      resourceContainer.appendChild(removeBtn);
+
+      inspector.appendChild(resourceContainer);
     });
+
+    // =========================
+    // ADD RESOURCE
+    // =========================
 
     const addResourceBtn = document.createElement("button");
 
     addResourceBtn.textContent = "+ Add Resource";
+
+    addResourceBtn.className = "add-resource-btn";
 
     addResourceBtn.onclick = () => {
       if (!currentSkill.resources) {
@@ -454,12 +753,13 @@ function renderInspector() {
         url: "",
       });
 
+      saveSkillTree();
+
       renderInspector();
     };
 
     inspector.appendChild(addResourceBtn);
   }
-
   // =========================
   // ACTIONS
   // =========================
@@ -555,14 +855,423 @@ function layoutTree(root) {
 function renderRoadmap() {
   if (!currentSkill) return;
 
-  if (currentSkill.children.length === 0) {
-    roadmapCanvas.innerHTML = `
-      <p class="empty-tree">
-        No skills yet.
-      </p>
-    `;
+  roadmapCanvas.innerHTML = "";
+
+  // ==========================================
+  // ROOT PAGE
+  // ==========================================
+
+  if (currentSkill.id === "root") {
+    renderRootRoadmap();
     return;
   }
+
+  // ==========================================
+  // SKILL PAGE
+  // ==========================================
+
+  const content = document.createElement("div");
+
+  content.className = "roadmap-content";
+
+  roadmapCanvas.appendChild(content);
+
+  // ==========================================
+  // LESSON
+  // ==========================================
+
+  const lessonSection = document.createElement("section");
+
+  lessonSection.className = "roadmap-lesson";
+
+  content.appendChild(lessonSection);
+
+  const lessonHeading = document.createElement("h2");
+
+  lessonHeading.className = "roadmap-section-title";
+  lessonHeading.textContent = "Lesson";
+
+  lessonSection.appendChild(lessonHeading);
+
+  const lessonText = document.createElement("div");
+
+  lessonText.className = "roadmap-lesson-text";
+
+  lessonSection.appendChild(lessonText);
+
+  // ==========================================
+  // NO LESSON YET
+  // ==========================================
+
+  if (!currentSkill.lesson) {
+    lessonText.innerHTML = `
+    <div class="lesson-empty">
+      <p>
+        No lesson has been generated for this skill yet.
+      </p>
+
+      <button
+        type="button"
+        class="generate-lesson-btn"
+        id="generateLessonBtn"
+      >
+        🧠 Generate Lesson
+      </button>
+    </div>
+  `;
+
+    const generateLessonBtn = lessonText.querySelector("#generateLessonBtn");
+
+    generateLessonBtn.onclick = () => {
+      generateSkillLesson(currentSkill);
+    };
+  }
+
+  // ==========================================
+  // LESSON EXISTS
+  // ==========================================
+  else {
+    const lesson = currentSkill.lesson;
+
+    // -------------------------
+    // OVERVIEW
+    // -------------------------
+
+    if (lesson.overview) {
+      const overview = document.createElement("div");
+
+      overview.className = "lesson-overview";
+
+      overview.textContent = lesson.overview;
+
+      lessonText.appendChild(overview);
+    }
+
+    // -------------------------
+    // CONTENT
+    // -------------------------
+
+    if (lesson.content) {
+      const contentBlock = document.createElement("div");
+
+      contentBlock.className = "lesson-content";
+
+      contentBlock.textContent = lesson.content;
+
+      lessonText.appendChild(contentBlock);
+    }
+
+    // -------------------------
+    // KEY CONCEPTS
+    // -------------------------
+
+    if (Array.isArray(lesson.keyConcepts) && lesson.keyConcepts.length > 0) {
+      const heading = document.createElement("h3");
+
+      heading.textContent = "Key Concepts";
+
+      lessonText.appendChild(heading);
+
+      const list = document.createElement("ul");
+
+      lesson.keyConcepts.forEach((concept) => {
+        if (!concept || !concept.trim()) return;
+
+        const item = document.createElement("li");
+
+        item.textContent = concept;
+
+        list.appendChild(item);
+      });
+
+      lessonText.appendChild(list);
+    }
+
+    // -------------------------
+    // EXAMPLES
+    // -------------------------
+
+    if (Array.isArray(lesson.examples) && lesson.examples.length > 0) {
+      const heading = document.createElement("h3");
+
+      heading.textContent = "Examples";
+
+      lessonText.appendChild(heading);
+
+      lesson.examples.forEach((example) => {
+        if (!example) return;
+
+        const exampleCard = document.createElement("div");
+
+        exampleCard.className = "lesson-example";
+
+        if (example.title) {
+          const title = document.createElement("h4");
+
+          title.textContent = example.title;
+
+          exampleCard.appendChild(title);
+        }
+
+        if (example.explanation) {
+          const explanation = document.createElement("p");
+
+          explanation.textContent = example.explanation;
+
+          exampleCard.appendChild(explanation);
+        }
+
+        if (example.code) {
+          const code = document.createElement("pre");
+
+          const codeElement = document.createElement("code");
+
+          codeElement.textContent = example.code;
+
+          code.appendChild(codeElement);
+
+          exampleCard.appendChild(code);
+        }
+
+        lessonText.appendChild(exampleCard);
+      });
+    }
+
+    // -------------------------
+    // COMMON MISTAKES
+    // -------------------------
+
+    if (
+      Array.isArray(lesson.commonMistakes) &&
+      lesson.commonMistakes.length > 0
+    ) {
+      const heading = document.createElement("h3");
+
+      heading.textContent = "Common Mistakes";
+
+      lessonText.appendChild(heading);
+
+      const list = document.createElement("ul");
+
+      lesson.commonMistakes.forEach((mistake) => {
+        if (!mistake || !mistake.trim()) {
+          return;
+        }
+
+        const item = document.createElement("li");
+
+        item.textContent = mistake;
+
+        list.appendChild(item);
+      });
+
+      lessonText.appendChild(list);
+    }
+
+    // -------------------------
+    // MASTERY CRITERIA
+    // -------------------------
+
+    if (
+      Array.isArray(lesson.masteryCriteria) &&
+      lesson.masteryCriteria.length > 0
+    ) {
+      const heading = document.createElement("h3");
+
+      heading.textContent = "Mastery Criteria";
+
+      lessonText.appendChild(heading);
+
+      const list = document.createElement("ul");
+
+      lesson.masteryCriteria.forEach((criteria) => {
+        if (!criteria || !criteria.trim()) {
+          return;
+        }
+
+        const item = document.createElement("li");
+
+        item.textContent = criteria;
+
+        list.appendChild(item);
+      });
+
+      lessonText.appendChild(list);
+    }
+  }
+
+  // ==========================================
+  // ROADMAP
+  // ==========================================
+
+  const roadmapSection = document.createElement("section");
+
+  roadmapSection.className = "roadmap-navigation";
+
+  content.appendChild(roadmapSection);
+
+  // Divider
+
+  const roadmapDivider = document.createElement("div");
+
+  roadmapDivider.className = "roadmap-divider";
+
+  roadmapSection.appendChild(roadmapDivider);
+
+  // Heading
+
+  const roadmapHeading = document.createElement("h2");
+
+  roadmapHeading.className = "roadmap-section-title";
+  roadmapHeading.textContent = "Roadmap";
+
+  roadmapSection.appendChild(roadmapHeading);
+
+  // ==========================================
+  // TREE WRAPPER
+  // ==========================================
+
+  const treeWrapper = document.createElement("div");
+
+  treeWrapper.className = "roadmap-tree-wrapper";
+
+  roadmapSection.appendChild(treeWrapper);
+
+  // ==========================================
+  // LEAF NODE
+  // ==========================================
+
+  if (!currentSkill.children || currentSkill.children.length === 0) {
+    const leafMessage = document.createElement("div");
+
+    leafMessage.className = "roadmap-leaf-message";
+
+    leafMessage.innerHTML = `
+      <strong>End of this roadmap branch</strong>
+      <span>
+        This is currently the deepest skill in this branch.
+        Use the lesson above to study this skill.
+      </span>
+    `;
+
+    treeWrapper.appendChild(leafMessage);
+
+    return;
+  }
+
+  // ==========================================
+  // TREE
+  // ==========================================
+
+  const treeCanvas = document.createElement("div");
+
+  treeCanvas.className = "roadmap-tree";
+
+  treeWrapper.appendChild(treeCanvas);
+
+  // ==========================================
+  // SVG CONNECTION LINES
+  // ==========================================
+
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+
+  svg.classList.add("roadmap-lines");
+
+  treeCanvas.appendChild(svg);
+
+  // ==========================================
+  // CURRENT SKILL NODE
+  // ==========================================
+
+  const currentNode = document.createElement("button");
+
+  currentNode.type = "button";
+
+  currentNode.className = "roadmap-node current-node";
+
+  currentNode.textContent = currentSkill.name;
+
+  treeCanvas.appendChild(currentNode);
+
+  // ==========================================
+  // CHILDREN
+  // ==========================================
+
+  const childrenContainer = document.createElement("div");
+
+  childrenContainer.className = "roadmap-children";
+
+  treeCanvas.appendChild(childrenContainer);
+
+  currentSkill.children.forEach((child) => {
+    const node = document.createElement("button");
+
+    node.type = "button";
+
+    node.className = "roadmap-node child-node";
+
+    node.textContent = child.name;
+
+    node.onclick = () => {
+      openSkill(child.id);
+    };
+
+    childrenContainer.appendChild(node);
+  });
+
+  // ==========================================
+  // DRAW CONNECTION LINES
+  // ==========================================
+
+  requestAnimationFrame(() => {
+    const currentRect = currentNode.getBoundingClientRect();
+
+    const treeRect = treeCanvas.getBoundingClientRect();
+
+    const startX = currentRect.left + currentRect.width / 2 - treeRect.left;
+
+    const startY = currentRect.bottom - treeRect.top;
+
+    const childNodes = childrenContainer.querySelectorAll(".child-node");
+
+    childNodes.forEach((node) => {
+      const rect = node.getBoundingClientRect();
+
+      const endX = rect.left + rect.width / 2 - treeRect.left;
+
+      const endY = rect.top - treeRect.top;
+
+      const line = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "line",
+      );
+
+      line.setAttribute("x1", startX);
+
+      line.setAttribute("y1", startY);
+
+      line.setAttribute("x2", endX);
+
+      line.setAttribute("y2", endY);
+
+      line.setAttribute("stroke", "currentColor");
+
+      line.setAttribute("stroke-width", "2");
+
+      line.setAttribute("opacity", "0.35");
+
+      svg.appendChild(line);
+    });
+
+    svg.setAttribute("width", treeCanvas.scrollWidth);
+
+    svg.setAttribute("height", treeCanvas.scrollHeight);
+  });
+}
+function renderRootRoadmap() {
+  // ==========================================
+  // ROOT ROADMAP
+  // ==========================================
 
   roadmapCanvas.innerHTML = "";
 
@@ -572,13 +1281,20 @@ function renderRoadmap() {
 
   roadmapCanvas.appendChild(svg);
 
+  // ==========================================
+  // ROOT NODE
+  // ==========================================
+
   const parentX = roadmapCanvas.clientWidth / 2;
-  const parentY = 40;
+
+  const parentY = 70;
 
   const parentNode = document.createElement("div");
-  parentNode.className = "roadmap-node";
+
+  parentNode.className = "roadmap-node current-node";
 
   parentNode.style.left = `${parentX}px`;
+
   parentNode.style.top = `${parentY}px`;
 
   roadmapCanvas.appendChild(parentNode);
@@ -586,63 +1302,102 @@ function renderRoadmap() {
   const parentLabel = document.createElement("div");
 
   parentLabel.className = "roadmap-label";
+
   parentLabel.textContent = currentSkill.name;
 
   parentLabel.style.left = `${parentX}px`;
-  parentLabel.style.top = `${parentY + 35}px`;
+
+  parentLabel.style.top = `${parentY + 45}px`;
 
   roadmapCanvas.appendChild(parentLabel);
-  parentNode.classList.add("current-node");
+
+  // ==========================================
+  // ROOT CHILDREN
+  // ==========================================
+
+  if (!currentSkill.children || currentSkill.children.length === 0) {
+    const empty = document.createElement("p");
+
+    empty.className = "empty-tree";
+
+    empty.textContent = "No skills yet.";
+
+    roadmapCanvas.appendChild(empty);
+
+    return;
+  }
+
+  const spacing = 170;
+
+  const totalWidth = (currentSkill.children.length - 1) * spacing;
+
+  const startX = roadmapCanvas.clientWidth / 2 - totalWidth / 2;
+
+  const childY = 190;
 
   currentSkill.children.forEach((child, index) => {
+    const x = startX + index * spacing;
+
+    // ======================================
+    // NODE
+    // ======================================
+
     const node = document.createElement("div");
 
     node.className = "roadmap-node";
-    const spacing = 140;
-    const totalWidth = (currentSkill.children.length - 1) * spacing;
-
-    const startX = roadmapCanvas.clientWidth / 2 - totalWidth / 2;
-
-    const x = startX + index * spacing;
-    const y = 120;
-
-    const parentX = roadmapCanvas.clientWidth / 2;
-    const parentY = 40;
-
-    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-
-    line.setAttribute("x1", parentX);
-    line.setAttribute("y1", parentY);
-
-    line.setAttribute("x2", x);
-    line.setAttribute("y2", y);
-
-    line.setAttribute("stroke", "#444");
-    line.setAttribute("stroke-width", "3");
-
-    svg.appendChild(line);
 
     node.style.left = `${x}px`;
-    node.style.top = `${y}px`;
+
+    node.style.top = `${childY}px`;
+
     node.onclick = () => {
       openSkill(child.id);
     };
 
     roadmapCanvas.appendChild(node);
+
+    // ======================================
+    // LABEL
+    // ======================================
+
     const label = document.createElement("div");
 
     label.className = "roadmap-label";
 
     label.textContent = child.name;
 
-    node.style.left = `${x}px`;
-    node.style.top = `${y}px`;
-
     label.style.left = `${x}px`;
-    label.style.top = `${y + 35}px`;
+
+    label.style.top = `${childY + 40}px`;
 
     roadmapCanvas.appendChild(label);
+
+    // ======================================
+    // CONNECTION
+    // ======================================
+
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+
+    line.setAttribute("x1", parentX);
+
+    line.setAttribute("y1", parentY);
+
+    line.setAttribute("x2", x);
+
+    line.setAttribute("y2", childY);
+
+    line.setAttribute("stroke", "currentColor");
+
+    line.setAttribute("stroke-width", "2");
+
+    line.setAttribute("opacity", "0.35");
+
+    svg.appendChild(line);
   });
+
+  svg.setAttribute("width", roadmapCanvas.scrollWidth);
+
+  svg.setAttribute("height", roadmapCanvas.scrollHeight);
 }
 function addChildSkill(parentSkill) {
   const name = prompt("Skill name:");
@@ -655,6 +1410,8 @@ function addChildSkill(parentSkill) {
     name,
 
     description: "",
+
+    lessonSummary: "",
 
     level: 1,
 
@@ -676,6 +1433,7 @@ function addChildSkill(parentSkill) {
 
     children: [],
   });
+
   saveSkillTree();
 
   renderInspector();
@@ -694,6 +1452,10 @@ function migrateSkills(nodes) {
   nodes.forEach((skill) => {
     if (!skill.description) {
       skill.description = "";
+    }
+
+    if (!skill.lessonSummary) {
+      skill.lessonSummary = "";
     }
 
     if (!skill.level) {
@@ -834,7 +1596,9 @@ roadmapFile.onchange = (event) => {
     } catch (err) {
       alert("Invalid roadmap JSON.");
       console.error(err);
+
       generateRoadmapBtn.disabled = false;
+
       aiOutput.textContent = "❌ " + err.message;
     }
   };
@@ -857,6 +1621,7 @@ generateRoadmapBtn.onclick = async () => {
   console.log("Sending request...");
 
   aiOutput.textContent = "🧠 Generating roadmap...";
+
   generateRoadmapBtn.disabled = true;
 
   try {
@@ -877,62 +1642,75 @@ generateRoadmapBtn.onclick = async () => {
       throw new Error(`Server error: ${res.status}`);
     }
 
-    const data = await res.json();
+    // ========================================================
+    // STREAM ROADMAP
+    // ========================================================
 
-    console.log("AI response:", data);
+    const roadmap = await readAIStream(res, (chunk, fullResponse) => {
+      // Show live generation
+      aiOutput.textContent = "🧠 Building roadmap...\n\n" + fullResponse;
 
-    // =========================
-    // PARSE AI ROADMAP
-    // =========================
+      // Keep newest content visible
+      aiOutput.scrollTop = aiOutput.scrollHeight;
+    });
 
-    let roadmap;
+    // ========================================================
+    // PARSE ROADMAP
+    // ========================================================
+
+    let roadmapData;
 
     try {
-      roadmap = JSON.parse(data.response);
+      roadmapData = JSON.parse(roadmap);
     } catch (parseError) {
-      console.error("AI did not return valid JSON:", data.response);
+      console.error("AI did not return valid JSON:", roadmap);
 
       aiOutput.textContent =
-        "❌ The AI did not return a valid roadmap.\n\n" + data.response;
+        "❌ The AI did not return a valid roadmap.\n\n" + roadmap;
 
       return;
     }
 
-    // =========================
+    // ========================================================
     // VALIDATE ROADMAP
-    // =========================
+    // ========================================================
 
-    if (!roadmap || typeof roadmap !== "object") {
+    if (!roadmapData || typeof roadmapData !== "object") {
       throw new Error("Invalid roadmap format.");
     }
 
-    if (!roadmap.name) {
+    if (!roadmapData.name) {
       throw new Error("Roadmap is missing a name.");
     }
 
-    if (!Array.isArray(roadmap.children)) {
-      roadmap.children = [];
+    if (!Array.isArray(roadmapData.children)) {
+      roadmapData.children = [];
     }
 
-    console.log("Valid roadmap:", roadmap);
+    console.log("Valid roadmap:", roadmapData);
 
-    // =========================
-    // IMPORT INTO SKILL TREE
-    // =========================
+    // ========================================================
+    // IMPORT
+    // ========================================================
 
-    const rootSkill = importRoadmap(roadmap);
+    const rootSkill = importRoadmap(roadmapData);
 
-    // =========================
+    // ========================================================
     // UPDATE UI
-    // =========================
+    // ========================================================
 
     navigationStack = [
       {
         id: "root",
+
         name: "Character Stats",
+
         level: 1,
+
         xp: 0,
+
         description: "Your overall character progression.",
+
         children: skillTree,
       },
     ];
@@ -942,15 +1720,14 @@ generateRoadmapBtn.onclick = async () => {
     renderInspector();
     renderRoadmap();
 
-    // =========================
-    // SHOW RESULT
-    // =========================
+    // ========================================================
+    // RESULT
+    // ========================================================
 
     aiOutput.textContent =
       `✅ Roadmap created: ${rootSkill.name}\n\n` +
-      JSON.stringify(roadmap, null, 2);
+      JSON.stringify(roadmapData, null, 2);
 
-    // Clear input
     roadmapPrompt.value = "";
 
     console.log("Roadmap successfully imported:", rootSkill);
@@ -962,4 +1739,5 @@ generateRoadmapBtn.onclick = async () => {
     generateRoadmapBtn.disabled = false;
   }
 };
+
 createAIDrawer();

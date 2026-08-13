@@ -180,3 +180,95 @@
   font-size: 0.9rem;
   font-weight: 700;
 }
+/* ==========================================
+   UPDATE MODAL
+========================================== */
+
+.update-modal {
+  position: fixed;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background: rgba(0, 0, 0, 0.45);
+
+  z-index: 9999;
+}
+
+.update-modal-content {
+  width: min(600px, 95%);
+
+  max-height: 80vh;
+
+  overflow-y: auto;
+
+  background: white;
+
+  border: 2px solid black;
+  border-radius: 16px;
+
+  padding: 25px;
+
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+}
+
+.update-modal-header {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 20px;
+}
+
+.update-modal-header h2 {
+  margin: 0;
+}
+
+.update-close {
+  width: 36px;
+  height: 36px;
+
+  border: 2px solid black;
+  border-radius: 50%;
+
+  background: white;
+
+  font-size: 1.4rem;
+
+  cursor: pointer;
+}
+
+.update-close:hover {
+  transform: scale(1.05);
+}
+
+.update-entry {
+  padding: 18px 0;
+
+  border-top: 1px solid #ddd;
+}
+
+.update-entry:first-of-type {
+  border-top: none;
+}
+
+.update-entry h3 {
+  margin: 0;
+}
+
+.update-entry h4 {
+  margin: 8px 0;
+}
+
+.update-entry small {
+  color: #777;
+}
+
+.update-entry li {
+  margin: 6px 0;
+}
