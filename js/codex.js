@@ -7,6 +7,15 @@
 // STORAGE
 // =====================================================
 
+let testTime = null;
+
+function getCurrentTime() {
+  return testTime || new Date();
+}
+function setTestTime(date) {
+  testTime = new Date(date);
+}
+
 const savedFolders = localStorage.getItem("codexFolders");
 
 let rootFolder;
@@ -53,9 +62,19 @@ let editingCard = null;
 
 let reviewCards = [];
 
+let stillNeedsReview = [];
+
+let originalReviewCount = 0;
+
+let completedReviewCount = 0;
+
+let isRetryPhase = false;
+
+let lastAnswerCorrect = false;
+
 let reviewIndex = 0;
 
-let reviewMode = null;
+let reviewMode = "multiple-choice";
 
 let reviewAnswered = false;
 
@@ -64,7 +83,7 @@ let reviewScore = 0;
 let reviewMatchSelections = [];
 
 // =====================================================
-// ELEMENTS
+// NORMAL CODEX ELEMENTS
 // =====================================================
 
 const card = document.getElementById("flipCard");
@@ -74,6 +93,10 @@ const frontEl = document.getElementById("cardFront");
 const backEl = document.getElementById("cardBack");
 
 const cardCounter = document.getElementById("cardCounter");
+
+const nextReviewPanel = document.getElementById("nextReviewPanel");
+
+const nextReviewList = document.getElementById("nextReviewList");
 
 const prevBtn = document.getElementById("prevBtn");
 
@@ -115,37 +138,37 @@ const importCodexInput = document.getElementById("importCodexInput");
 
 const reviewModeBtn = document.getElementById("reviewModeBtn");
 
-const reviewArea = document.getElementById("reviewArea");
+const reviewWorkspace = document.getElementById("reviewWorkspace");
 
-const reviewDueCount = document.getElementById("reviewDueCount");
+const reviewModeSelectorBtn = document.getElementById("reviewModeSelectorBtn");
 
-const reviewModeSelector = document.getElementById("reviewModeSelector");
+const reviewModeSelectorLabel = document.getElementById(
+  "reviewModeSelectorLabel",
+);
 
-const reviewSession = document.getElementById("reviewSession");
-
-const changeReviewModeBtn = document.getElementById("changeReviewModeBtn");
+const reviewModeOptions = document.querySelectorAll(".review-mode-option");
 
 const reviewProgress = document.getElementById("reviewProgress");
 
 const reviewQuestion = document.getElementById("reviewQuestion");
 
-const multipleChoiceArea = document.getElementById("multipleChoiceArea");
+const multipleChoiceReview = document.getElementById("multipleChoiceReview");
 
 const multipleChoiceAnswers = document.getElementById("multipleChoiceAnswers");
 
-const shortAnswerArea = document.getElementById("shortAnswerArea");
+const shortAnswerReview = document.getElementById("shortAnswerReview");
 
 const shortAnswerInput = document.getElementById("shortAnswerInput");
 
 const checkShortAnswerBtn = document.getElementById("checkShortAnswerBtn");
 
-const matchArea = document.getElementById("matchArea");
+const matchReview = document.getElementById("matchReview");
 
 const matchBoard = document.getElementById("matchBoard");
 
 const checkMatchBtn = document.getElementById("checkMatchBtn");
 
-const recallArea = document.getElementById("recallArea");
+const recallReview = document.getElementById("recallReview");
 
 const revealRecallBtn = document.getElementById("revealRecallBtn");
 
@@ -154,6 +177,10 @@ const recallAnswer = document.getElementById("recallAnswer");
 const reviewResult = document.getElementById("reviewResult");
 
 const reviewRatingArea = document.getElementById("reviewRatingArea");
+
+const reviewPreviousBtn = document.getElementById("reviewPreviousBtn");
+
+const reviewNextBtn = document.getElementById("reviewNextBtn");
 
 // =====================================================
 // STORAGE HELPERS
@@ -208,6 +235,12 @@ function renderFolders() {
 
   folderList.innerHTML = "";
 
+  const folderActions = document.querySelector(".folder-actions");
+
+  if (folderActions) {
+    folderActions.style.display = currentFolder === rootFolder ? "none" : "";
+  }
+
   for (const folder of currentFolder.children || []) {
     const button = document.createElement("button");
 
@@ -217,6 +250,10 @@ function renderFolders() {
       folderHistory.push(currentFolder);
 
       currentFolder = folder;
+
+      updateReviewDueCounts();
+
+      updateNextReviewPanel();
 
       currentIndex = 0;
 
@@ -249,6 +286,10 @@ if (addFolderBtn) {
 
     if (!trimmed) {
       return;
+    }
+
+    if (!currentFolder.children) {
+      currentFolder.children = [];
     }
 
     currentFolder.children.push({
@@ -335,6 +376,8 @@ if (deleteFolderBtn) {
 
     currentIndex = 0;
 
+    updateReviewDueCounts();
+
     saveFolders();
 
     renderFolders();
@@ -360,6 +403,8 @@ if (backBtn) {
     currentFolder = folderHistory.pop();
 
     currentIndex = 0;
+
+    updateReviewDueCounts();
 
     renderFolders();
 
@@ -388,7 +433,7 @@ function updateFilteredCards() {
 }
 
 // =====================================================
-// RENDER FLASHCARD
+// NORMAL FLASHCARD RENDER
 // =====================================================
 
 function render() {
@@ -417,7 +462,7 @@ function render() {
   cardCounter.textContent =
     "Card " + (currentIndex + 1) + " / " + filteredCards.length;
 
-  card.classList.remove("flipped");
+  card?.classList.remove("flipped");
 
   flipped = false;
 }
@@ -603,25 +648,46 @@ if (bulkAddBtn) {
 }
 
 // =====================================================
-// SPACED REPETITION
+// SRS
 // =====================================================
 
-function ensureSRS(card) {
-  if (!card.srs) {
+function createSRSData() {
+  return {
+    due: new Date().toISOString(),
+    interval: 0,
+    ease: 2.5,
+    repetitions: 0,
+    lapses: 0,
+  };
+}
+
+function ensureSRS(card, mode = "multipleChoice") {
+  const modeMap = {
+    "multiple-choice": "multipleChoice",
+    "short-answer": "shortAnswer",
+    match: "match",
+    recall: "recall",
+  };
+
+  mode = modeMap[mode] || mode;
+  // New SRS structure
+  if (!card.srs || !card.srs.multipleChoice) {
+    const oldSRS = card.srs;
+
     card.srs = {
-      due: new Date().toISOString(),
-
-      interval: 0,
-
-      ease: 2.5,
-
-      repetitions: 0,
-
-      lapses: 0,
+      multipleChoice: oldSRS || createSRSData(),
+      shortAnswer: createSRSData(),
+      match: createSRSData(),
+      recall: createSRSData(),
     };
   }
 
-  return card.srs;
+  // Make sure every mode exists.
+  if (!card.srs[mode]) {
+    card.srs[mode] = createSRSData();
+  }
+
+  return card.srs[mode];
 }
 
 function addMinutes(date, minutes) {
@@ -631,15 +697,66 @@ function addMinutes(date, minutes) {
 function addDays(date, days) {
   return new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
 }
+function resetCurrentFolderSRS() {
+  for (const card of getCurrentCards()) {
+    card.srs = {
+      multipleChoice: createSRSData(),
+      shortAnswer: createSRSData(),
+      match: createSRSData(),
+      recall: createSRSData(),
+    };
+  }
 
+  saveFolders();
+
+  updateReviewDueCounts();
+  updateNextReviewPanel();
+
+  console.log(
+    `Reset SRS for ${getCurrentCards().length} cards in "${currentFolder.name}".`,
+  );
+}
+function formatTimeUntil(date) {
+  const diff = new Date(date).getTime() - getCurrentTime().getTime();
+
+  if (diff <= 0) {
+    return "Due now";
+  }
+
+  const minutes = Math.ceil(diff / (1000 * 60));
+
+  if (minutes < 60) {
+    return `${minutes}m`;
+  }
+
+  const hours = Math.ceil(minutes / 60);
+
+  if (hours < 24) {
+    return `${hours}h`;
+  }
+
+  const days = Math.ceil(hours / 24);
+
+  return `${days}d`;
+}
 // =====================================================
 // SCHEDULE CARD
 // =====================================================
 
-function scheduleCard(card, rating) {
-  const srs = ensureSRS(card);
+function scheduleCard(card, rating, mode = "multipleChoice") {
+  const srsMode =
+    {
+      "multiple-choice": "multipleChoice",
+      "short-answer": "shortAnswer",
+      match: "match",
+      recall: "recall",
+    }[mode] || mode;
 
-  const now = new Date();
+  const srs = ensureSRS(card, srsMode);
+
+  console.log("SRS before scheduling:", card.srs);
+
+  const now = getCurrentTime();
 
   if (rating === "again") {
     srs.lapses++;
@@ -650,55 +767,89 @@ function scheduleCard(card, rating) {
 
     srs.due = addMinutes(now, 10).toISOString();
   } else if (rating === "hard") {
-    srs.interval =
-      srs.interval <= 0 ? 1 : Math.max(1, Math.round(srs.interval * 1.2));
-
-    srs.ease = Math.max(1.3, srs.ease - 0.15);
+    srs.interval = 1;
 
     srs.repetitions++;
 
-    srs.due = addDays(now, srs.interval).toISOString();
+    srs.due = addDays(now, 1).toISOString();
   } else if (rating === "good") {
-    if (srs.interval <= 0) {
-      srs.interval = 1;
-    } else if (srs.interval === 1) {
-      srs.interval = 3;
-    } else {
-      srs.interval = Math.max(
-        srs.interval + 1,
-        Math.round(srs.interval * srs.ease),
-      );
-    }
+    srs.interval = 3;
 
     srs.repetitions++;
 
-    srs.due = addDays(now, srs.interval).toISOString();
+    srs.due = addDays(now, 3).toISOString();
   } else if (rating === "easy") {
-    srs.interval =
-      srs.interval <= 0
-        ? 4
-        : Math.max(srs.interval + 1, Math.round(srs.interval * srs.ease * 1.3));
-
-    srs.ease = Math.min(3.0, srs.ease + 0.15);
+    srs.interval = 7;
 
     srs.repetitions++;
 
-    srs.due = addDays(now, srs.interval).toISOString();
+    srs.due = addDays(now, 7).toISOString();
   }
-
+  console.log("SRS after scheduling:", card.srs);
+  console.log("SRS scheduled:", {
+    mode,
+    rating,
+    due: srs.due,
+  });
   saveFolders();
 }
 
-function isCardDue(card) {
-  const srs = ensureSRS(card);
-
-  return new Date(srs.due) <= new Date();
+function isCardDue(card, mode = "multipleChoice") {
+  const srs = ensureSRS(card, mode);
+  return new Date(srs.due) <= getCurrentTime();
 }
 
-function getDueCards() {
-  return getCurrentCards().filter((card) => isCardDue(card));
-}
+function getDueCards(mode = "multipleChoice") {
+  const srsModeMap = {
+    "multiple-choice": "multipleChoice",
+    "short-answer": "shortAnswer",
+    match: "match",
+    recall: "recall",
+  };
 
+  const srsMode = srsModeMap[mode] || mode;
+
+  return getCurrentCards().filter((card) => isCardDue(card, srsMode));
+}
+function getUpcomingReviews() {
+  const srsModeMap = {
+    "multiple-choice": "multipleChoice",
+    "short-answer": "shortAnswer",
+    match: "match",
+    recall: "recall",
+  };
+
+  const srsMode = srsModeMap[reviewMode] || reviewMode;
+
+  return getCurrentCards()
+    .filter((card) => {
+      const srs = card.srs?.[srsMode];
+
+      return srs && new Date(srs.due) > getCurrentTime();
+    })
+    .sort(
+      (a, b) => new Date(a.srs[srsMode].due) - new Date(b.srs[srsMode].due),
+    );
+}
+function getReviewDueCounts() {
+  return {
+    multipleChoice: getDueCards("multipleChoice").length,
+    shortAnswer: getDueCards("shortAnswer").length,
+    match: getDueCards("match").length,
+    recall: getDueCards("recall").length,
+  };
+}
+function updateReviewDueCounts() {
+  const counts = getReviewDueCounts();
+
+  document.querySelectorAll(".review-mode-due").forEach((element) => {
+    const mode = element.dataset.dueMode;
+
+    const count = counts[mode];
+
+    element.textContent = `${count} due`;
+  });
+}
 function getAllDueCards(folder = rootFolder) {
   let cards = [];
 
@@ -716,128 +867,222 @@ function getAllDueCards(folder = rootFolder) {
 }
 
 // =====================================================
-// REVIEW
+// REVIEW WORKSPACE
 // =====================================================
 
 function openReview() {
-  if (!reviewArea) {
+  if (!reviewWorkspace) {
+    console.error("Review workspace not found.");
+
     return;
   }
 
-  reviewArea.classList.remove("hidden");
+  // Hide normal flashcards.
+  document.querySelector(".card-counter-container")?.classList.add("hidden");
 
-  document.getElementById("flashcardWorkspace")?.classList.add("hidden");
+  document.querySelector(".card-container")?.classList.add("hidden");
 
-  reviewCards = getDueCards();
+  // Show Review.
+  reviewWorkspace.classList.remove("hidden");
+
+  // Reset the mode BEFORE pulling due cards, so the cards we
+  // fetch actually match the mode the UI is about to show.
+  reviewCards = getDueCards(reviewMode);
+  originalReviewCount = reviewCards.length;
+  stillNeedsReview = [];
+  isRetryPhase = false;
+  lastAnswerCorrect = false;
+
+  if (reviewCards.length === 0) {
+    alert("No cards are due for review.");
+    return;
+  }
 
   reviewIndex = 0;
 
   reviewScore = 0;
 
-  reviewMode = null;
-
   reviewAnswered = false;
 
-  updateReviewDueCount();
+  updateReviewDueCounts();
 
-  showReviewSelector();
+  updateReviewModeLabel();
+
+  renderReview();
 }
-
-function closeReview() {
-  if (!reviewArea) {
+function updateNextReviewPanel() {
+  if (!nextReviewPanel || !nextReviewList) {
     return;
   }
 
-  reviewArea.classList.add("hidden");
+  if (currentFolder === rootFolder) {
+    nextReviewPanel.classList.add("hidden");
+    return;
+  }
 
-  document.getElementById("flashcardWorkspace")?.classList.remove("hidden");
+  nextReviewPanel.classList.remove("hidden");
+
+  const upcomingReviews = getUpcomingReviews();
+
+  nextReviewList.innerHTML = "";
+
+  if (upcomingReviews.length === 0) {
+    nextReviewList.textContent = "No upcoming reviews.";
+    return;
+  }
+
+  for (const card of upcomingReviews.slice(0, 10)) {
+    const item = document.createElement("div");
+
+    item.className = "next-review-item";
+
+    const srsModeMap = {
+      "multiple-choice": "multipleChoice",
+      "short-answer": "shortAnswer",
+      match: "match",
+      recall: "recall",
+    };
+
+    const srsMode = srsModeMap[reviewMode] || reviewMode;
+
+    const time = formatTimeUntil(card.srs[srsMode].due);
+
+    item.innerHTML = `
+      <span>${card.front}</span>
+      <strong>${time}</strong>
+    `;
+
+    nextReviewList.appendChild(item);
+  }
+}
+// =====================================================
+// CLOSE REVIEW
+// =====================================================
+
+function closeReview() {
+  if (!reviewWorkspace) {
+    return;
+  }
+
+  reviewWorkspace.classList.add("hidden");
+
+  // Restore normal flashcards.
+  document.querySelector(".card-counter-container")?.classList.remove("hidden");
+
+  document.querySelector(".card-container")?.classList.remove("hidden");
 
   reviewCards = [];
 
   reviewIndex = 0;
 
-  reviewMode = null;
-}
-
-function updateReviewDueCount() {
-  if (!reviewDueCount) {
-    return;
-  }
-
-  reviewDueCount.textContent =
-    reviewCards.length === 1 ? "1 card due" : `${reviewCards.length} cards due`;
-}
-
-// =====================================================
-// REVIEW MODE SELECTOR
-// =====================================================
-
-function showReviewSelector() {
-  reviewModeSelector.classList.remove("hidden");
-
-  reviewSession.classList.add("hidden");
-}
-
-function startReviewMode(mode) {
-  if (reviewCards.length === 0) {
-    showNoCardsMessage();
-
-    return;
-  }
-
-  reviewMode = mode;
-
-  reviewIndex = 0;
-
   reviewScore = 0;
 
-  reviewModeSelector.classList.add("hidden");
-
-  reviewSession.classList.remove("hidden");
-
-  renderReviewQuestion();
-}
-
-function showNoCardsMessage() {
-  reviewModeSelector.classList.add("hidden");
-
-  reviewSession.classList.remove("hidden");
-
-  reviewProgress.textContent = "Complete";
-
-  reviewQuestion.textContent = "🎉 You're caught up!";
-
-  hideAllReviewModes();
-
-  reviewResult.classList.remove("hidden");
-
-  reviewResult.textContent = "There are no cards due in this folder right now.";
+  reviewAnswered = false;
 }
 
 // =====================================================
-// REVIEW QUESTION
+// REVIEW COUNT
 // =====================================================
 
-function renderReviewQuestion() {
+// =====================================================
+// REVIEW MODE LABEL
+// =====================================================
+
+function updateReviewModeLabel() {
+  const modes = {
+    "multiple-choice": "🎯 Multiple Choice",
+
+    "short-answer": "✍️ Short Answer",
+
+    match: "🔗 Match",
+
+    recall: "🧠 Recall",
+  };
+
+  const label = modes[reviewMode] || modes["multiple-choice"];
+
+  if (reviewModeSelectorLabel) {
+    reviewModeSelectorLabel.textContent = label;
+  }
+
+  if (reviewModeSelectorBtn) {
+    reviewModeSelectorBtn.setAttribute("aria-label", `Review mode: ${label}`);
+  }
+}
+
+// =====================================================
+// CHANGE REVIEW MODE
+// =====================================================
+
+reviewModeOptions.forEach((option) => {
+  option.addEventListener("click", () => {
+    const mode = option.dataset.mode;
+
+    if (!mode) {
+      return;
+    }
+
+    reviewMode = mode;
+
+    reviewIndex = 0;
+
+    reviewScore = 0;
+
+    reviewAnswered = false;
+
+    updateReviewModeLabel();
+
+    renderReview();
+  });
+});
+
+// =====================================================
+// RENDER REVIEW
+// =====================================================
+
+function renderReview() {
+  // Clear previous dynamically
+  // created next button.
+
+  hideReviewModes();
+
+  if (reviewCards.length === 0) {
+    showReviewComplete();
+
+    return;
+  }
+
   const currentCard = reviewCards[reviewIndex];
 
   if (!currentCard) {
-    finishReview();
+    showReviewComplete();
 
     return;
   }
 
   reviewAnswered = false;
 
-  reviewProgress.textContent = `${reviewIndex + 1} / ${reviewCards.length}`;
+  if (reviewProgress) {
+    if (isRetryPhase) {
+      reviewProgress.textContent = `Still Needs Review • ${reviewIndex + 1} / ${reviewCards.length}`;
+    } else {
+      reviewProgress.textContent = `${reviewIndex + 1} / ${originalReviewCount}`;
+    }
+  }
 
-  reviewQuestion.textContent = currentCard.front;
+  if (reviewQuestion) {
+    reviewQuestion.textContent = currentCard.front || "";
+  }
 
-  reviewResult.classList.add("hidden");
+  if (reviewResult) {
+    reviewResult.className = "review-result hidden";
 
-  reviewRatingArea.classList.add("hidden");
+    reviewResult.textContent = "";
+  }
 
-  hideAllReviewModes();
+  if (reviewRatingArea) {
+    reviewRatingArea.classList.add("hidden");
+  }
 
   if (reviewMode === "multiple-choice") {
     renderMultipleChoice();
@@ -848,16 +1093,63 @@ function renderReviewQuestion() {
   } else if (reviewMode === "recall") {
     renderRecall();
   }
+  updateReviewNavigation();
 }
 
-function hideAllReviewModes() {
-  multipleChoiceArea.classList.add("hidden");
+function updateReviewNavigation() {
+  if (reviewPreviousBtn) {
+    reviewPreviousBtn.disabled = reviewIndex === 0;
+  }
 
-  shortAnswerArea.classList.add("hidden");
+  if (reviewNextBtn) {
+    reviewNextBtn.disabled = !reviewAnswered;
 
-  matchArea.classList.add("hidden");
+    reviewNextBtn.textContent =
+      reviewIndex === reviewCards.length - 1 ? "Finish →" : "Next →";
+  }
+}
+if (reviewPreviousBtn) {
+  reviewPreviousBtn.addEventListener("click", () => {
+    if (reviewIndex <= 0) {
+      return;
+    }
 
-  recallArea.classList.add("hidden");
+    reviewIndex--;
+
+    reviewAnswered = false;
+
+    renderReview();
+  });
+}
+if (reviewNextBtn) {
+  reviewNextBtn.addEventListener("click", () => {
+    if (!reviewAnswered) {
+      return;
+    }
+
+    if (reviewIndex < reviewCards.length - 1) {
+      reviewIndex++;
+
+      reviewAnswered = false;
+
+      renderReview();
+    } else {
+      finishReview();
+    }
+  });
+}
+// =====================================================
+// HIDE REVIEW MODES
+// =====================================================
+
+function hideReviewModes() {
+  multipleChoiceReview?.classList.add("hidden");
+
+  shortAnswerReview?.classList.add("hidden");
+
+  matchReview?.classList.add("hidden");
+
+  recallReview?.classList.add("hidden");
 }
 
 // =====================================================
@@ -865,21 +1157,29 @@ function hideAllReviewModes() {
 // =====================================================
 
 function renderMultipleChoice() {
-  multipleChoiceArea.classList.remove("hidden");
+  if (!multipleChoiceReview || !multipleChoiceAnswers) {
+    return;
+  }
+
+  multipleChoiceReview.classList.remove("hidden");
 
   multipleChoiceAnswers.innerHTML = "";
 
   const currentCard = reviewCards[reviewIndex];
 
+  if (!currentCard) {
+    return;
+  }
+
   const answers = [currentCard.back];
 
-  const otherCards = reviewCards.filter((card) => card !== currentCard);
+  const otherCards = reviewCards.filter((item) => item !== currentCard);
 
   const shuffled = [...otherCards].sort(() => Math.random() - 0.5);
 
-  for (const card of shuffled.slice(0, 3)) {
-    if (!answers.includes(card.back)) {
-      answers.push(card.back);
+  for (const otherCard of shuffled.slice(0, 3)) {
+    if (!answers.includes(otherCard.back)) {
+      answers.push(otherCard.back);
     }
   }
 
@@ -887,6 +1187,8 @@ function renderMultipleChoice() {
 
   for (const answer of answers) {
     const button = document.createElement("button");
+
+    button.type = "button";
 
     button.className = "multiple-choice-btn";
 
@@ -897,38 +1199,45 @@ function renderMultipleChoice() {
         return;
       }
 
-      reviewAnswered = true;
+      reviewAnswered = false;
 
       const correct = answer === currentCard.back;
+
+      lastAnswerCorrect = correct;
 
       if (correct) {
         reviewScore++;
       }
 
-      showReviewResult(
-        correct ? "correct" : "incorrect",
-        correct ? "Correct!" : `Incorrect. The answer is: ${currentCard.back}`,
-      );
+      markMultipleChoiceButtons(currentCard, answer);
 
-      scheduleCard(currentCard, correct ? "good" : "again");
+      reviewRatingArea?.classList.remove("hidden");
 
-      disableChoiceButtons();
-
-      showNextReviewButton();
+      updateReviewNavigation();
     });
 
     multipleChoiceAnswers.appendChild(button);
   }
 }
 
-function disableChoiceButtons() {
-  const buttons = multipleChoiceAnswers.querySelectorAll("button");
+function markMultipleChoiceButtons(currentCard, selectedAnswer) {
+  const buttons = multipleChoiceAnswers?.querySelectorAll("button");
 
-  buttons.forEach((button) => {
+  buttons?.forEach((button) => {
     button.disabled = true;
 
-    if (button.textContent === reviewCards[reviewIndex].back) {
+    // Always show the correct answer in green
+    if (button.textContent === currentCard.back) {
       button.classList.add("correct");
+    }
+
+    // If the user selected the wrong answer,
+    // show their selection in red.
+    if (
+      button.textContent === selectedAnswer &&
+      selectedAnswer !== currentCard.back
+    ) {
+      button.classList.add("incorrect");
     }
   });
 }
@@ -938,11 +1247,21 @@ function disableChoiceButtons() {
 // =====================================================
 
 function renderShortAnswer() {
-  shortAnswerArea.classList.remove("hidden");
+  if (!shortAnswerReview) {
+    return;
+  }
 
-  shortAnswerInput.value = "";
+  shortAnswerReview.classList.remove("hidden");
 
-  shortAnswerInput.focus();
+  if (shortAnswerInput) {
+    shortAnswerInput.value = "";
+
+    shortAnswerInput.disabled = false;
+  }
+
+  if (checkShortAnswerBtn) {
+    checkShortAnswerBtn.disabled = false;
+  }
 }
 
 function normalizeAnswer(text) {
@@ -960,6 +1279,10 @@ if (checkShortAnswerBtn) {
     }
 
     const currentCard = reviewCards[reviewIndex];
+
+    if (!currentCard) {
+      return;
+    }
 
     const userAnswer = normalizeAnswer(shortAnswerInput.value);
 
@@ -979,16 +1302,19 @@ if (checkShortAnswerBtn) {
 
     showReviewResult(
       correct ? "correct" : "incorrect",
+
       correct
         ? "Correct!"
         : `Not an exact match.\n\nExpected answer:\n${currentCard.back}`,
     );
 
-    scheduleCard(currentCard, correct ? "good" : "again");
+    scheduleCard(currentCard, correct ? "good" : "again", "multipleChoice");
+
+    shortAnswerInput.disabled = true;
 
     checkShortAnswerBtn.disabled = true;
 
-    showNextReviewButton();
+    updateReviewNavigation();
   });
 }
 
@@ -997,18 +1323,24 @@ if (checkShortAnswerBtn) {
 // =====================================================
 
 function renderRecall() {
-  recallArea.classList.remove("hidden");
+  if (!recallReview) {
+    return;
+  }
 
-  recallAnswer.classList.add("hidden");
+  recallReview.classList.remove("hidden");
 
-  revealRecallBtn.classList.remove("hidden");
+  recallAnswer?.classList.add("hidden");
 
-  reviewResult.classList.add("hidden");
+  revealRecallBtn?.classList.remove("hidden");
 }
 
 if (revealRecallBtn) {
   revealRecallBtn.addEventListener("click", () => {
     const currentCard = reviewCards[reviewIndex];
+
+    if (!currentCard) {
+      return;
+    }
 
     recallAnswer.textContent = currentCard.back;
 
@@ -1016,11 +1348,11 @@ if (revealRecallBtn) {
 
     revealRecallBtn.classList.add("hidden");
 
-    reviewResult.classList.remove("hidden");
+    reviewAnswered = true;
 
-    reviewResult.textContent = "Rate your recall below.";
+    showReviewResult("correct", "Answer revealed. Rate how well you knew it.");
 
-    reviewRatingArea.classList.remove("hidden");
+    reviewRatingArea?.classList.remove("hidden");
   });
 }
 
@@ -1029,22 +1361,30 @@ if (revealRecallBtn) {
 // =====================================================
 
 function renderMatch() {
-  matchArea.classList.remove("hidden");
+  if (!matchReview || !matchBoard) {
+    return;
+  }
+
+  matchReview.classList.remove("hidden");
 
   matchBoard.innerHTML = "";
 
-  const start = reviewIndex;
+  const cards = reviewCards.slice(reviewIndex, reviewIndex + 4);
 
-  const cards = reviewCards.slice(start, start + 4);
+  if (cards.length < 2) {
+    matchBoard.textContent = "Not enough cards to create a matching set.";
 
-  const questions = cards.map((card, index) => ({
+    return;
+  }
+
+  const questions = cards.map((item, index) => ({
     id: `q-${index}`,
-    text: card.front,
+    text: item.front,
   }));
 
-  const answers = cards.map((card, index) => ({
+  const answers = cards.map((item, index) => ({
     id: `a-${index}`,
-    text: card.back,
+    text: item.back,
   }));
 
   answers.sort(() => Math.random() - 0.5);
@@ -1060,6 +1400,8 @@ function renderMatch() {
   questions.forEach((question) => {
     const button = document.createElement("button");
 
+    button.type = "button";
+
     button.className = "match-item";
 
     button.dataset.id = question.id;
@@ -1073,6 +1415,8 @@ function renderMatch() {
 
   answers.forEach((answer) => {
     const button = document.createElement("button");
+
+    button.type = "button";
 
     button.className = "match-item";
 
@@ -1128,28 +1472,56 @@ if (checkMatchBtn) {
       return;
     }
 
-    const correct =
-      question.id.replace("q-", "") === answer.id.replace("a-", "");
+    const questionIndex = question.id.replace("q-", "");
 
-    reviewMatchSelections.forEach((item) => {
-      item.button.classList.remove("selected");
+    const answerIndex = answer.id.replace("a-", "");
 
-      item.button.classList.add(correct ? "correct" : "incorrect");
-    });
+    const correct = questionIndex === answerIndex;
+
+    if (correct) {
+      reviewMatchSelections.forEach((item) => {
+        item.button.classList.remove("selected");
+        item.button.classList.add("correct");
+      });
+
+      reviewMatchSelections = [];
+    } else {
+      reviewMatchSelections.forEach((item) => {
+        item.button.classList.remove("selected");
+        item.button.classList.add("incorrect");
+      });
+
+      setTimeout(() => {
+        reviewMatchSelections.forEach((item) => {
+          item.button.classList.remove("incorrect");
+        });
+
+        reviewMatchSelections = [];
+      }, 700);
+    }
 
     if (correct) {
       reviewScore++;
     }
 
-    reviewAnswered = true;
+    if (correct) {
+      reviewAnswered = false;
 
-    showReviewResult(
-      correct ? "correct" : "incorrect",
-      correct ? "Correct match!" : "That pair doesn't match.",
-    );
+      showReviewResult("correct", "Correct match!");
 
-    if (reviewCards[reviewIndex]) {
-      scheduleCard(reviewCards[reviewIndex], correct ? "good" : "again");
+      updateReviewNavigation();
+    } else {
+      reviewAnswered = false;
+
+      showReviewResult("incorrect", "That pair doesn't match. Try again.");
+
+      updateReviewNavigation();
+    }
+
+    const currentCard = reviewCards[reviewIndex];
+
+    if (currentCard) {
+      scheduleCard(currentCard, correct ? "good" : "again", "match");
     }
 
     showNextReviewButton();
@@ -1161,42 +1533,15 @@ if (checkMatchBtn) {
 // =====================================================
 
 function showReviewResult(type, message) {
-  reviewResult.classList.remove("hidden");
+  if (!reviewResult) {
+    return;
+  }
 
   reviewResult.className = `review-result ${type}`;
 
+  reviewResult.classList.remove("hidden");
+
   reviewResult.textContent = message;
-}
-
-function showNextReviewButton() {
-  reviewRatingArea.classList.add("hidden");
-
-  const existing = document.getElementById("nextReviewBtn");
-
-  if (existing) {
-    existing.remove();
-  }
-
-  const button = document.createElement("button");
-
-  button.id = "nextReviewBtn";
-
-  button.className = "review-primary-btn";
-
-  button.textContent =
-    reviewIndex < reviewCards.length - 1 ? "Next Card →" : "Finish Review";
-
-  button.addEventListener("click", () => {
-    reviewIndex++;
-
-    if (reviewIndex >= reviewCards.length) {
-      finishReview();
-    } else {
-      renderReviewQuestion();
-    }
-  });
-
-  reviewSession.appendChild(button);
 }
 
 // =====================================================
@@ -1204,59 +1549,33 @@ function showNextReviewButton() {
 // =====================================================
 
 function finishReview() {
-  hideAllReviewModes();
+  hideReviewModes();
 
-  reviewResult.classList.remove("hidden");
-
-  reviewResult.className = "review-result complete";
-
-  reviewResult.textContent = `🎉 Review complete!\n\nScore: ${reviewScore} / ${reviewCards.length}`;
-
-  reviewProgress.textContent = "Complete";
-
-  reviewRatingArea.classList.add("hidden");
-
-  const existing = document.getElementById("nextReviewBtn");
-
-  if (existing) {
-    existing.remove();
+  if (reviewProgress) {
+    reviewProgress.textContent = "Complete";
   }
 
-  updateReviewDueCount();
-}
+  if (reviewQuestion) {
+    reviewQuestion.textContent = "🎉 Review complete!";
+  }
 
-// =====================================================
-// CHANGE MODE
-// =====================================================
+  if (reviewResult) {
+    reviewResult.className = "review-result complete";
 
-if (changeReviewModeBtn) {
-  changeReviewModeBtn.addEventListener("click", () => {
-    const nextButton = document.getElementById("nextReviewBtn");
+    reviewResult.classList.remove("hidden");
 
-    if (nextButton) {
-      nextButton.remove();
-    }
+    reviewResult.textContent = `Score: ${reviewScore} / ${reviewCards.length}`;
+  }
 
-    showReviewSelector();
-  });
-}
+  if (reviewRatingArea) {
+    reviewRatingArea.classList.add("hidden");
+  }
 
-// =====================================================
-// MODE BUTTONS
-// =====================================================
+  updateReviewDueCounts();
 
-document.querySelectorAll(".review-mode-card").forEach((button) => {
-  button.addEventListener("click", () => {
-    startReviewMode(button.dataset.reviewMode);
-  });
-});
-
-// =====================================================
-// REVIEW BUTTON
-// =====================================================
-
-if (reviewModeBtn) {
-  reviewModeBtn.addEventListener("click", openReview);
+  stillNeedsReview = [];
+  isRetryPhase = false;
+  lastAnswerCorrect = false;
 }
 
 // =====================================================
@@ -1271,17 +1590,66 @@ document.querySelectorAll(".review-rating-btn").forEach((button) => {
       return;
     }
 
-    scheduleCard(currentCard, button.dataset.rating);
+    scheduleCard(currentCard, button.dataset.rating, reviewMode);
+
+    const srsModeMap = {
+      "multiple-choice": "multipleChoice",
+      "short-answer": "shortAnswer",
+      match: "match",
+      recall: "recall",
+    };
+
+    const srsMode = srsModeMap[reviewMode] || reviewMode;
+    const srs = ensureSRS(currentCard, srsMode);
+
+    if (reviewResult) {
+      reviewResult.textContent = `Next review: ${formatTimeUntil(srs.due)}`;
+      reviewResult.className = "review-result";
+      reviewResult.classList.remove("hidden");
+    }
+
+    reviewAnswered = true;
+
+    updateReviewDueCounts();
+
+    if (!lastAnswerCorrect) {
+      stillNeedsReview.push(currentCard);
+    }
 
     reviewIndex++;
 
     if (reviewIndex >= reviewCards.length) {
-      finishReview();
+      if (stillNeedsReview.length > 0) {
+        isRetryPhase = true;
+        reviewCards = [...stillNeedsReview];
+
+        stillNeedsReview = [];
+
+        reviewIndex = 0;
+
+        renderReview();
+      } else {
+        finishReview();
+      }
     } else {
-      renderReviewQuestion();
+      renderReview();
     }
   });
 });
+
+// =====================================================
+// REVIEW BUTTON
+// =====================================================
+
+if (reviewModeBtn) {
+  reviewModeBtn.addEventListener("click", () => {
+    if (reviewWorkspace.classList.contains("hidden")) {
+      openReview();
+    } else {
+      closeReview();
+    }
+  });
+}
 
 // =====================================================
 // EXPORT
@@ -1291,8 +1659,11 @@ if (exportCodexBtn) {
   exportCodexBtn.addEventListener("click", () => {
     const exportData = {
       version: 1,
+
       exportedAt: new Date().toISOString(),
+
       app: "Ascend Codex",
+
       data: rootFolder,
     };
 
@@ -1352,9 +1723,11 @@ if (importCodexInput) {
           return;
         }
 
-        if (
-          !confirm("Importing will replace your current Codex.\n\nContinue?")
-        ) {
+        const confirmed = confirm(
+          "Importing will replace your current Codex.\n\nContinue?",
+        );
+
+        if (!confirmed) {
           return;
         }
 
@@ -1399,5 +1772,11 @@ renderFolders();
 render();
 
 updateBreadcrumb();
+
+updateReviewModeLabel();
+
+updateReviewDueCounts();
+
+updateNextReviewPanel();
 
 console.log("📚 Ascend Codex loaded");

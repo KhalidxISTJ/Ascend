@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="css/codex.css" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
     <link
@@ -21,8 +20,15 @@
   </head>
 
   <body>
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
     <header>
-      <h1>Welcome to <span class="ascend">Ascend</span></h1>
+      <h1>
+        Welcome to
+        <span class="ascend">Ascend</span>
+      </h1>
 
       <hr />
 
@@ -41,27 +47,40 @@
         </div>
 
         <div class="nav-links">
-          <a class="nav-link" href="index.html">Home</a>
-          <a class="nav-link" href="quests.html">Quests</a>
-          <a class="nav-link" href="stats.html">Stats</a>
-          <a class="nav-link active" href="codex.html">Codex</a>
-          <a class="nav-link" href="journal.html">Journal</a>
-          <a class="nav-link" href="notes.html">Notes</a>
+          <a class="nav-link" href="index.html"> Home </a>
+
+          <a class="nav-link" href="quests.html"> Quests </a>
+
+          <a class="nav-link" href="stats.html"> Stats </a>
+
+          <a class="nav-link active" href="codex.html"> Codex </a>
+
+          <a class="nav-link" href="journal.html"> Journal </a>
+
+          <a class="nav-link" href="notes.html"> Notes </a>
         </div>
 
         <div class="right-placeholder"></div>
       </nav>
     </header>
 
+    <!-- =====================================================
+         MAIN
+    ====================================================== -->
+
     <main>
       <h2>Codex</h2>
 
       <div class="codex-container">
-        <!-- ================= STUDY ================= -->
+        <!-- =================================================
+             STUDY WORKSPACE
+        ================================================== -->
 
         <section class="study-workspace">
           <div class="study-content">
-            <!-- ================= LEFT ================= -->
+            <!-- =============================================
+                 LEFT — FOLDERS
+            ============================================== -->
 
             <aside class="folder-panel">
               <hr />
@@ -87,14 +106,22 @@
               </div>
             </aside>
 
-            <!-- ================= CENTER ================= -->
+            <!-- =============================================
+                 CENTER — STUDY PANEL
+            ============================================== -->
 
             <section class="study-panel">
+              <!-- =========================================
+                   NORMAL FLASHCARD COUNTER
+              ========================================== -->
+
               <div class="card-counter-container">
                 <span id="cardCounter"> Card 1 / 1 </span>
               </div>
 
-              <!-- ================= FLASHCARDS ================= -->
+              <!-- =========================================
+                   NORMAL FLASHCARD WORKSPACE
+              ========================================== -->
 
               <div id="flashcardWorkspace" class="flashcard-workspace">
                 <div class="card-container">
@@ -112,189 +139,238 @@
                 </div>
               </div>
 
-              <!-- ================= REVIEW ================= -->
+              <!-- =========================================
+                   REVIEW WORKSPACE
 
-              <div id="reviewArea" class="review-area hidden">
-                <!-- REVIEW HEADER -->
+                   This replaces the flashcard workspace
+                   while Review Mode is active.
+              ========================================== -->
+
+              <section id="reviewWorkspace" class="review-workspace hidden">
+                <!-- =======================================
+                     REVIEW HEADER
+                ======================================== -->
 
                 <div class="review-header">
-                  <div>
-                    <span class="review-eyebrow"> CODEX REVIEW </span>
+                  <div class="review-heading">
+                    <span> CODEX REVIEW </span>
 
-                    <h3>📚 Review Session</h3>
+                    <h3>Review Session</h3>
                   </div>
 
-                  <div id="reviewDueCount" class="review-due-count">
-                    0 cards due
-                  </div>
-                </div>
+                  <!-- =====================================
+                       MODE SELECTOR
 
-                <!-- REVIEW MODE SELECTOR -->
+                       The menu floats over the UI.
+                       It does NOT increase page height.
+                  ====================================== -->
 
-                <div id="reviewModeSelector" class="review-mode-selector">
-                  <div class="review-selector-heading">
-                    <h4>Choose a study mode</h4>
-
-                    <p>Practice the cards that are due.</p>
-                  </div>
-
-                  <div class="review-mode-grid">
+                  <div class="review-mode-selector">
                     <button
-                      class="review-mode-card"
-                      data-review-mode="multiple-choice"
+                      id="reviewModeSelectorBtn"
+                      class="review-mode-selector-btn"
+                      type="button"
                     >
-                      <span class="review-mode-icon"> 🎯 </span>
-
-                      <span class="review-mode-title"> Multiple Choice </span>
-
-                      <span class="review-mode-description">
-                        Choose the correct answer.
+                      <span id="reviewModeSelectorLabel">
+                        🎯 Multiple Choice
                       </span>
+
+                      <span class="review-mode-arrow"> ▾ </span>
                     </button>
 
-                    <button
-                      class="review-mode-card"
-                      data-review-mode="short-answer"
-                    >
-                      <span class="review-mode-icon"> ✍️ </span>
+                    <!-- HOVER MENU -->
 
-                      <span class="review-mode-title"> Short Answer </span>
+                    <div id="reviewModeMenu" class="review-mode-menu">
+                      <!-- MULTIPLE CHOICE -->
 
-                      <span class="review-mode-description">
-                        Type your answer.
-                      </span>
-                    </button>
-
-                    <button class="review-mode-card" data-review-mode="match">
-                      <span class="review-mode-icon"> 🔗 </span>
-
-                      <span class="review-mode-title"> Match </span>
-
-                      <span class="review-mode-description">
-                        Match questions with answers.
-                      </span>
-                    </button>
-
-                    <button class="review-mode-card" data-review-mode="recall">
-                      <span class="review-mode-icon"> 🧠 </span>
-
-                      <span class="review-mode-title"> Recall </span>
-
-                      <span class="review-mode-description">
-                        Recall without hints.
-                      </span>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- ================= REVIEW SESSION ================= -->
-
-                <div id="reviewSession" class="review-session hidden">
-                  <div class="review-session-top">
-                    <button
-                      id="changeReviewModeBtn"
-                      class="review-secondary-btn"
-                    >
-                      ← Change Mode
-                    </button>
-
-                    <span id="reviewProgress"> 1 / 1 </span>
-                  </div>
-
-                  <!-- QUESTION -->
-
-                  <div class="review-question-card">
-                    <span class="review-question-label"> QUESTION </span>
-
-                    <div id="reviewQuestion" class="review-question"></div>
-                  </div>
-
-                  <!-- ================= MULTIPLE CHOICE ================= -->
-
-                  <div id="multipleChoiceArea" class="review-mode-area hidden">
-                    <div
-                      id="multipleChoiceAnswers"
-                      class="multiple-choice-answers"
-                    ></div>
-                  </div>
-
-                  <!-- ================= SHORT ANSWER ================= -->
-
-                  <div id="shortAnswerArea" class="review-mode-area hidden">
-                    <textarea
-                      id="shortAnswerInput"
-                      class="short-answer-input"
-                      placeholder="Type your answer..."
-                    ></textarea>
-
-                    <button id="checkShortAnswerBtn" class="review-primary-btn">
-                      Check Answer
-                    </button>
-                  </div>
-
-                  <!-- ================= MATCH ================= -->
-
-                  <div id="matchArea" class="review-mode-area hidden">
-                    <div id="matchBoard" class="match-board"></div>
-
-                    <button id="checkMatchBtn" class="review-primary-btn">
-                      Check Matches
-                    </button>
-                  </div>
-
-                  <!-- ================= RECALL ================= -->
-
-                  <div id="recallArea" class="review-mode-area hidden">
-                    <button id="revealRecallBtn" class="review-primary-btn">
-                      Reveal Answer
-                    </button>
-
-                    <div id="recallAnswer" class="recall-answer hidden"></div>
-                  </div>
-
-                  <!-- ================= RESULT ================= -->
-
-                  <div id="reviewResult" class="review-result hidden"></div>
-
-                  <!-- ================= SRS ================= -->
-
-                  <div id="reviewRatingArea" class="review-rating-area hidden">
-                    <span class="review-rating-label">
-                      How well did you know it?
-                    </span>
-
-                    <div class="review-rating-buttons">
                       <button
-                        class="review-rating-btn again"
-                        data-rating="again"
+                        class="review-mode-option"
+                        data-mode="multiple-choice"
                       >
-                        <strong>Again</strong>
-                        <span>10m</span>
+                        <span>🎯 Multiple Choice</span>
+                        <span
+                          class="review-mode-due"
+                          data-due-mode="multipleChoice"
+                          >0 due</span
+                        >
                       </button>
 
-                      <button class="review-rating-btn hard" data-rating="hard">
-                        <strong>Hard</strong>
-                        <span>1d</span>
+                      <button
+                        class="review-mode-option"
+                        data-mode="short-answer"
+                      >
+                        <span>✍️ Short Answer</span>
+                        <span
+                          class="review-mode-due"
+                          data-due-mode="shortAnswer"
+                          >0 due</span
+                        >
                       </button>
 
-                      <button class="review-rating-btn good" data-rating="good">
-                        <strong>Good</strong>
-                        <span>3d</span>
+                      <button class="review-mode-option" data-mode="match">
+                        <span>🔗 Match</span>
+                        <span class="review-mode-due" data-due-mode="match"
+                          >0 due</span
+                        >
                       </button>
 
-                      <button class="review-rating-btn easy" data-rating="easy">
-                        <strong>Easy</strong>
-                        <span>4d+</span>
+                      <button class="review-mode-option" data-mode="recall">
+                        <span>🧠 Recall</span>
+                        <span class="review-mode-due" data-due-mode="recall"
+                          >0 due</span
+                        >
                       </button>
                     </div>
                   </div>
                 </div>
 
-                <!-- ================= TEST/RESULT REMOVED ================= -->
-              </div>
+                <!-- =======================================
+                     REVIEW PROGRESS
+                ======================================== -->
+
+                <div class="review-progress">
+                  <span id="reviewProgress"> 1 / 1 </span>
+                </div>
+
+                <!-- =======================================
+                     QUESTION
+                ======================================== -->
+
+                <div class="review-question-card">
+                  <span> QUESTION </span>
+
+                  <div id="reviewQuestion"></div>
+                </div>
+
+                <!-- =======================================
+                     MULTIPLE CHOICE
+                ======================================== -->
+
+                <div id="multipleChoiceReview" class="review-mode-content">
+                  <div
+                    id="multipleChoiceAnswers"
+                    class="multiple-choice-answers"
+                  ></div>
+                </div>
+
+                <!-- =======================================
+                     SHORT ANSWER
+                ======================================== -->
+
+                <div id="shortAnswerReview" class="review-mode-content hidden">
+                  <textarea
+                    id="shortAnswerInput"
+                    placeholder="Type your answer..."
+                  ></textarea>
+
+                  <button id="checkShortAnswerBtn" class="review-action-btn">
+                    Check Answer
+                  </button>
+                </div>
+
+                <!-- =======================================
+                     MATCH
+                ======================================== -->
+
+                <div id="matchReview" class="review-mode-content hidden">
+                  <div id="matchBoard" class="match-board"></div>
+
+                  <button id="checkMatchBtn" class="review-action-btn">
+                    Check Matches
+                  </button>
+                </div>
+
+                <!-- =======================================
+                     RECALL
+                ======================================== -->
+
+                <div id="recallReview" class="review-mode-content hidden">
+                  <button id="revealRecallBtn" class="review-action-btn">
+                    Reveal Answer
+                  </button>
+
+                  <div id="recallAnswer" class="recall-answer hidden"></div>
+                </div>
+
+                <!-- =======================================
+                     RESULT
+                ======================================== -->
+
+                <div id="reviewResult" class="review-result hidden"></div>
+
+                <!-- =======================================
+                     SRS RATING
+                ======================================== -->
+
+                <div id="reviewRatingArea" class="review-rating-area hidden">
+                  <span> How well did you know this? </span>
+
+                  <div class="review-rating-buttons">
+                    <button
+                      class="review-rating-btn"
+                      data-rating="again"
+                      type="button"
+                    >
+                      <strong> Again </strong>
+
+                      <small> 10m </small>
+                    </button>
+
+                    <button
+                      class="review-rating-btn"
+                      data-rating="hard"
+                      type="button"
+                    >
+                      <strong> Hard </strong>
+
+                      <small> 1d </small>
+                    </button>
+
+                    <button
+                      class="review-rating-btn"
+                      data-rating="good"
+                      type="button"
+                    >
+                      <strong> Good </strong>
+
+                      <small> 3d </small>
+                    </button>
+
+                    <button
+                      class="review-rating-btn"
+                      data-rating="easy"
+                      type="button"
+                    >
+                      <strong> Easy </strong>
+
+                      <small> 7d </small>
+                    </button>
+                  </div>
+                </div>
+                <!-- =======================================
+                  REVIEW NAVIGATION
+                  ======================================== -->
+
+                <div id="reviewNavigation" class="review-navigation">
+                  <button id="reviewPreviousBtn" type="button">
+                    ← Previous
+                  </button>
+
+                  <button id="reviewNextBtn" type="button">Next →</button>
+                </div>
+                <!-- =======================================
+                     NEXT CARD
+
+                     JS can also generate this dynamically,
+                     but keeping the element here lets CSS
+                     handle it cleanly.
+                ======================================== -->
+              </section>
             </section>
 
-            <!-- ================= RIGHT ================= -->
+            <!-- =============================================
+                 RIGHT — CARD EDITOR
+            ============================================== -->
 
             <aside class="add-card-panel">
               <h3>Card Editor</h3>
@@ -309,10 +385,17 @@
 
               <button id="deleteCardBtn">Delete Card</button>
             </aside>
+            <div id="nextReviewPanel" class="next-review-panel hidden">
+              <div class="next-review-title">Next Reviews</div>
+
+              <div id="nextReviewList" class="next-review-list"></div>
+            </div>
           </div>
         </section>
 
-        <!-- ================= BULK IMPORT ================= -->
+        <!-- =================================================
+             BULK IMPORT
+        ================================================== -->
 
         <section class="bulk-panel">
           <h3>Bulk Import</h3>
@@ -325,7 +408,9 @@
           <button id="bulkAddBtn">Bulk Add</button>
         </section>
 
-        <!-- ================= BACKUP ================= -->
+        <!-- =================================================
+             BACKUP
+        ================================================== -->
 
         <button id="exportCodexBtn">Export Codex</button>
 
@@ -334,6 +419,10 @@
         <input type="file" id="importCodexInput" accept=".json" hidden />
       </div>
     </main>
+
+    <!-- =====================================================
+         SCRIPTS
+    ====================================================== -->
 
     <script src="js/player.js"></script>
     <script src="js/codex.js"></script>

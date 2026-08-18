@@ -1,18 +1,36 @@
 const activeQuestCount = document.getElementById("activeQuestCount");
+
 const completedQuestCount = document.getElementById("completedQuestCount");
+
 const completionRate = document.getElementById("completionRate");
+
 const completeCurrentQuest = document.getElementById("completeCurrentQuest");
+
 const currentQuestElement = document.getElementById("current-quest");
+
 const timerDisplay = document.getElementById("timerDisplay");
+
 const timerMinutes = document.getElementById("timerMinutes");
+
 const startTimer = document.getElementById("startTimer");
+
 const pauseTimer = document.getElementById("pauseTimer");
+
 const resetTimer = document.getElementById("resetTimer");
+
 const timerStatus = document.getElementById("timerStatus");
+
 const skipCurrentQuest = document.getElementById("skipCurrentQuest");
+
 const overdueQuestsElement = document.getElementById("overdueQuests");
+
 const upcomingQuestsElement = document.getElementById("upcomingQuests");
+
 document.getElementById("version").textContent = APP_VERSION;
+
+// =====================================================
+// QUEST LIST
+// =====================================================
 
 function renderQuestList(element, quests) {
   if (quests.length === 0) {
@@ -24,16 +42,26 @@ function renderQuestList(element, quests) {
     .map(
       (q) => `
         <div class="dashboard-quest">
-            ${q.name}
+          ${q.name}
         </div>
-    `,
+      `,
     )
     .join("");
 }
+
+// =====================================================
+// CURRENT QUEST
+// =====================================================
+
 let currentQuestSkipCount = 0;
+
 function getCurrentMission() {
   return getCurrentQuest(currentQuestSkipCount);
 }
+
+// =====================================================
+// QUEST TIME STATE
+// =====================================================
 
 function getQuestTimeState(quest) {
   if (!quest) {
@@ -41,6 +69,7 @@ function getQuestTimeState(quest) {
   }
 
   const now = new Date();
+
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
   function getTimeMinutes(time) {
@@ -54,6 +83,7 @@ function getQuestTimeState(quest) {
   }
 
   const startMinutes = getTimeMinutes(quest.startTime);
+
   const endMinutes = getTimeMinutes(quest.endTime);
 
   // No time information
@@ -74,7 +104,13 @@ function getQuestTimeState(quest) {
   // Currently inside the scheduled window
   return "active";
 }
+
+// =====================================================
+// SKIP QUEST
+// =====================================================
+
 let skippedToday = JSON.parse(localStorage.getItem("skippedToday")) || [];
+
 function skipQuest(quest) {
   if (!quest || quest.status === "completed") {
     return;
@@ -86,8 +122,14 @@ function skipQuest(quest) {
 
   window.dispatchEvent(new CustomEvent("questStateChanged"));
 }
+
+// =====================================================
+// DASHBOARD
+// =====================================================
+
 function updateDashboard() {
   const quests = JSON.parse(localStorage.getItem("quests")) || [];
+
   const mission = getCurrentMission();
 
   // =====================
@@ -101,12 +143,19 @@ function updateDashboard() {
     `;
 
     completeCurrentQuest.hidden = false;
+
     skipCurrentQuest.hidden = false;
   } else {
     currentQuestElement.textContent = "No active quest.";
+
     completeCurrentQuest.hidden = true;
+
     skipCurrentQuest.hidden = true;
   }
+
+  // =====================
+  // Overdue
+  // =====================
 
   const overdueQuests = quests.filter((quest) => {
     return quest.status === "active" && getQuestTimeState(quest) === "overdue";
@@ -114,12 +163,13 @@ function updateDashboard() {
 
   renderQuestList(overdueQuestsElement, overdueQuests);
 
+  // =====================
+  // Upcoming
+  // =====================
+
   const upcoming = getUpcomingQuests();
 
-  renderQuestList(
-    upcomingQuestsElement,
-    upcoming.length > 0 ? [upcoming[0]] : [],
-  );
+  renderQuestList(upcomingQuestsElement, upcoming);
 
   // =====================
   // Quest Stats
@@ -133,13 +183,19 @@ function updateDashboard() {
     quests.length === 0 ? 0 : Math.round((completed / quests.length) * 100);
 
   activeQuestCount.textContent = `Active Quests: ${active}`;
+
   completedQuestCount.textContent = `Completed Quests: ${completed}`;
+
   completionRate.textContent = `Completion Rate: ${completion}%`;
 
   // =====================
   // Codex
   // =====================
 }
+
+// =====================================================
+// COMPLETE CURRENT QUEST
+// =====================================================
 
 completeCurrentQuest.onclick = function () {
   const mission = getCurrentMission();
@@ -150,93 +206,158 @@ completeCurrentQuest.onclick = function () {
 
   completeQuest(mission);
 
-  // Completing a quest returns us to the real Current Quest.
+  // Completing a quest returns us
+  // to the real Current Quest.
   currentQuestSkipCount = 0;
 
   updateDashboard();
 };
 
+// =====================================================
+// SKIP CURRENT QUEST BUTTON
+// =====================================================
+
 skipCurrentQuest.onclick = function () {
   const mission = getCurrentMission();
 
-  if (!mission) return;
+  if (!mission) {
+    return;
+  }
 
   skipQuest(mission);
 
   updateDashboard();
 };
+
+// =====================================================
+// INITIAL DASHBOARD UPDATE
+// =====================================================
+
 updateDashboard();
+
+// =====================================================
+// QUEST STATE CHANGES
+// =====================================================
 
 window.addEventListener("questStateChanged", () => {
   updateDashboard();
 });
 
-// =====================
+// =====================================================
 // TIMER
-// =====================
+// =====================================================
 
 let timer;
+
 let timeLeft = Number(timerMinutes.value) * 60;
+
 let running = false;
+
 updateTimerButtons();
+
+// =====================================================
+// TIMER DISPLAY
+// =====================================================
 
 function updateTimerDisplay() {
   const hours = Math.floor(timeLeft / 3600);
+
   const minutes = Math.floor((timeLeft % 3600) / 60);
+
   const seconds = timeLeft % 60;
 
-  timerDisplay.textContent = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  timerDisplay.textContent = `${String(hours).padStart(2, "0")}:${String(
+    minutes,
+  ).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
 updateTimerDisplay();
+
 updateTimerButtons();
 
+// =====================================================
+// START TIMER
+// =====================================================
+
 startTimer.onclick = function () {
-  if (running) return;
+  if (running) {
+    return;
+  }
 
   running = true;
+
   updateTimerButtons();
+
   setTimerStatus("running");
 
   timer = setInterval(() => {
     if (timeLeft <= 0) {
       clearInterval(timer);
+
       running = false;
+
       updateTimerButtons();
+
+      setTimerStatus("finished");
+
       alert("Time's up!");
+
       return;
     }
 
     timeLeft--;
+
     updateTimerDisplay();
   }, 1000);
 };
 
+// =====================================================
+// PAUSE TIMER
+// =====================================================
+
 pauseTimer.onclick = function () {
   clearInterval(timer);
+
   running = false;
+
   updateTimerButtons();
+
   setTimerStatus("paused");
 };
 
+// =====================================================
+// RESET TIMER
+// =====================================================
+
 resetTimer.onclick = function () {
   clearInterval(timer);
+
   running = false;
 
-  timeLeft = Number(timerMinutes.value) * 0;
-  timerMinutes.value = 0;
+  timeLeft = Number(timerMinutes.value) * 60;
 
   updateTimerDisplay();
+
   updateTimerButtons();
+
   setTimerStatus("ready");
 };
+
+// =====================================================
+// TIMER MINUTES CHANGED
+// =====================================================
 
 timerMinutes.onchange = function () {
   if (!running) {
     timeLeft = Number(timerMinutes.value) * 60;
+
     updateTimerDisplay();
   }
 };
+
+// =====================================================
+// TIMER STATUS
+// =====================================================
 
 function setTimerStatus(state) {
   timerStatus.className = "timer-status";
@@ -244,28 +365,40 @@ function setTimerStatus(state) {
   switch (state) {
     case "running":
       timerStatus.classList.add("running");
+
       timerStatus.textContent = "🟢 Running";
+
       break;
 
     case "paused":
       timerStatus.classList.add("paused");
+
       timerStatus.textContent = "🟡 Paused";
+
       break;
 
     case "finished":
       timerStatus.classList.add("finished");
+
       timerStatus.textContent = "🔵 Complete";
+
       break;
 
     default:
       timerStatus.textContent = "⚪ Ready";
   }
 }
+
+// =====================================================
+// TIMER BUTTONS
+// =====================================================
+
 function updateTimerButtons() {
   pauseTimer.disabled = !running;
 
   if (running) {
     startTimer.disabled = true;
+
     startTimer.textContent = "Running...";
   } else {
     startTimer.disabled = false;
