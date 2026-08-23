@@ -21,7 +21,7 @@
   const history = [];
   let historyIndex = -1;
   let isRestoringHistory = false;
-  
+
   let savedIndex = null;
   let savedLength = 0;
   let isApplyingSize = false;
@@ -66,7 +66,7 @@
       const defaultSection = {
         id: createId(),
         title: "📁 Uncategorized",
-        pages: library.pages.map(p => p.id)
+        pages: library.pages.map((p) => p.id),
       };
       library.sections.push(defaultSection);
       saveLibrary();
@@ -89,7 +89,7 @@
             [{ align: [] }],
             ["link", "image", "code-block"],
             ["clean"],
-          ]
+          ],
         },
       },
       placeholder: "Start writing...",
@@ -129,34 +129,36 @@
   ======================================================= */
 
   function setupInlineChecklist() {
-    const editor = document.querySelector('.ql-editor');
+    const editor = document.querySelector(".ql-editor");
     if (!editor) return;
-    
+
     // Listen for clicks on the editor
-    editor.addEventListener('click', function(e) {
+    editor.addEventListener("click", function (e) {
       // Find if we clicked on a list item
-      const li = e.target.closest('li');
+      const li = e.target.closest("li");
       if (!li) return;
-      
+
       // Check if it's a checklist item (has parent ul with data-checked)
       const ul = li.parentElement;
-      if (!ul || ul.tagName !== 'UL') return;
-      
+      if (!ul || ul.tagName !== "UL") return;
+
       // Check if this is a checklist (has data-checked attribute)
-      if (!ul.hasAttribute('data-checked')) return;
-      
+      if (!ul.hasAttribute("data-checked")) return;
+
       // Toggle the checklist item
-      const isChecked = ul.getAttribute('data-checked') === 'true';
+      const isChecked = ul.getAttribute("data-checked") === "true";
       const newState = !isChecked;
-      ul.setAttribute('data-checked', newState ? 'true' : 'false');
-      
+      ul.setAttribute("data-checked", newState ? "true" : "false");
+
       // Also update the li class
-      li.classList.toggle('ql-checked', newState);
-      
+      li.classList.toggle("ql-checked", newState);
+
       // Save the changes
       saveCurrentPage();
-      
-      console.log(`✅ Toggled checklist item to ${newState ? 'checked' : 'unchecked'}`);
+
+      console.log(
+        `✅ Toggled checklist item to ${newState ? "checked" : "unchecked"}`,
+      );
     });
   }
 
@@ -166,7 +168,7 @@
 
   function saveQuillSelection() {
     if (isApplyingSize) return;
-    
+
     const range = window.quill.getSelection();
     if (range && range.length > 0) {
       savedIndex = range.index;
@@ -177,66 +179,68 @@
   }
 
   function setupFontSizeFix() {
-    const toolbar = document.querySelector('.ql-toolbar');
+    const toolbar = document.querySelector(".ql-toolbar");
     if (!toolbar) return;
 
-    const sizePicker = toolbar.querySelector('.ql-size');
+    const sizePicker = toolbar.querySelector(".ql-size");
     if (!sizePicker) return;
 
-    window.quill.on('selection-change', function(range, oldRange, source) {
+    window.quill.on("selection-change", function (range, oldRange, source) {
       if (range && range.length > 0) {
         saveQuillSelection();
       }
     });
-    
-    const pickerLabel = sizePicker.querySelector('.ql-picker-label');
+
+    const pickerLabel = sizePicker.querySelector(".ql-picker-label");
     if (pickerLabel) {
-      pickerLabel.addEventListener('mousedown', function(e) {
+      pickerLabel.addEventListener("mousedown", function (e) {
         saveQuillSelection();
       });
     }
 
-    const options = sizePicker.querySelectorAll('.ql-picker-options .ql-picker-item');
-    options.forEach(item => {
-      item.addEventListener('mouseenter', function() {
+    const options = sizePicker.querySelectorAll(
+      ".ql-picker-options .ql-picker-item",
+    );
+    options.forEach((item) => {
+      item.addEventListener("mouseenter", function () {
         saveQuillSelection();
       });
-      
-      item.addEventListener('click', function(e) {
+
+      item.addEventListener("click", function (e) {
         e.preventDefault();
         e.stopPropagation();
-        
-        const value = this.getAttribute('data-value');
+
+        const value = this.getAttribute("data-value");
         if (!value) return;
-        
+
         if (savedIndex !== null && savedLength > 0) {
           try {
             isApplyingSize = true;
             window.quill.setSelection(savedIndex, savedLength);
-            window.quill.format('size', value);
-            
+            window.quill.format("size", value);
+
             const selection = window.getSelection();
             if (selection.rangeCount > 0) {
               const range = selection.getRangeAt(0);
               if (!range.collapsed) {
                 const text = range.toString();
                 if (text && text.length > 0) {
-                  const span = document.createElement('span');
-                  span.style.fontSize = value + 'px';
+                  const span = document.createElement("span");
+                  span.style.fontSize = value + "px";
                   span.textContent = text;
                   range.deleteContents();
                   range.insertNode(span);
                 }
               }
             }
-            
+
             window.quill.update();
             saveCurrentPage();
-            
+
             savedIndex = null;
             savedLength = 0;
-          } catch(err) {
-            console.error('Error applying size:', err);
+          } catch (err) {
+            console.error("Error applying size:", err);
           } finally {
             isApplyingSize = false;
           }
@@ -244,41 +248,96 @@
         window.quill.focus();
       });
     });
-    
-    console.log('✅ Font size fix applied!');
+
+    console.log("✅ Font size fix applied!");
   }
 
   /* =======================================================
      SECTIONS & PAGE LIST
   ======================================================= */
+  /* =======================================================
+   RENDER PAGE ITEM (with hierarchy support)
+======================================================= */
+
+  function renderPageItem(page, depth) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "library-page-item";
+    button.draggable = true;
+
+    if (page.id === library.selectedPageId) {
+      button.classList.add("active");
+    }
+
+    // Indent based on depth (sub-pages get indented)
+    button.style.paddingLeft = `${11 + depth * 24}px`;
+
+    const icon = document.createElement("span");
+    icon.className = "library-page-icon";
+    icon.textContent = depth > 0 ? "↳" : "📄";
+
+    const name = document.createElement("span");
+    name.className = "library-page-name";
+    name.textContent = page.title || "Untitled";
+
+    button.appendChild(icon);
+    button.appendChild(name);
+
+    button.addEventListener("click", () => {
+      openPage(page.id);
+    });
+
+    button.addEventListener("dragstart", (e) => {
+      e.dataTransfer.setData("text/plain", page.id);
+      e.dataTransfer.effectAllowed = "move";
+      setTimeout(() => button.classList.add("dragging"), 0);
+    });
+
+    button.addEventListener("dragend", () => {
+      button.classList.remove("dragging");
+    });
+
+    button.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      showPageContextMenu(e.clientX, e.clientY, page, null);
+    });
+
+    pageList.appendChild(button);
+
+    // Find and render children (sub-pages)
+    const children = library.pages.filter(
+      (child) => child.parentId === page.id,
+    );
+    for (const child of children) {
+      renderPageItem(child, depth + 1);
+    }
+  }
 
   function renderPageList() {
     if (!pageList) return;
     pageList.innerHTML = "";
 
-    if (library.sections.length === 0 && library.pages.length === 0) {
+    if (library.pages.length === 0) {
       const empty = document.createElement("div");
       empty.className = "library-empty-pages";
-      empty.textContent = "No pages yet. Create a section or page to get started.";
+      empty.textContent = "No pages yet. Create a page to get started.";
       pageList.appendChild(empty);
       return;
     }
 
-    library.sections.forEach(section => {
-      const sectionEl = createSectionElement(section);
-      pageList.appendChild(sectionEl);
-    });
+    // Only show root pages (no parentId)
+    const roots = library.pages.filter((page) => !page.parentId);
 
-    const addSectionBtn = document.createElement("button");
-    addSectionBtn.className = "library-add-section-btn";
-    addSectionBtn.textContent = "+ New Section";
-    addSectionBtn.addEventListener("click", () => {
-      const title = prompt("Enter section name:", "📁 New Section");
-      if (title && title.trim()) {
-        createSection(title.trim());
+    if (roots.length === 0) {
+      // If no root pages, show all pages (orphans)
+      for (const page of library.pages) {
+        renderPageItem(page, 0);
       }
-    });
-    pageList.appendChild(addSectionBtn);
+    } else {
+      for (const page of roots) {
+        renderPageItem(page, 0);
+      }
+    }
   }
 
   function createSectionElement(section) {
@@ -323,23 +382,30 @@
     deleteBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       if (section.pages.length > 0) {
-        if (!confirm(`Delete section "${section.title}" and move its ${section.pages.length} pages to "Uncategorized"?`)) return;
+        if (
+          !confirm(
+            `Delete section "${section.title}" and move its ${section.pages.length} pages to "Uncategorized"?`,
+          )
+        )
+          return;
       } else {
         if (!confirm(`Delete section "${section.title}"?`)) return;
       }
-      
-      const uncategorized = library.sections.find(s => s.title === "📁 Uncategorized");
+
+      const uncategorized = library.sections.find(
+        (s) => s.title === "📁 Uncategorized",
+      );
       if (section.pages.length > 0 && uncategorized) {
         uncategorized.pages.push(...section.pages);
       }
-      
-      library.sections = library.sections.filter(s => s.id !== section.id);
+
+      library.sections = library.sections.filter((s) => s.id !== section.id);
       saveLibrary();
       renderPageList();
     });
 
-    section.pages.forEach(pageId => {
-      const page = library.pages.find(p => p.id === pageId);
+    section.pages.forEach((pageId) => {
+      const page = library.pages.find((p) => p.id === pageId);
       if (page) {
         const pageEl = createPageItem(page, section.id);
         pageContainer.appendChild(pageEl);
@@ -359,7 +425,7 @@
       e.preventDefault();
       e.stopPropagation();
       pageContainer.classList.remove("drag-over");
-      
+
       const pageId = e.dataTransfer.getData("text/plain");
       if (pageId) {
         movePageToSection(pageId, section.id);
@@ -426,51 +492,62 @@
 
     const options = [
       { label: "📄 Open", action: () => openPage(page.id) },
-      { label: "✏️ Rename", action: () => {
-        const newTitle = prompt("Rename page:", page.title);
-        if (newTitle && newTitle.trim()) {
-          page.title = newTitle.trim();
-          saveLibrary();
-          renderPageList();
-          if (page.id === library.selectedPageId) {
-            pageTitle.value = page.title;
+      {
+        label: "✏️ Rename",
+        action: () => {
+          const newTitle = prompt("Rename page:", page.title);
+          if (newTitle && newTitle.trim()) {
+            page.title = newTitle.trim();
+            saveLibrary();
+            renderPageList();
+            if (page.id === library.selectedPageId) {
+              pageTitle.value = page.title;
+            }
           }
-        }
-      }},
-      { label: "📋 Move to section...", action: () => {
-        const sectionNames = library.sections
-          .filter(s => s.id !== sectionId)
-          .map((s, i) => `${i+1}. ${s.title}`);
-        
-        const choice = prompt(
-          `Move "${page.title}" to which section?\n\n${sectionNames.join("\n")}\n\nEnter section number:`
-        );
-        
-        if (choice) {
-          const index = parseInt(choice) - 1;
-          const targetSection = library.sections.filter(s => s.id !== sectionId)[index];
-          if (targetSection) {
-            movePageToSection(page.id, targetSection.id);
+        },
+      },
+      {
+        label: "📋 Move to section...",
+        action: () => {
+          const sectionNames = library.sections
+            .filter((s) => s.id !== sectionId)
+            .map((s, i) => `${i + 1}. ${s.title}`);
+
+          const choice = prompt(
+            `Move "${page.title}" to which section?\n\n${sectionNames.join("\n")}\n\nEnter section number:`,
+          );
+
+          if (choice) {
+            const index = parseInt(choice) - 1;
+            const targetSection = library.sections.filter(
+              (s) => s.id !== sectionId,
+            )[index];
+            if (targetSection) {
+              movePageToSection(page.id, targetSection.id);
+            }
           }
-        }
-      }},
-      { label: "🗑️ Delete", action: () => {
-        if (confirm(`Delete "${page.title}"?`)) {
-          library.sections.forEach(s => {
-            s.pages = s.pages.filter(id => id !== page.id);
-          });
-          library.pages = library.pages.filter(p => p.id !== page.id);
-          if (library.selectedPageId === page.id) {
-            library.selectedPageId = null;
+        },
+      },
+      {
+        label: "🗑️ Delete",
+        action: () => {
+          if (confirm(`Delete "${page.title}"?`)) {
+            library.sections.forEach((s) => {
+              s.pages = s.pages.filter((id) => id !== page.id);
+            });
+            library.pages = library.pages.filter((p) => p.id !== page.id);
+            if (library.selectedPageId === page.id) {
+              library.selectedPageId = null;
+            }
+            saveLibrary();
+            renderPageList();
+            showEmptyState();
           }
-          saveLibrary();
-          renderPageList();
-          showEmptyState();
-        }
-      }}
+        },
+      },
     ];
 
-    options.forEach(opt => {
+    options.forEach((opt) => {
       const item = document.createElement("div");
       item.className = "library-context-menu-item";
       item.textContent = opt.label;
@@ -495,7 +572,7 @@
     const section = {
       id: createId(),
       title: title,
-      pages: []
+      pages: [],
     };
     library.sections.push(section);
     saveLibrary();
@@ -504,14 +581,16 @@
   }
 
   function movePageToSection(pageId, targetSectionId) {
-    const page = library.pages.find(p => p.id === pageId);
+    const page = library.pages.find((p) => p.id === pageId);
     if (!page) return;
 
-    library.sections.forEach(section => {
-      section.pages = section.pages.filter(id => id !== pageId);
+    library.sections.forEach((section) => {
+      section.pages = section.pages.filter((id) => id !== pageId);
     });
 
-    const targetSection = library.sections.find(s => s.id === targetSectionId);
+    const targetSection = library.sections.find(
+      (s) => s.id === targetSectionId,
+    );
     if (targetSection) {
       targetSection.pages.push(pageId);
     }
@@ -528,7 +607,7 @@
     const page = {
       id: createId(),
       title,
-      parentId,
+      parentId, // ← This should be set to the parent page's ID
       content: JSON.stringify({ ops: [] }),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -537,6 +616,7 @@
     library.pages.push(page);
     library.selectedPageId = page.id;
 
+    // Add to first section, or Uncategorized
     if (library.sections.length > 0) {
       library.sections[0].pages.push(page.id);
     }
@@ -553,11 +633,11 @@
 
     if (!window.confirm(`Delete "${page.title}"?`)) return;
 
-    library.sections.forEach(section => {
-      section.pages = section.pages.filter(id => id !== page.id);
+    library.sections.forEach((section) => {
+      section.pages = section.pages.filter((id) => id !== page.id);
     });
 
-    library.pages = library.pages.filter(p => p.id !== page.id);
+    library.pages = library.pages.filter((p) => p.id !== page.id);
     library.selectedPageId = null;
     saveLibrary();
     renderPageList();
@@ -636,7 +716,7 @@
 
     saveLibrary();
     renderPageList();
-    console.log('💾 Page saved!');
+    console.log("💾 Page saved!");
   }
 
   /* =======================================================
@@ -888,7 +968,9 @@
       if (!parsed || typeof parsed !== "object") return;
 
       library.sections = Array.isArray(parsed.sections) ? parsed.sections : [];
-      library.pages = Array.isArray(parsed.pages) ? parsed.pages.map(migratePage) : [];
+      library.pages = Array.isArray(parsed.pages)
+        ? parsed.pages.map(migratePage)
+        : [];
       library.selectedPageId = parsed.selectedPageId || null;
     } catch (error) {
       console.error("Ascend Library: Failed to load library.", error);
@@ -913,31 +995,36 @@
     const defaultSection = {
       id: createId(),
       title: "📁 Uncategorized",
-      pages: checkData.pages.map(p => p.id)
+      pages: checkData.pages.map((p) => p.id),
     };
     checkData.sections = [defaultSection];
     checkData.selectedPageId = checkData.selectedPageId || null;
     localStorage.setItem("ascendLibrary", JSON.stringify(checkData));
   }
-  
+
   if (checkData.pages && checkData.pages.length === 0) {
     const defaultPage = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2),
       title: "Welcome",
       parentId: null,
       content: JSON.stringify({
-        ops: [{ insert: "Welcome to Ascend Library! Create sections and organize your knowledge." }],
+        ops: [
+          {
+            insert:
+              "Welcome to Ascend Library! Create sections and organize your knowledge.",
+          },
+        ],
       }),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    
+
     const defaultSection = {
       id: createId(),
       title: "📁 Uncategorized",
-      pages: [defaultPage.id]
+      pages: [defaultPage.id],
     };
-    
+
     checkData.pages = [defaultPage];
     checkData.sections = [defaultSection];
     checkData.selectedPageId = defaultPage.id;
