@@ -5,16 +5,10 @@
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, user-scalable=yes"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0,user-scalable=yes"
     />
     <title>Ascend</title>
-    <link rel="stylesheet" href="css/style.css" />
-    <link rel="stylesheet" href="css/ai.css" />
-    <link rel="stylesheet" href="css/navigation.css" />
-    <link rel="stylesheet" href="css/index.css" />
-    <link rel="stylesheet" href="css/profile.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
     <!-- PWA -->
     <link rel="manifest" href="manifest.json" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
@@ -25,10 +19,21 @@
     />
     <meta name="apple-mobile-web-app-title" content="Ascend" />
     <meta name="theme-color" content="#0f0f1a" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Space+Grotesk:wght@300..700&display=swap"
       rel="stylesheet"
     />
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/navigation.css" />
+    <link rel="stylesheet" href="css/index.css" />
+    <link rel="stylesheet" href="css/profile.css" />
+    <link rel="stylesheet" href="css/ai.css" />
   </head>
 
   <!-- BODY -->
@@ -37,7 +42,6 @@
     <header>
       <div class="header-top">
         <h1>Welcome to <span class="ascend">Ascend</span></h1>
-
         <div id="version" class="version-badge"></div>
       </div>
 
@@ -62,15 +66,17 @@
           <a class="nav-link" href="quests.html">Quests</a>
           <a class="nav-link" href="stats.html">Stats</a>
           <a class="nav-link" href="codex.html">Codex</a>
-          <a class="nav-link" href="library.html"> Library </a>
+          <a class="nav-link" href="library.html">Library</a>
           <a class="nav-link" href="journal.html">Journal</a>
           <a class="nav-link" href="notes.html">Notes</a>
         </div>
         <div class="right-placeholder"></div>
       </nav>
     </header>
+
     <main>
       <section class="dashboard">
+        <!-- Profile Panel -->
         <div class="profile-panel">
           <div class="profile-left">
             <img
@@ -78,48 +84,37 @@
               id="profile-img"
               class="profile-picture"
             />
-
             <form class="profile-form" id="profile-form">
               <input type="file" id="profile-picture" />
-
               <input type="text" id="name" placeholder="Enter your name" />
-
               <button type="submit">Save</button>
             </form>
           </div>
 
           <div class="profile-right">
             <div class="stat-card" id="display-name">Name:</div>
-
             <div class="stat-card" id="level">Level:</div>
-
             <div class="stat-card xp-card">
               <strong>XP</strong>
-
               <span id="xp-number">0</span>
-
               <div class="xp-track">
                 <div class="xp-fill" id="xp-fill"></div>
               </div>
             </div>
-
             <div class="stat-card" id="activeQuestCount">Active Quests: 0</div>
-
             <div class="stat-card" id="completedQuestCount">
               Completed Quests: 0
             </div>
-
             <div class="stat-card" id="completionRate">Completion: 0%</div>
           </div>
         </div>
 
+        <!-- Home Grid -->
         <div class="home-grid">
           <!-- Current Quest -->
           <div class="home-card">
             <h3>🎯 Current Quest</h3>
-
             <div id="current-quest" class="current-quest">No active quest.</div>
-
             <div class="quest-actions">
               <button id="completeCurrentQuest" hidden>Complete</button>
               <button id="skipCurrentQuest" hidden>Skip</button>
@@ -129,7 +124,6 @@
           <!-- Overdue -->
           <div class="home-card">
             <h3>🔴 Overdue</h3>
-
             <div id="overdueQuests" class="quest-list">
               <p class="empty-state">No overdue quests.</p>
             </div>
@@ -138,7 +132,6 @@
           <!-- Upcoming -->
           <div class="home-card">
             <h3>🟡 Upcoming</h3>
-
             <div id="upcomingQuests" class="quest-list">
               <p class="empty-state">Nothing upcoming.</p>
             </div>
@@ -147,13 +140,9 @@
           <!-- Timer -->
           <div class="home-card">
             <h3>⏱ Focus Timer</h3>
-
             <div id="timerStatus" class="timer-status">⚪ Ready</div>
-
             <h2 id="timerDisplay">00:00:00</h2>
-
             <input type="number" id="timerMinutes" min="1" value="25" />
-
             <div class="timer-buttons">
               <button id="startTimer">Start</button>
               <button id="pauseTimer">Pause</button>
@@ -164,14 +153,12 @@
           <!-- Streak -->
           <div class="home-card">
             <h3>🔥 Streak</h3>
-
             <p id="streak">Coming Soon</p>
           </div>
 
           <!-- Overview -->
           <div class="home-card">
             <h3>📊 Overview</h3>
-
             <p>Character stats will move to the Stats page.</p>
           </div>
         </div>
@@ -179,6 +166,76 @@
         <button id="resetGameBtn">Factory Reset</button>
       </section>
     </main>
+
+    <!-- Service Worker -->
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .register("/Ascend/sw.js")
+          .then(() => console.log("✅ Service Worker registered"))
+          .catch((err) => console.log("❌ Service Worker failed:", err));
+      }
+    </script>
+
+    <!-- PWA Install Prompt -->
+    <script>
+      let deferredPrompt;
+      window.addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        console.log("📱 App can be installed!");
+        showInstallButton();
+      });
+
+      function showInstallButton() {
+        if (document.getElementById("installBtn")) return;
+        const btn = document.createElement("button");
+        btn.id = "installBtn";
+        btn.textContent = "📱 Install App";
+        btn.style.cssText = `
+          position: fixed;
+          bottom: 20px;
+          right: 20px;
+          padding: 12px 24px;
+          background: #3b82f6;
+          color: white;
+          border: none;
+          border-radius: 12px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+          z-index: 999;
+          transition: all 0.25s;
+        `;
+        btn.onmouseover = () => {
+          btn.style.transform = "scale(1.05)";
+        };
+        btn.onmouseout = () => {
+          btn.style.transform = "scale(1)";
+        };
+        btn.onclick = async () => {
+          if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const result = await deferredPrompt.userChoice;
+            console.log(
+              `User ${result.outcome === "accepted" ? "installed" : "dismissed"}`,
+            );
+            deferredPrompt = null;
+            btn.remove();
+          }
+        };
+        document.body.appendChild(btn);
+      }
+
+      window.addEventListener("appinstalled", () => {
+        console.log("✅ App installed!");
+        const btn = document.getElementById("installBtn");
+        if (btn) btn.remove();
+      });
+    </script>
+
+    <!-- Scripts -->
     <script src="js/version.js"></script>
     <script src="js/versionUI.js"></script>
     <script src="js/player.js"></script>
