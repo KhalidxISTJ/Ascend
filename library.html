@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ascend Library</title>
+
+    <!-- Quill CSS -->
+    <link
+      href="https://cdn.quilljs.com/1.3.7/quill.snow.css"
+      rel="stylesheet"
+    />
+
+    <!-- Your existing CSS -->
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/navigation.css" />
+    <link rel="stylesheet" href="css/library.css" />
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="Ascend" />
+    <meta name="theme-color" content="#0f0f1a" />
+  </head>
+
+  <body>
+    <!-- Navigation -->
+    <nav class="main-nav">
+      <div class="nav-links">
+        <a class="nav-link" href="index.html">Home</a>
+        <a class="nav-link" href="quests.html">Quests</a>
+        <a class="nav-link" href="stats.html">Stats</a>
+        <a class="nav-link" href="codex.html">Codex</a>
+        <a class="nav-link active" href="library.html">Library</a>
+        <a class="nav-link" href="journal.html">Journal</a>
+        <a class="nav-link" href="notes.html">Notes</a>
+      </div>
+    </nav>
+
+    <!-- Library -->
+    <main class="library-page">
+      <!-- Header -->
+      <header class="library-header">
+        <div>
+          <h1>📚 Library</h1>
+          <p>Your knowledge, notes, ideas, and projects.</p>
+        </div>
+        <button
+          id="newLibraryPageBtn"
+          type="button"
+          class="library-new-page-btn"
+        >
+          + New Page
+        </button>
+      </header>
+
+      <!-- Main Layout -->
+      <section class="library-layout">
+        <!-- Sidebar -->
+        <aside class="library-sidebar">
+          <div class="library-sidebar-header">
+            <h2>Pages</h2>
+          </div>
+          <div id="libraryPageList" class="library-page-list"></div>
+        </aside>
+
+        <!-- Editor -->
+        <section class="library-editor">
+          <!-- Empty State -->
+          <div id="libraryEmptyState" class="library-empty-state">
+            <div class="library-empty-icon">📚</div>
+            <h2>Select a page</h2>
+            <p>Choose a page from the Library or create a new one.</p>
+          </div>
+
+          <!-- Page View -->
+          <div id="libraryPageView" class="library-page-view hidden">
+            <!-- Document Header -->
+            <div class="library-document-header">
+              <input
+                id="libraryPageTitle"
+                class="library-page-title"
+                type="text"
+                placeholder="Untitled"
+                autocomplete="off"
+              />
+              <div class="library-page-actions">
+                <button id="newLibrarySubpageBtn" type="button">
+                  + Subpage
+                </button>
+                <button
+                  id="deleteLibraryPageBtn"
+                  type="button"
+                  class="library-danger-btn"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div id="librarySearchBar" class="library-search-bar hidden">
+              <input
+                id="librarySearchInput"
+                type="text"
+                placeholder="Search this page..."
+                autocomplete="off"
+              />
+              <span id="librarySearchCount" class="library-search-count"
+                >0 results</span
+              >
+              <button id="librarySearchClose" type="button">×</button>
+            </div>
+
+            <!-- Quill Editor Container -->
+            <div id="editor-container"></div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <!-- Quill JS -->
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+
+    <!-- Library JS -->
+    <script src="js/library.js"></script>
+  </body>
+</html>

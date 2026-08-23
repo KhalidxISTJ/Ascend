@@ -35,6 +35,68 @@ const addCategoryBtn = document.getElementById("addCategoryBtn");
 
 const sortQuestsElement = document.getElementById("sortQuests");
 
+/* =======================================================
+   PRAYER TIMES API (Albany, NY - ISNA Method)
+======================================================= */
+
+const ALBANY_COORDS = {
+  latitude: 42.6526,
+  longitude: -73.7562,
+  method: 99, // Custom
+  fajrAngle: 15,
+  ishaAngle: 15,
+};
+
+async function getPrayerTimes() {
+  try {
+    const response = await fetch(
+      `https://api.aladhan.com/v1/timings?latitude=${ALBANY_COORDS.latitude}&longitude=${ALBANY_COORDS.longitude}&method=99&fajrAngle=${ALBANY_COORDS.fajrAngle}&ishaAngle=${ALBANY_COORDS.ishaAngle}`,
+    );
+    const data = await response.json();
+    return data.data.timings;
+  } catch (error) {
+    console.error("Failed to fetch prayer times:", error);
+    return null;
+  }
+}
+
+function formatTimeForQuest(timeStr) {
+  if (!timeStr) return "00:00";
+  const [hours, minutes] = timeStr.split(":");
+  return `${hours}:${minutes}`;
+}
+
+async function updatePrayerQuests() {
+  const times = await getPrayerTimes();
+  if (!times) return;
+
+  // Load quests from localStorage (using the same key as saveQuests)
+  const saved = localStorage.getItem("quests");
+  if (!saved) return;
+
+  const quests = JSON.parse(saved);
+  let updated = false;
+
+  // Find and update prayer quests
+  quests.forEach((quest) => {
+    if (quest.isPrayer && times[quest.prayerType]) {
+      const newTime = formatTimeForQuest(times[quest.prayerType]);
+      if (quest.startTime !== newTime) {
+        quest.startTime = newTime;
+        updated = true;
+        console.log(`🕌 Updated ${quest.prayerType} to ${newTime}`);
+      }
+    }
+  });
+
+  if (updated) {
+    localStorage.setItem("quests", JSON.stringify(quests));
+    // Reload quests from storage to reflect changes
+    loadQuests();
+    renderQuests();
+  }
+}
+
 // =====================
 // Quest Data
 // =====================
@@ -330,9 +392,7 @@ function renderSections() {
 
   for (const section of sections) {
     const button = document.createElement("button");
-
     button.className = "section-tab";
-
     button.textContent = section;
 
     if (section === currentSection) {
@@ -341,30 +401,51 @@ function renderSections() {
 
     button.onclick = () => {
       currentSection = section;
-
       renderSections();
-
       renderQuests();
     };
+
+    // Add delete button for non-default sections
+    const defaultSections = ["Morning", "School", "General", "Night"];
+    if (!defaultSections.includes(section)) {
+      const deleteBtn = document.createElement("span");
+      deleteBtn.className = "section-delete-btn";
+      deleteBtn.textContent = "✕";
+      deleteBtn.title = "Delete section";
+      deleteBtn.onclick = (e) => {
+        e.stopPropagation();
+        if (
+          !confirm(
+            `Delete section "${section}"? All quests in this section will be moved to "General".`,
+          )
+        )
+          return;
+
+        // Move quests to General
+        quests.forEach((q) => {
+          if (q.section === section) q.section = "General";
+        });
+        saveQuests();
+
+        sections = sections.filter((s) => s !== section);
+        saveSections();
+        renderSections();
+        renderQuests();
+      };
+      button.appendChild(deleteBtn);
+    }
 
     questSections.appendChild(button);
   }
 
   const addButton = document.createElement("button");
-
   addButton.className = "section-tab add-section";
-
   addButton.textContent = "+";
-
   addButton.onclick = () => {
     const name = prompt("New section name:");
-
     if (!name) return;
-
     sections.push(name);
-
     saveSections();
-
     renderSections();
   };
 
@@ -490,31 +571,48 @@ function createQuestElement(quest) {
     Low: "🟢",
   };
 
+  // Check if it's a prayer quest
+  let nameDisplay = quest.name;
+  if (quest.isPrayer && quest.prayerType === "Fajr") {
+    nameDisplay = `🌙 ${quest.name}`;
+  }
+
   title.textContent =
     `${quest.completed ? "✔️ " : ""}` +
     `${priorityIcons[quest.priority] || "🟡"} ` +
-    quest.name;
+    nameDisplay;
 
   // TIME
 
+  // TIME
   const time = document.createElement("div");
-
   time.className = "quest-time";
 
-  const hasTime = quest.startTime || quest.endTime;
-  const hasDueDate = quest.dueDate;
+  const hasStartTime = quest.startTime && quest.startTime !== "";
+  const hasEndTime = quest.endTime && quest.endTime !== "";
+  const hasDueDate = quest.dueDate && quest.dueDate !== "";
 
   let info = "";
 
-  if (hasTime) {
-    info += `🕓 ${formatTime(quest.startTime)} - ${formatTime(quest.endTime)}`;
+  if (hasStartTime || hasEndTime) {
+    // Check if it's a prayer quest
+    if (quest.isPrayer && quest.prayerType === "Fajr") {
+      info += `🕌 Fajr: ${formatTime(quest.startTime)} (auto-updated)`;
+    } else {
+      if (hasStartTime && hasEndTime) {
+        info += `🕓 ${formatTime(quest.startTime)} - ${formatTime(quest.endTime)}`;
+      } else if (hasStartTime) {
+        info += `🕓 ${formatTime(quest.startTime)}`;
+      } else if (hasEndTime) {
+        info += `🕓 Ends at ${formatTime(quest.endTime)}`;
+      }
+    }
   }
 
   if (hasDueDate) {
     if (info) {
       info += "<br>";
     }
-
     info += `📅 ${formatDate(quest.dueDate)}`;
   }
 
@@ -523,7 +621,6 @@ function createQuestElement(quest) {
   }
 
   time.innerHTML = info;
-
   // DETAILS
 
   const details = document.createElement("div");
@@ -534,54 +631,40 @@ function createQuestElement(quest) {
 
   details.innerHTML = `
 
-
     Priority:
     ${quest.priority}
 
     <br>
 
-
     Type:
     ${quest.type}
 
-
     <br>
-
 
     Difficulty:
     ${quest.difficulty}
 
-
     <br>
-
 
     Recurring:
     ${quest.recurring}
 
-
     <br>
-
 
     Section:
     ${quest.section}
 
-
     <br>
-
 
     Due:
     ${quest.dueDate ? formatDate(quest.dueDate) : "None"}
 
-
     <br>
-
 
     Status:
     ${due.text}
 
-
     <br>
-
 
     🕓
     ${formatTime(quest.startTime)}
@@ -660,6 +743,7 @@ function createQuestElement(quest) {
     questList.appendChild(li);
   }
 }
+
 // =====================
 // QUEST SYSTEM — PART 3
 // ADD / EDIT / DELETE
@@ -672,27 +756,21 @@ function createQuestElement(quest) {
 function createQuestObject() {
   return {
     name: questInput.value.trim(),
-
     type: questCategoryElement.value,
-
     difficulty: questDifficultyElement.value,
-
     recurring: questRecurringElement.value,
-
     startTime: questStartTimeElement.value,
-
     endTime: questEndTimeElement.value,
-
     dueDate: questDueDateElement.value,
-
     priority: questPriority.value,
-
     section: currentSection,
-
     completed: false,
     status: "active",
     skippedToday: false,
     createdAt: Date.now(),
+    // Prayer flags (default false)
+    isPrayer: false,
+    prayerType: null,
   };
 }
 
@@ -1422,10 +1500,13 @@ function questDebug() {
 // =====================
 
 function initializeQuestSystem() {
+  // First load quests and other data
   loadQuests();
   loadSections();
   loadCategories();
   migrateQuests();
+  // Then update prayer quests (this will also re-save if needed)
+  updatePrayerQuests();
   runDailyReset();
   updateQuestOrder();
   renderSections();
