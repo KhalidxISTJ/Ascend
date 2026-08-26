@@ -677,6 +677,8 @@
     // If it's a folder, show folder view
     if (page.isFolder || !page.parentId) {
       pageTitle.value = page.title || "Untitled";
+      const toolbar = document.querySelector(".ql-toolbar");
+      if (toolbar) toolbar.style.display = "none";
 
       const editorContainer = document.getElementById("editor-container");
       const folderView =
@@ -687,12 +689,7 @@
         folderView.style.display = "block";
         folderView.innerHTML = `
           <div class="folder-view">
-            <div class="folder-icon">📁</div>
-            <h2>${page.title}</h2>
-            <p>This is a folder. Add pages inside it using the "Subpage" button.</p>
-            <div class="folder-children">
-              ${getFolderChildrenHTML(page.id)}
-            </div>
+            <h2>This is a folder. Add pages inside it using the "Subpage" button.</h2>
           </div>
         `;
       }
@@ -704,6 +701,8 @@
     // Regular page — show editor
     const editorContainer = document.getElementById("editor-container");
     const folderView = document.getElementById("folderView");
+    const toolbar = document.querySelector(".ql-toolbar");
+    if (toolbar) toolbar.style.display = "block";
     if (editorContainer) editorContainer.style.display = "block";
     if (folderView) folderView.style.display = "none";
 
