@@ -1,130 +1,95 @@
 /* =====================================================
-   NAVIGATION — White Theme
+   Header
 ===================================================== */
 
-.navigation {
+.header-top {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 12px 20px;
-  gap: 12px;
+  justify-content: space-between;
   flex-wrap: wrap;
-  background: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  gap: 10px;
+  padding: 16px 20px 8px;
 }
 
-/* =====================================================
-   SEARCH
-===================================================== */
+.header-top h1 {
+  font-size: 2rem;
+  margin: 0;
+  font-weight: 700;
+}
+
+.header-top .ascend {
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.version-badge {
+  font-size: 0.75rem;
+  color: #6b7280;
+  background: #e5e7eb;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+hr {
+  margin: 8px 20px;
+  border: none;
+  border-top: 2px solid #d1d5db;
+}
+.navigation {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  padding: 12px 20px;
+}
 
 .search-container {
   flex: 1;
-  min-width: 140px;
+}
+
+.nav-links {
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  gap: 10px;
+}
+
+.right-placeholder {
+  flex: 1;
+}
+
+.nav-link {
+  padding: 8px 18px;
+
+  border-radius: 8px;
+
+  font-weight: bold;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  background: black;
+
+  color: white;
 }
 
 #search-box {
   width: 220px;
-  padding: 8px 14px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 14px;
-  background: #ffffff;
-  color: #111827;
-  transition: all 0.2s;
 }
-
-#search-box:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-#search-box::placeholder {
-  color: #9ca3af;
-}
-
-/* =====================================================
-   NAV LINKS
-===================================================== */
-
-.nav-links {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.nav-link {
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 14px;
-  color: #6b7280;
-  text-decoration: none;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-
-.nav-link:hover {
-  background: #f3f4f6;
-  color: #111827;
-}
-
-.nav-link.active {
-  background: #3b82f6;
-  color: white;
-}
-
-.nav-link.active:hover {
-  background: #2563eb;
-}
-
-/* =====================================================
-   RIGHT PLACEHOLDER
-===================================================== */
-
-.right-placeholder {
-  flex: 1;
-  min-width: 20px;
-}
-
-/* =====================================================
-   RESPONSIVE
-===================================================== */
-
-/* Tablets & small laptops */
-@media (max-width: 1024px) {
+@media (max-width: 700px) {
   .navigation {
-    padding: 10px 16px;
+    flex-wrap: wrap;
     gap: 10px;
   }
 
-  #search-box {
-    width: 160px;
-  }
-
-  .nav-link {
-    padding: 6px 12px;
-    font-size: 13px;
-  }
-}
-
-/* Large phones */
-@media (max-width: 768px) {
-  .navigation {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 10px 14px;
-    gap: 8px;
-  }
-
   .search-container {
-    flex: none;
-    width: 100%;
+    flex: 1 1 100%;
   }
 
   #search-box {
@@ -132,47 +97,7 @@
   }
 
   .nav-links {
+    flex-wrap: wrap;
     justify-content: center;
-    gap: 4px;
-  }
-
-  .nav-link {
-    padding: 6px 10px;
-    font-size: 12px;
-  }
-
-  .right-placeholder {
-    display: none;
-  }
-}
-
-/* Very small phones */
-@media (max-width: 480px) {
-  .navigation {
-    padding: 8px 10px;
-  }
-
-  .nav-link {
-    padding: 4px 8px;
-    font-size: 11px;
-  }
-
-  #search-box {
-    font-size: 13px;
-    padding: 6px 10px;
-  }
-}
-
-/* =====================================================
-   ACCESSIBILITY — Reduce motion
-===================================================== */
-
-@media (prefers-reduced-motion: reduce) {
-  .nav-link {
-    transition: none;
-  }
-
-  #search-box {
-    transition: none;
   }
 }

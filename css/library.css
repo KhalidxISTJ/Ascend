@@ -1,39 +1,26 @@
 /* =====================================================
-   ASCEND LIBRARY — POLISHED
-===================================================== */
-
-.library-page {
-  width: min(1450px, 95%);
-  margin: 35px auto 60px;
-}
-
-/* =====================================================
    HEADER
 ===================================================== */
 
-.library-header {
+.header-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 30px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid rgba(0, 0, 0, 0.06);
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 16px 20px 8px;
 }
 
-.library-header h1 {
+.header-top h1 {
+  font-size: 2rem;
   margin: 0;
-  font-size: 32px;
   font-weight: 700;
-  background: linear-gradient(135deg, #1a1a2e, #16213e);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
-.library-header p {
-  margin: 6px 0 0;
-  opacity: 0.6;
-  font-size: 15px;
+.header-top .ascend {
+  font-weight: 700;
+  letter-spacing: 1px;
+  font-family: "Space Grotesk", sans-serif !important;
 }
 
 .library-new-page-btn {
@@ -44,7 +31,7 @@
   color: white;
   cursor: pointer;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 800;
   transition: all 0.25s ease;
   box-shadow: 0 4px 12px rgba(26, 26, 46, 0.25);
 }

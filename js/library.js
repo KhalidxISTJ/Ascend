@@ -1,5 +1,5 @@
 /* =========================================================
-   ASCEND LIBRARY — WITH INLINE CHECKLIST
+   ASCEND LIBRARY — WITH SECTION STATE + FOLDER VIEW
 ========================================================= */
 
 (() => {
@@ -95,7 +95,6 @@
       placeholder: "Start writing...",
     });
 
-    // Set up inline checklist click handler
     setupInlineChecklist();
 
     setTimeout(() => {
@@ -132,28 +131,21 @@
     const editor = document.querySelector(".ql-editor");
     if (!editor) return;
 
-    // Listen for clicks on the editor
     editor.addEventListener("click", function (e) {
-      // Find if we clicked on a list item
       const li = e.target.closest("li");
       if (!li) return;
 
-      // Check if it's a checklist item (has parent ul with data-checked)
       const ul = li.parentElement;
       if (!ul || ul.tagName !== "UL") return;
 
-      // Check if this is a checklist (has data-checked attribute)
       if (!ul.hasAttribute("data-checked")) return;
 
-      // Toggle the checklist item
       const isChecked = ul.getAttribute("data-checked") === "true";
       const newState = !isChecked;
       ul.setAttribute("data-checked", newState ? "true" : "false");
 
-      // Also update the li class
       li.classList.toggle("ql-checked", newState);
 
-      // Save the changes
       saveCurrentPage();
 
       console.log(
@@ -253,11 +245,8 @@
   }
 
   /* =======================================================
-     SECTIONS & PAGE LIST
+     RENDER PAGE ITEM (with hierarchy support)
   ======================================================= */
-  /* =======================================================
-   RENDER PAGE ITEM (with hierarchy support)
-======================================================= */
 
   function renderPageItem(page, depth) {
     const button = document.createElement("button");
@@ -269,12 +258,16 @@
       button.classList.add("active");
     }
 
-    // Indent based on depth (sub-pages get indented)
     button.style.paddingLeft = `${11 + depth * 24}px`;
 
     const icon = document.createElement("span");
     icon.className = "library-page-icon";
-    icon.textContent = depth > 0 ? "↳" : "📄";
+
+    if (page.isFolder || !page.parentId) {
+      icon.textContent = "📁";
+    } else {
+      icon.textContent = "📄";
+    }
 
     const name = document.createElement("span");
     name.className = "library-page-name";
@@ -304,7 +297,6 @@
 
     pageList.appendChild(button);
 
-    // Find and render children (sub-pages)
     const children = library.pages.filter(
       (child) => child.parentId === page.id,
     );
@@ -312,6 +304,10 @@
       renderPageItem(child, depth + 1);
     }
   }
+
+  /* =======================================================
+     SECTIONS & PAGE LIST
+  ======================================================= */
 
   function renderPageList() {
     if (!pageList) return;
@@ -325,11 +321,9 @@
       return;
     }
 
-    // Only show root pages (no parentId)
     const roots = library.pages.filter((page) => !page.parentId);
 
     if (roots.length === 0) {
-      // If no root pages, show all pages (orphans)
       for (const page of library.pages) {
         renderPageItem(page, 0);
       }
@@ -361,10 +355,27 @@
     const pageContainer = document.createElement("div");
     pageContainer.className = "library-section-pages";
 
+    // =============================================
+    // RESTORE — SIMPLE (individual localStorage keys)
+    // =============================================
+    const key = "sectionState_" + section.id;
+    const saved = localStorage.getItem(key);
+    if (saved === "closed") {
+      pageContainer.classList.add("collapsed");
+      toggle.textContent = "▶";
+    }
+
+    // =============================================
+    // SAVE — SIMPLE (individual localStorage keys)
+    // =============================================
     header.addEventListener("click", (e) => {
       if (e.target.closest("button")) return;
       const isCollapsed = pageContainer.classList.toggle("collapsed");
       toggle.textContent = isCollapsed ? "▶" : "▼";
+      localStorage.setItem(
+        "sectionState_" + section.id,
+        isCollapsed ? "closed" : "open",
+      );
     });
 
     const renameBtn = header.querySelector(".library-section-rename-btn");
@@ -450,7 +461,7 @@
 
     const icon = document.createElement("span");
     icon.className = "library-page-icon";
-    icon.textContent = "📄";
+    icon.textContent = page.isFolder || !page.parentId ? "📁" : "📄";
 
     const name = document.createElement("span");
     name.className = "library-page-name";
@@ -603,11 +614,12 @@
      PAGE MANAGEMENT
   ======================================================= */
 
-  function createPage(title = "Untitled", parentId = null) {
+  function createPage(title = "Untitled", parentId = null, isFolder = false) {
     const page = {
       id: createId(),
       title,
-      parentId, // ← This should be set to the parent page's ID
+      parentId,
+      isFolder: isFolder || !parentId,
       content: JSON.stringify({ ops: [] }),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -616,7 +628,6 @@
     library.pages.push(page);
     library.selectedPageId = page.id;
 
-    // Add to first section, or Uncategorized
     if (library.sections.length > 0) {
       library.sections[0].pages.push(page.id);
     }
@@ -650,7 +661,7 @@
   }
 
   /* =======================================================
-     OPEN PAGE
+     OPEN PAGE — FOLDER HANDLING
   ======================================================= */
 
   function openPage(pageId) {
@@ -662,6 +673,39 @@
 
     if (emptyState) emptyState.classList.add("hidden");
     if (pageView) pageView.classList.remove("hidden");
+
+    // If it's a folder, show folder view
+    if (page.isFolder || !page.parentId) {
+      pageTitle.value = page.title || "Untitled";
+
+      const editorContainer = document.getElementById("editor-container");
+      const folderView =
+        document.getElementById("folderView") || createFolderView();
+
+      if (editorContainer) editorContainer.style.display = "none";
+      if (folderView) {
+        folderView.style.display = "block";
+        folderView.innerHTML = `
+          <div class="folder-view">
+            <div class="folder-icon">📁</div>
+            <h2>${page.title}</h2>
+            <p>This is a folder. Add pages inside it using the "Subpage" button.</p>
+            <div class="folder-children">
+              ${getFolderChildrenHTML(page.id)}
+            </div>
+          </div>
+        `;
+      }
+
+      renderPageList();
+      return;
+    }
+
+    // Regular page — show editor
+    const editorContainer = document.getElementById("editor-container");
+    const folderView = document.getElementById("folderView");
+    if (editorContainer) editorContainer.style.display = "block";
+    if (folderView) folderView.style.display = "none";
 
     pageTitle.value = page.title || "Untitled";
 
@@ -692,6 +736,31 @@
     window.quill.focus();
   }
 
+  function createFolderView() {
+    const div = document.createElement("div");
+    div.id = "folderView";
+    div.className = "folder-view-container";
+    div.style.display = "none";
+    const editorContainer = document.getElementById("editor-container");
+    if (editorContainer && editorContainer.parentNode) {
+      editorContainer.parentNode.insertBefore(div, editorContainer.nextSibling);
+    }
+    return div;
+  }
+
+  function getFolderChildrenHTML(parentId) {
+    const children = library.pages.filter((p) => p.parentId === parentId);
+    if (children.length === 0) {
+      return '<p class="empty-folder">No pages in this folder yet.</p>';
+    }
+    return children
+      .map(
+        (p) =>
+          `<div class="folder-child-item" onclick="openPage('${p.id}')">📄 ${p.title}</div>`,
+      )
+      .join("");
+  }
+
   function showEmptyState() {
     if (emptyState) emptyState.classList.remove("hidden");
     if (pageView) pageView.classList.add("hidden");
@@ -708,6 +777,15 @@
   function saveCurrentPage() {
     const page = getSelectedPage();
     if (!page || !window.quill) return;
+
+    // Don't save content for folders
+    if (page.isFolder || !page.parentId) {
+      page.title = pageTitle.value.trim() || "Untitled";
+      page.updatedAt = new Date().toISOString();
+      saveLibrary();
+      renderPageList();
+      return;
+    }
 
     page.title = pageTitle.value.trim() || "Untitled";
     const delta = window.quill.getContents();
@@ -734,6 +812,17 @@
       const page = getSelectedPage();
       if (page) createPage("Untitled", page.id);
     });
+
+    const newFolderBtn = document.getElementById("newLibraryFolderBtn");
+    if (newFolderBtn) {
+      newFolderBtn.addEventListener("click", function (event) {
+        event.preventDefault();
+        const title = prompt("Enter folder name:", "New Folder");
+        if (title && title.trim()) {
+          createPage(title.trim(), null, true);
+        }
+      });
+    }
 
     deletePageBtn?.addEventListener("click", deleteCurrentPage);
     pageTitle?.addEventListener("input", saveCurrentPage);
@@ -943,10 +1032,15 @@
       id: page.id || createId(),
       title: page.title || "Untitled",
       parentId: page.parentId || null,
+      isFolder: page.isFolder || false,
       content: page.content || "",
       createdAt: page.createdAt || new Date().toISOString(),
       updatedAt: page.updatedAt || new Date().toISOString(),
     };
+
+    if (!migrated.parentId && !migrated.isFolder) {
+      migrated.isFolder = true;
+    }
 
     if (typeof page.content === "string" && !page.content.startsWith("{")) {
       migrated.content = JSON.stringify([{ insert: page.content || "" }]);

@@ -1,11 +1,10 @@
 <!doctype html>
 <html lang="en">
-  <!-- HEAD -->
   <head>
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0,user-scalable=yes"
+      content="width=device-width, initial-scale=1.0, user-scalable=yes"
     />
     <title>Ascend</title>
 
@@ -33,31 +32,26 @@
     <link rel="stylesheet" href="css/navigation.css" />
     <link rel="stylesheet" href="css/index.css" />
     <link rel="stylesheet" href="css/profile.css" />
-    <link rel="stylesheet" href="css/ai.css" />
   </head>
 
-  <!-- BODY -->
   <body data-page="home">
-    <!-- PAGE TITLE -->
     <header>
       <div class="header-top">
-        <h1>Welcome to <span class="ascend">Ascend</span></h1>
+        <h1>
+          <img
+            src="Icons\Ascend Logo PWA 512x.png"
+            alt="Ascend"
+            class="ascend-logo"
+          />
+        </h1>
         <div id="version" class="version-badge"></div>
       </div>
-
       <hr />
 
-      <!-- NAVIGATION -->
       <nav class="navigation">
         <div class="search-container">
           <form method="get">
-            <input
-              id="search-box"
-              type="text"
-              name="Search-box"
-              placeholder="Search"
-              autocomplete="on"
-            />
+            <input id="search-box" type="text" placeholder="Search" />
             <button type="submit">Search</button>
           </form>
         </div>
@@ -90,7 +84,6 @@
               <button type="submit">Save</button>
             </form>
           </div>
-
           <div class="profile-right">
             <div class="stat-card" id="display-name">Name:</div>
             <div class="stat-card" id="level">Level:</div>
@@ -142,24 +135,12 @@
             <h3>⏱ Focus Timer</h3>
             <div id="timerStatus" class="timer-status">⚪ Ready</div>
             <h2 id="timerDisplay">00:00:00</h2>
-            <input type="number" id="timerMinutes" min="1" value="25" />
+            <input type="number" id="timerMinutes" min="0" value="0" />
             <div class="timer-buttons">
               <button id="startTimer">Start</button>
               <button id="pauseTimer">Pause</button>
               <button id="resetTimer">Reset</button>
             </div>
-          </div>
-
-          <!-- Streak -->
-          <div class="home-card">
-            <h3>🔥 Streak</h3>
-            <p id="streak">Coming Soon</p>
-          </div>
-
-          <!-- Overview -->
-          <div class="home-card">
-            <h3>📊 Overview</h3>
-            <p>Character stats will move to the Stats page.</p>
           </div>
         </div>
 
@@ -177,71 +158,10 @@
       }
     </script>
 
-    <!-- PWA Install Prompt -->
-    <script>
-      let deferredPrompt;
-      window.addEventListener("beforeinstallprompt", (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        console.log("📱 App can be installed!");
-        showInstallButton();
-      });
-
-      function showInstallButton() {
-        if (document.getElementById("installBtn")) return;
-        const btn = document.createElement("button");
-        btn.id = "installBtn";
-        btn.textContent = "📱 Install App";
-        btn.style.cssText = `
-          position: fixed;
-          bottom: 20px;
-          right: 20px;
-          padding: 12px 24px;
-          background: #3b82f6;
-          color: white;
-          border: none;
-          border-radius: 12px;
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
-          z-index: 999;
-          transition: all 0.25s;
-        `;
-        btn.onmouseover = () => {
-          btn.style.transform = "scale(1.05)";
-        };
-        btn.onmouseout = () => {
-          btn.style.transform = "scale(1)";
-        };
-        btn.onclick = async () => {
-          if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const result = await deferredPrompt.userChoice;
-            console.log(
-              `User ${result.outcome === "accepted" ? "installed" : "dismissed"}`,
-            );
-            deferredPrompt = null;
-            btn.remove();
-          }
-        };
-        document.body.appendChild(btn);
-      }
-
-      window.addEventListener("appinstalled", () => {
-        console.log("✅ App installed!");
-        const btn = document.getElementById("installBtn");
-        if (btn) btn.remove();
-      });
-    </script>
-
     <!-- Scripts -->
     <script src="js/version.js"></script>
     <script src="js/versionUI.js"></script>
     <script src="js/player.js"></script>
-    <script src="js/aiContext.js"></script>
-    <script src="js/ascendAI.js"></script>
-    <script src="js/skillTree.js"></script>
     <script src="js/quests.js"></script>
     <script src="js/config.js"></script>
     <script src="js/index.js"></script>

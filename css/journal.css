@@ -1,3 +1,42 @@
+/* Header */
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 16px 20px 8px;
+}
+
+.header-top h1 {
+  font-size: 2rem;
+  margin: 0;
+  font-weight: 700;
+}
+
+.header-top .ascend {
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.version-badge {
+  font-size: 0.75rem;
+  color: #6b7280;
+  background: #e5e7eb;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+hr {
+  margin: 8px 20px;
+  border: none;
+  border-top: 2px solid #d1d5db;
+}
+
+/*Journal*/
+
 .journal-page {
   max-width: 1400px;
   margin: auto;

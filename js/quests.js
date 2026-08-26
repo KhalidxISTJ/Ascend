@@ -91,10 +91,32 @@ async function updatePrayerQuests() {
 
   if (updated) {
     localStorage.setItem("quests", JSON.stringify(quests));
-    // Reload quests from storage to reflect changes
+    // Force reload of quests data
     loadQuests();
     renderQuests();
+    // Also update home page if it's open
+    if (typeof updateDashboard === "function") {
+      updateDashboard();
+    }
   }
+}
+
+// =====================================================
+// DATE HELPERS
+// =====================================================
+
+function getTodayString() {
+  return new Date().toISOString().split("T")[0];
+}
+
+function getYesterdayString() {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return yesterday.toISOString().split("T")[0];
+}
+
+function getDateString(date) {
+  return date.toISOString().split("T")[0];
 }
 
 // =====================
@@ -743,7 +765,6 @@ function createQuestElement(quest) {
     questList.appendChild(li);
   }
 }
-
 // =====================
 // QUEST SYSTEM — PART 3
 // ADD / EDIT / DELETE
@@ -890,19 +911,28 @@ function deleteQuest(quest) {
 // =====================
 
 function completeQuest(quest) {
-  if (!quest || quest.status === "completed") {
-    return;
-  }
+  if (!quest || quest.status === "completed") return;
 
   quest.status = "completed";
   quest.completed = true;
 
+  // =============================================
+  // SAVE HISTORY (optional)
+  // =============================================
+  if (quest.recurring === "daily" || quest.recurring === "weekly") {
+    const today = getTodayString();
+    if (!quest.history) quest.history = {};
+    quest.history[today] = true;
+  }
+
   giveQuestXP(quest);
-
   saveQuests();
-
   renderQuests();
-  updateDashboard();
+
+  // Only update dashboard if the function exists (Home page)
+  if (typeof updateDashboard === "function") {
+    updateDashboard();
+  }
 }
 
 function restoreQuest(quest) {
@@ -916,8 +946,12 @@ function restoreQuest(quest) {
   saveQuests();
 
   renderQuests();
-  updateDashboard();
+
+  if (typeof updateDashboard === "function") {
+    updateDashboard();
+  }
 }
+
 function skipQuest(quest) {
   if (!quest || quest.status === "completed") {
     return;
@@ -933,6 +967,7 @@ function skipQuest(quest) {
     renderQuests();
   }
 
+  // Only update dashboard if the function exists (Home page)
   if (typeof updateDashboard === "function") {
     updateDashboard();
   }
@@ -955,11 +990,17 @@ function giveQuestXP(quest) {
 
   const reward = rewards[quest.difficulty] || 10;
 
-  addXP(reward);
+  // These functions should be defined elsewhere (player.js, skillTree.js)
+  if (typeof addXP === "function") {
+    addXP(reward);
+  }
 
-  const skill = findSkillByName(skillTree, quest.type);
+  const skill =
+    typeof findSkillByName === "function"
+      ? findSkillByName(skillTree, quest.type)
+      : null;
 
-  if (skill) {
+  if (skill && typeof addSkillXP === "function") {
     addSkillXP(skill, reward);
   }
 }
@@ -1047,17 +1088,27 @@ function resetRecurringQuests() {
 // =====================
 
 function runDailyReset() {
-  if (!isNewDay()) {
-    return;
-  }
+  if (!isNewDay()) return;
 
   console.log("Daily reset triggered");
+
+  // =============================================
+  // MARK MISSED DAYS FOR RECURRING QUESTS
+  // =============================================
+  const yesterday = getYesterdayString();
+  quests.forEach((quest) => {
+    if (quest.recurring === "daily" || quest.recurring === "weekly") {
+      if (!quest.history) quest.history = {};
+      if (quest.history[yesterday] === undefined) {
+        quest.history[yesterday] = false;
+      }
+    }
+  });
 
   resetRecurringQuests();
 
   if (playerData) {
     playerData.lastResetDate = getTodayString();
-
     savePlayer();
   }
 
@@ -1505,7 +1556,6 @@ function initializeQuestSystem() {
   loadSections();
   loadCategories();
   migrateQuests();
-  // Then update prayer quests (this will also re-save if needed)
   updatePrayerQuests();
   runDailyReset();
   updateQuestOrder();

@@ -32,34 +32,34 @@
   </head>
 
   <body>
-    <!-- Navigation -->
-    <nav class="main-nav">
-      <div class="nav-links">
-        <a class="nav-link" href="index.html">Home</a>
-        <a class="nav-link" href="quests.html">Quests</a>
-        <a class="nav-link" href="stats.html">Stats</a>
-        <a class="nav-link" href="codex.html">Codex</a>
-        <a class="nav-link active" href="library.html">Library</a>
-        <a class="nav-link" href="journal.html">Journal</a>
-        <a class="nav-link" href="notes.html">Notes</a>
-      </div>
-    </nav>
-
     <!-- Library -->
     <main class="library-page">
       <!-- Header -->
-      <header class="library-header">
-        <div>
-          <h1>📚 Library</h1>
-          <p>Your knowledge, notes, ideas, and projects.</p>
+
+      <header>
+        <div class="header-top">
+          <h1><span class="ascend">Ascend</span></h1>
         </div>
-        <button
-          id="newLibraryPageBtn"
-          type="button"
-          class="library-new-page-btn"
-        >
-          + New Page
-        </button>
+        <hr />
+
+        <nav class="navigation">
+          <div class="search-container">
+            <form method="get">
+              <input id="search-box" type="text" placeholder="Search" />
+              <button type="submit">Search</button>
+            </form>
+          </div>
+          <div class="nav-links">
+            <a class="nav-link" href="index.html">Home</a>
+            <a class="nav-link" href="quests.html">Quests</a>
+            <a class="nav-link" href="stats.html">Stats</a>
+            <a class="nav-link" href="codex.html">Codex</a>
+            <a class="nav-link active" href="library.html">Library</a>
+            <a class="nav-link" href="journal.html">Journal</a>
+            <a class="nav-link" href="notes.html">Notes</a>
+          </div>
+          <div class="right-placeholder"></div>
+        </nav>
       </header>
 
       <!-- Main Layout -->
