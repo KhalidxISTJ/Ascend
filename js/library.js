@@ -240,8 +240,6 @@
         window.quill.focus();
       });
     });
-
-    console.log("✅ Font size fix applied!");
   }
 
   /* =======================================================
@@ -276,8 +274,35 @@
     button.appendChild(icon);
     button.appendChild(name);
 
+    const childrenContainer = document.createElement("div");
+    childrenContainer.className = "folder-children";
+
+    // Restore saved state
+    if (page.isFolder) {
+      const savedState = localStorage.getItem("folderState_" + page.id);
+      if (savedState === "closed") {
+        childrenContainer.style.display = "none";
+        icon.textContent = "📁";
+      } else {
+        childrenContainer.style.display = "block";
+        icon.textContent = "📂";
+      }
+    }
+
     button.addEventListener("click", () => {
-      openPage(page.id);
+      if (page.isFolder) {
+        if (childrenContainer.style.display === "none") {
+          childrenContainer.style.display = "block";
+          icon.textContent = "📂";
+          localStorage.setItem("folderState_" + page.id, "open");
+        } else {
+          childrenContainer.style.display = "none";
+          icon.textContent = "📁";
+          localStorage.setItem("folderState_" + page.id, "closed");
+        }
+      } else {
+        openPage(page.id);
+      }
     });
 
     button.addEventListener("dragstart", (e) => {
@@ -295,14 +320,33 @@
       showPageContextMenu(e.clientX, e.clientY, page, null);
     });
 
-    pageList.appendChild(button);
-
     const children = library.pages.filter(
       (child) => child.parentId === page.id,
     );
-    for (const child of children) {
-      renderPageItem(child, depth + 1);
+
+    if (children.length > 0) {
+      for (const child of children) {
+        const result = renderPageItem(child, depth + 1);
+        if (result) {
+          childrenContainer.appendChild(result.button);
+          if (result.container) {
+            childrenContainer.appendChild(result.container);
+          }
+        }
+      }
+
+      button.appendChild(childrenContainer);
+
+      return {
+        button: button,
+        container: childrenContainer,
+      };
     }
+
+    return {
+      button: button,
+      container: null,
+    };
   }
 
   /* =======================================================
@@ -310,6 +354,7 @@
   ======================================================= */
 
   function renderPageList() {
+    console.log("renderPageList called, pages:", library.pages.length);
     if (!pageList) return;
     pageList.innerHTML = "";
 
@@ -324,12 +369,26 @@
     const roots = library.pages.filter((page) => !page.parentId);
 
     if (roots.length === 0) {
+      console.log("Rendering root pages:");
       for (const page of library.pages) {
-        renderPageItem(page, 0);
+        console.log("  -", page.title);
+        const result = renderPageItem(page, 0);
+        if (result) {
+          pageList.appendChild(result.button);
+          if (result.container) {
+            pageList.appendChild(result.container);
+          }
+        }
       }
     } else {
       for (const page of roots) {
-        renderPageItem(page, 0);
+        const result = renderPageItem(page, 0);
+        if (result) {
+          pageList.appendChild(result.button);
+          if (result.container) {
+            pageList.appendChild(result.container);
+          }
+        }
       }
     }
   }
