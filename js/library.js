@@ -250,7 +250,6 @@
     const button = document.createElement("button");
     button.type = "button";
     button.className = "library-page-item";
-    button.draggable = true;
 
     if (page.id === library.selectedPageId) {
       button.classList.add("active");
@@ -291,28 +290,23 @@
 
     button.addEventListener("click", () => {
       if (page.isFolder) {
-        if (childrenContainer.style.display === "none") {
-          childrenContainer.style.display = "block";
-          icon.textContent = "📂";
-          localStorage.setItem("folderState_" + page.id, "open");
+        const hasChildren = library.pages.some((p) => p.parentId === page.id);
+        if (hasChildren) {
+          if (childrenContainer.style.display === "none") {
+            childrenContainer.style.display = "block";
+            icon.textContent = "📂";
+            localStorage.setItem("folderState_" + page.id, "open");
+          } else {
+            childrenContainer.style.display = "none";
+            icon.textContent = "📁";
+            localStorage.setItem("folderState_" + page.id, "closed");
+          }
         } else {
-          childrenContainer.style.display = "none";
-          icon.textContent = "📁";
-          localStorage.setItem("folderState_" + page.id, "closed");
+          openPage(page.id);
         }
       } else {
         openPage(page.id);
       }
-    });
-
-    button.addEventListener("dragstart", (e) => {
-      e.dataTransfer.setData("text/plain", page.id);
-      e.dataTransfer.effectAllowed = "move";
-      setTimeout(() => button.classList.add("dragging"), 0);
-    });
-
-    button.addEventListener("dragend", () => {
-      button.classList.remove("dragging");
     });
 
     button.addEventListener("contextmenu", (e) => {
@@ -512,7 +506,6 @@
     const button = document.createElement("button");
     button.type = "button";
     button.className = "library-page-item";
-    button.draggable = true;
 
     if (page.id === library.selectedPageId) {
       button.classList.add("active");
@@ -531,16 +524,6 @@
 
     button.addEventListener("click", () => {
       openPage(page.id);
-    });
-
-    button.addEventListener("dragstart", (e) => {
-      e.dataTransfer.setData("text/plain", page.id);
-      e.dataTransfer.effectAllowed = "move";
-      setTimeout(() => button.classList.add("dragging"), 0);
-    });
-
-    button.addEventListener("dragend", () => {
-      button.classList.remove("dragging");
     });
 
     button.addEventListener("contextmenu", (e) => {
@@ -872,15 +855,33 @@
     });
 
     const newFolderBtn = document.getElementById("newLibraryFolderBtn");
+
     if (newFolderBtn) {
       newFolderBtn.addEventListener("click", function (event) {
         event.preventDefault();
-        const title = prompt("Enter folder name:", "New Folder");
+        const title = prompt("Enter folder name:", "");
+        const selected = getSelectedPage();
+        let parentId = null;
+
+        if (selected) {
+          if (selected.isFolder) {
+            parentId = selected.id;
+          } else {
+            parentId = selected.parentId;
+          }
+        }
+
+        createPage(title.trim(), parentId, true);
+      });
+    }
+    document
+      .getElementById("newLibraryFolderBtnSidebar")
+      ?.addEventListener("click", function () {
+        const title = prompt("Enter folder name:", "");
         if (title && title.trim()) {
           createPage(title.trim(), null, true);
         }
       });
-    }
 
     deletePageBtn?.addEventListener("click", deleteCurrentPage);
     pageTitle?.addEventListener("input", saveCurrentPage);

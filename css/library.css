@@ -223,11 +223,13 @@
   border-radius: 8px;
   background: transparent;
   text-align: left;
-  cursor: grab;
+  cursor: pointer;
   font-size: 14px;
   color: #2d2d3f;
   transition: all 0.15s ease;
   position: relative;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .library-page-item:hover {
@@ -255,10 +257,6 @@
 .library-page-item.dragging {
   opacity: 0.3;
   transform: scale(0.95);
-}
-
-.library-page-item:active {
-  cursor: grabbing;
 }
 
 .library-page-icon {
