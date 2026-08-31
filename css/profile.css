@@ -29,87 +29,62 @@
 
 .profile-panel {
   display: grid;
-
   grid-template-columns: 260px 1fr;
-
   gap: 30px;
-
   background: rgba(255, 255, 255, 0.85);
-
   border: 2px solid black;
-
   border-radius: 18px;
-
   padding: 25px;
 }
 
 .profile-left {
   display: flex;
-
   flex-direction: column;
-
   gap: 15px;
 }
 
 .profile-form {
   display: flex;
-
   flex-direction: column;
-
   gap: 10px;
 }
 
 .profile-picture {
   width: 220px;
-
   border-radius: 12px;
-
   border: 2px solid black;
 }
 
 .profile-right {
   display: grid;
-
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-
   gap: 15px;
 }
 
 .stat-card {
   background: white;
-
   border: 2px solid black;
-
   border-radius: 12px;
-
   padding: 18px;
-
   font-weight: 600;
 }
 
 .xp-card {
-  grid-column: 1/-1;
+  grid-column: 1 / -1;
 }
 
 .xp-track {
   width: 100%;
-
   height: 22px;
-
   margin-top: 10px;
-
   background: #ddd;
-
   border-radius: 8px;
-
   overflow: hidden;
 }
 
 .xp-fill {
   width: 0%;
-
   height: 100%;
-
   background: limegreen;
 }
 
@@ -119,7 +94,6 @@
 
 .profile-picture {
   cursor: pointer;
-
   transition:
     transform 0.2s,
     box-shadow 0.2s;
@@ -127,19 +101,49 @@
 
 .profile-picture:hover {
   transform: scale(1.05);
-
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
 }
 
+/* =====================================================
+   Mobile Fixes
+===================================================== */
+
 @media (max-width: 600px) {
-  .profile-picture {
-    width: 70px;
-    height: 70px;
+  .profile-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 20px;
+    padding: 16px;
   }
+
+  .profile-left {
+    width: 100%;
+  }
+
+  .profile-picture {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+  }
+
   .profile-form {
     width: 100%;
   }
+
   .profile-right {
+    display: grid;
     grid-template-columns: 1fr;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .stat-card {
+    padding: 12px 16px;
+    font-size: 0.95rem;
+  }
+
+  .xp-track {
+    height: 16px;
   }
 }

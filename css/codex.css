@@ -1438,3 +1438,28 @@ hr {
     min-width: 80px;
   }
 }
+@media (max-width: 700px) {
+  .flip-card {
+    width: 100%;
+    max-width: 320px;
+    aspect-ratio: 3/2;
+  }
+  .flip-front,
+  .flip-back {
+    font-size: 1.2rem;
+    padding: 20px;
+  }
+  .folder-actions button {
+    padding: 12px;
+    font-size: 1rem;
+    min-height: 48px;
+  }
+  .add-card-panel input,
+  .add-card-panel button {
+    font-size: 1rem;
+    padding: 12px;
+  }
+  #cardCounter {
+    font-size: 1.1rem;
+  }
+}
