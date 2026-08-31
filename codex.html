@@ -116,6 +116,45 @@
                 <button id="deleteFolderBtn">🗑 Delete Folder</button>
 
                 <button id="reviewModeBtn">📚 Review</button>
+
+                <!-- Review Overlay -->
+
+                <div id="reviewOverlay" class="overlay-hidden">
+                  <div class="overlay-content">
+                    <h2>Review Settings</h2>
+
+                    <!-- Mode buttons -->
+                    <div class="review-mode-options">
+                      <button
+                        class="review-mode-option"
+                        data-mode="multiple-choice"
+                      >
+                        🎯 Multiple Choice
+                      </button>
+                      <button
+                        class="review-mode-option"
+                        data-mode="short-answer"
+                      >
+                        ✍️ Short Answer
+                      </button>
+                      <button class="review-mode-option" data-mode="match">
+                        🔗 Match
+                      </button>
+                      <button class="review-mode-option" data-mode="recall">
+                        🧠 Recall
+                      </button>
+                    </div>
+
+                    <!-- Random toggle -->
+                    <div id="randomOrderToggle">
+                      <label><input type="checkbox" /> Random Order</label>
+                    </div>
+
+                    <!-- Buttons -->
+                    <button id="startReviewBtn">Start Review</button>
+                    <button id="cancelReviewBtn">Cancel</button>
+                  </div>
+                </div>
               </div>
             </aside>
 
@@ -169,71 +208,6 @@
                     <span> CODEX REVIEW </span>
 
                     <h3>Review Session</h3>
-                  </div>
-
-                  <!-- =====================================
-                       MODE SELECTOR
-
-                       The menu floats over the UI.
-                       It does NOT increase page height.
-                  ====================================== -->
-
-                  <div class="review-mode-selector">
-                    <button
-                      id="reviewModeSelectorBtn"
-                      class="review-mode-selector-btn"
-                      type="button"
-                    >
-                      <span id="reviewModeSelectorLabel">
-                        🎯 Multiple Choice
-                      </span>
-
-                      <span class="review-mode-arrow"> ▾ </span>
-                    </button>
-
-                    <!-- HOVER MENU -->
-
-                    <div id="reviewModeMenu" class="review-mode-menu">
-                      <!-- MULTIPLE CHOICE -->
-
-                      <button
-                        class="review-mode-option"
-                        data-mode="multiple-choice"
-                      >
-                        <span>🎯 Multiple Choice</span>
-                        <span
-                          class="review-mode-due"
-                          data-due-mode="multipleChoice"
-                          >0 due</span
-                        >
-                      </button>
-
-                      <button
-                        class="review-mode-option"
-                        data-mode="short-answer"
-                      >
-                        <span>✍️ Short Answer</span>
-                        <span
-                          class="review-mode-due"
-                          data-due-mode="shortAnswer"
-                          >0 due</span
-                        >
-                      </button>
-
-                      <button class="review-mode-option" data-mode="match">
-                        <span>🔗 Match</span>
-                        <span class="review-mode-due" data-due-mode="match"
-                          >0 due</span
-                        >
-                      </button>
-
-                      <button class="review-mode-option" data-mode="recall">
-                        <span>🧠 Recall</span>
-                        <span class="review-mode-due" data-due-mode="recall"
-                          >0 due</span
-                        >
-                      </button>
-                    </div>
                   </div>
                 </div>
 

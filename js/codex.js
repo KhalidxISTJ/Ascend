@@ -148,6 +148,16 @@ const reviewModeSelectorLabel = document.getElementById(
 
 const reviewModeOptions = document.querySelectorAll(".review-mode-option");
 
+let selectedMode = "multiple-choice";
+
+reviewModeOptions.forEach((btn) => {
+  btn.addEventListener("click", function () {
+    reviewModeOptions.forEach((b) => b.classList.remove("selected"));
+    this.classList.add("selected");
+    selectedMode = this.dataset.mode;
+  });
+});
+
 const reviewProgress = document.getElementById("reviewProgress");
 
 const reviewQuestion = document.getElementById("reviewQuestion");
@@ -877,6 +887,8 @@ function openReview() {
     return;
   }
 
+  reviewModeBtn.textContent = "✕ Cancel";
+
   // Hide normal flashcards.
   document.querySelector(".card-counter-container")?.classList.add("hidden");
 
@@ -964,6 +976,7 @@ function closeReview() {
     return;
   }
 
+  reviewModeBtn.textContent = "📚 Review";
   reviewWorkspace.classList.add("hidden");
 
   // Restore normal flashcards.
@@ -1643,11 +1656,61 @@ document.querySelectorAll(".review-rating-btn").forEach((button) => {
 
 if (reviewModeBtn) {
   reviewModeBtn.addEventListener("click", () => {
-    if (reviewWorkspace.classList.contains("hidden")) {
-      openReview();
-    } else {
+    // If review is active, close it
+    if (!reviewWorkspace.classList.contains("hidden")) {
       closeReview();
+      reviewModeBtn.textContent = "📚 Review";
+      return;
     }
+
+    // Otherwise show overlay
+    const overlay = document.getElementById("reviewOverlay");
+    if (overlay) {
+      overlay.classList.remove("overlay-hidden");
+    }
+  });
+}
+
+const cancelBtn = document.getElementById("cancelReviewBtn");
+if (cancelBtn) {
+  cancelBtn.addEventListener("click", () => {
+    const overlay = document.getElementById("reviewOverlay");
+    if (overlay) {
+      overlay.classList.add("overlay-hidden");
+    }
+  });
+}
+
+const startBtn = document.getElementById("startReviewBtn");
+if (startBtn) {
+  startBtn.addEventListener("click", () => {
+    const overlay = document.getElementById("reviewOverlay");
+    if (overlay) {
+      overlay.classList.add("overlay-hidden");
+    }
+
+    // Get selected mode
+    const selected = document.querySelector(".review-mode-option.selected");
+    const mode = selected ? selected.dataset.mode : "multiple-choice";
+    reviewMode = mode;
+
+    // Get random toggle
+    const randomToggle = document
+      .getElementById("randomOrderToggle")
+      .querySelector("input");
+    const isRandom = randomToggle ? randomToggle.checked : false;
+
+    // If random is on, shuffle cards
+    if (isRandom) {
+      const cards = getCurrentCards();
+      cards.sort(() => Math.random() - 0.5);
+      console.log(
+        "Shuffled cards:",
+        cards.map((c) => c.front),
+      );
+    }
+
+    openReview();
   });
 }
 

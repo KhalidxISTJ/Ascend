@@ -863,6 +863,31 @@ hr {
     visibility 0.14s ease;
 }
 
+#reviewOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.overlay-content {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  width: 400px;
+  max-width: 90%;
+}
+
+.overlay-hidden {
+  display: none !important;
+}
+
 .review-mode-selector:hover .review-mode-menu,
 .review-mode-selector:focus-within .review-mode-menu {
   opacity: 1;
@@ -873,23 +898,25 @@ hr {
 }
 
 .review-mode-option {
-  width: 100%;
-
-  display: flex;
-  align-items: center;
-
-  gap: 10px;
-
-  padding: 10px 12px;
-
-  border: none;
-  border-radius: 8px;
-
-  background: transparent;
-
-  text-align: left;
-
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
   cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+.review-mode-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.review-mode-option.selected {
+  border-color: black;
+  background: #f0f0f0;
 }
 
 .review-mode-option:hover {
@@ -1388,5 +1415,26 @@ hr {
 
   .review-question {
     font-size: 1.05rem;
+  }
+}
+@media (max-width: 700px) {
+  .study-content {
+    grid-template-columns: 1fr;
+  }
+  .flip-card {
+    width: 100%;
+    max-width: 350px;
+  }
+  .add-card-panel {
+    margin-top: 20px;
+  }
+  .folder-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .folder-actions button {
+    flex: 1;
+    min-width: 80px;
   }
 }
