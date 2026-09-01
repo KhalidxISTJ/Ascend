@@ -1,39 +1,3 @@
-/* Header */
-
-.header-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding: 16px 20px 8px;
-}
-
-.header-top h1 {
-  font-size: 2rem;
-  margin: 0;
-  font-weight: 700;
-}
-
-.header-top .ascend {
-  font-weight: 800;
-  letter-spacing: 1px;
-}
-
-.version-badge {
-  font-size: 0.75rem;
-  color: #6b7280;
-  background: #e5e7eb;
-  padding: 4px 14px;
-  border-radius: 20px;
-  font-weight: 600;
-}
-
-hr {
-  margin: 8px 20px;
-  border: none;
-  border-top: 2px solid #d1d5db;
-}
 /* ==========================================
    CODEX V2
 ========================================== */
@@ -1352,78 +1316,56 @@ hr {
 }
 
 /* =====================================================
-   MOBILE
+   MOBILE — ONE MERGED QUERY
 ===================================================== */
 
 @media (max-width: 700px) {
+  /* Review */
   .review-header {
     align-items: flex-start;
-
     flex-direction: column;
   }
-
   .review-mode-selector {
     width: 100%;
   }
-
   .review-mode-selector-btn {
     width: 100%;
-
     justify-content: center;
   }
-
   .review-mode-menu {
     left: 0;
     right: auto;
-
     width: 100%;
   }
-
-  .match-board {
-    grid-template-columns: 1fr;
-  }
-
-  .review-rating-buttons {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-/* =====================================================
-   MOBILE
-===================================================== */
-
-@media (max-width: 700px) {
-  .review-header {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
   .review-mode-grid {
     grid-template-columns: 1fr;
   }
-
+  .review-question-card {
+    padding: 20px;
+  }
+  .review-question {
+    font-size: 1.05rem;
+  }
   .match-board {
     grid-template-columns: 1fr;
   }
-
   .review-rating-buttons {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .review-question-card {
-    padding: 20px;
-  }
-
-  .review-question {
-    font-size: 1.05rem;
-  }
-}
-@media (max-width: 700px) {
+  /* Study content */
   .study-content {
     grid-template-columns: 1fr;
   }
   .flip-card {
-    width: 100%;
-    max-width: 350px;
+    width: 95%;
+    max-width: 100%;
+    aspect-ratio: 1/1;
+  }
+  .flip-front,
+  .flip-back {
+    font-size: 1.4rem;
+    padding: 24px;
   }
   .add-card-panel {
     margin-top: 20px;
@@ -1436,20 +1378,6 @@ hr {
   .folder-actions button {
     flex: 1;
     min-width: 80px;
-  }
-}
-@media (max-width: 700px) {
-  .flip-card {
-    width: 100%;
-    max-width: 320px;
-    aspect-ratio: 3/2;
-  }
-  .flip-front,
-  .flip-back {
-    font-size: 1.2rem;
-    padding: 20px;
-  }
-  .folder-actions button {
     padding: 12px;
     font-size: 1rem;
     min-height: 48px;
