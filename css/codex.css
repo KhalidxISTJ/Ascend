@@ -1362,10 +1362,15 @@
     max-width: 100%;
     aspect-ratio: 1/1;
   }
+
   .flip-front,
   .flip-back {
     font-size: 1.4rem;
     padding: 24px;
+  }
+  .card-container {
+    width: 100%;
+    padding: 0 10px;
   }
   .add-card-panel {
     margin-top: 20px;
