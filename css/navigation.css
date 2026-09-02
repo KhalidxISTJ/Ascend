@@ -22,6 +22,13 @@
   letter-spacing: 1px;
 }
 
+.ascend-logo {
+  height: 60px; /* adjust to match your header height */
+  width: auto;
+  display: inline-block;
+  vertical-align: middle;
+}
+
 .version-badge {
   font-size: 0.75rem;
   color: #6b7280;

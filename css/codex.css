@@ -11,6 +11,13 @@
   gap: 24px;
 }
 
+.ascend-logo {
+  height: 60px; /* adjust to match your header height */
+  width: auto;
+  display: inline-block;
+  vertical-align: middle;
+}
+
 /* ==========================================
    SHARED PANEL
 ========================================== */
@@ -1357,29 +1364,44 @@
   .study-content {
     grid-template-columns: 1fr;
   }
+
   .flip-card {
-    width: 95%;
-    max-width: 100%;
-    aspect-ratio: 1/1;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 350px;
+    aspect-ratio: auto !important;
   }
 
   .flip-front,
   .flip-back {
-    font-size: 1.4rem;
-    padding: 24px;
+    font-size: 1.6rem !important;
+    padding: 30px !important;
   }
+
   .card-container {
-    width: 100%;
-    padding: 0 10px;
+    width: 100% !important;
+    padding: 0 10px !important;
+    gap: 10px !important;
   }
+
+  #prevBtn,
+  #nextBtn {
+    width: 50px !important;
+    height: 50px !important;
+    font-size: 1.4rem !important;
+    min-width: 50px !important;
+  }
+
   .add-card-panel {
     margin-top: 20px;
   }
+
   .folder-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
   }
+
   .folder-actions button {
     flex: 1;
     min-width: 80px;
@@ -1387,28 +1409,91 @@
     font-size: 1rem;
     min-height: 48px;
   }
+
   .add-card-panel input,
   .add-card-panel button {
     font-size: 1rem;
     padding: 12px;
   }
+
   #cardCounter {
     font-size: 1.1rem;
   }
-}
-.flip-card {
-  width: 95% !important;
-  max-width: 100% !important;
-  aspect-ratio: 1/1 !important;
-}
 
-.flip-front,
-.flip-back {
-  font-size: 1.4rem !important;
-  padding: 24px !important;
-}
+  .study-panel {
+    width: 100%;
+    padding: 0 5px;
+  }
+  .flip-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 60vh !important;
+    aspect-ratio: auto !important;
+  }
 
-.card-container {
-  width: 100% !important;
-  padding: 0 10px !important;
+  .flip-front,
+  .flip-back {
+    font-size: 1.8rem !important;
+    padding: 30px !important;
+  }
+
+  .card-container {
+    width: 100% !important;
+    padding: 0 !important;
+    gap: 10px !important;
+  }
+
+  .study-panel {
+    width: 100%;
+    padding: 0 5px;
+  }
+
+  .study-content {
+    min-height: 80vh;
+  }
+}
+/* Force full-screen card on mobile */
+@media (max-width: 800px) {
+  .study-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 70vh;
+    padding: 0 10px;
+  }
+
+  .card-container {
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+    gap: 10px;
+  }
+
+  .flip-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 60vh !important;
+    aspect-ratio: auto !important;
+  }
+
+  .flip-front,
+  .flip-back {
+    font-size: 1.8rem !important;
+    padding: 30px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    word-wrap: break-word;
+  }
+
+  #prevBtn,
+  #nextBtn {
+    width: 55px !important;
+    height: 55px !important;
+    font-size: 1.5rem !important;
+    min-width: 55px !important;
+  }
 }

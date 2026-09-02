@@ -172,3 +172,9 @@ h3 {
 
   padding-right: 10px;
 }
+.ascend-logo {
+  height: 60px; /* adjust to match your header height */
+  width: auto;
+  display: inline-block;
+  vertical-align: middle;
+}

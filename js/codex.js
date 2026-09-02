@@ -447,34 +447,201 @@ function updateFilteredCards() {
 // =====================================================
 
 function render() {
+  console.log("🔄 Rendering flashcard...");
+
   if (!frontEl || !backEl || !cardCounter) {
+    console.warn("❌ Missing DOM elements for flashcard");
     return;
   }
 
   updateFilteredCards();
+  console.log(`📊 Filtered cards: ${filteredCards.length}`);
 
   if (filteredCards.length === 0) {
     frontEl.textContent = "No Cards";
-
     backEl.textContent = "Add a card.";
-
     cardCounter.textContent = "0 / 0";
-
+    console.log("📭 No cards to display");
     return;
   }
 
   const currentCard = filteredCards[currentIndex];
+  console.log(
+    `📄 Displaying card ${currentIndex + 1}/${filteredCards.length}: "${currentCard.front}"`,
+  );
 
   frontEl.textContent = currentCard.front || "";
-
   backEl.textContent = currentCard.back || "";
 
   cardCounter.textContent =
     "Card " + (currentIndex + 1) + " / " + filteredCards.length;
 
   card?.classList.remove("flipped");
-
   flipped = false;
+
+  // =============================================
+  // FORCE FULL-SCREEN CARD ON MOBILE — FINAL
+  // =============================================
+
+  const isMobile = window.innerWidth <= 800;
+
+  if (isMobile) {
+    console.log("🔧 Applying FINAL mobile card size fix...");
+
+    // Get all elements
+    const flipCard = document.getElementById("flipCard");
+    const front = document.getElementById("cardFront");
+    const back = document.getElementById("cardBack");
+    const flipInner = document.querySelector(".flip-inner");
+
+    // 1. Force the flip card to fill the screen
+    if (flipCard) {
+      flipCard.style.cssText = `
+      width: 100vw !important;
+      max-width: 100vw !important;
+      min-height: 70vh !important;
+      aspect-ratio: auto !important;
+      perspective: 1200px !important;
+      cursor: pointer !important;
+      display: block !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      position: relative !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+    `;
+    }
+
+    // 2. Force the flip inner
+    if (flipInner) {
+      flipInner.style.cssText = `
+      position: relative !important;
+      width: 100% !important;
+      height: 100% !important;
+      min-height: 70vh !important;
+      transition: transform 0.6s !important;
+      transform-style: preserve-3d !important;
+    `;
+    }
+
+    // 3. Force front and back
+    if (front) {
+      front.style.cssText = `
+      position: absolute !important;
+      inset: 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      text-align: center !important;
+      padding: 30px !important;
+      border-radius: 16px !important;
+      border: 2px solid black !important;
+      background: white !important;
+      font-size: 1.6rem !important;
+      word-wrap: break-word !important;
+      overflow-wrap: break-word !important;
+      backface-visibility: hidden !important;
+      width: 100% !important;
+      height: 100% !important;
+      box-sizing: border-box !important;
+      margin: 0 !important;
+    `;
+    }
+
+    if (back) {
+      back.style.cssText = `
+      position: absolute !important;
+      inset: 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      text-align: center !important;
+      padding: 30px !important;
+      border-radius: 16px !important;
+      border: 2px solid black !important;
+      background: #f5f5f5 !important;
+      font-size: 1.6rem !important;
+      word-wrap: break-word !important;
+      overflow-wrap: break-word !important;
+      transform: rotateY(180deg) !important;
+      backface-visibility: hidden !important;
+      width: 100% !important;
+      height: 100% !important;
+      box-sizing: border-box !important;
+      margin: 0 !important;
+    `;
+    }
+
+    // Card container
+    const cardContainer = document.querySelector(".card-container");
+    if (cardContainer) {
+      cardContainer.style.cssText = `
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 0 !important;
+    flex: 1 !important;
+  `;
+    }
+
+    // 5. Force the study panel
+    const studyPanel = document.querySelector(".study-panel");
+    if (studyPanel) {
+      studyPanel.style.cssText = `
+    width: 100vw !important;
+    max-width: 100vw !important;
+    min-height: 80vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    flex: 1 !important;
+    background: transparent !important;
+  `;
+    }
+
+    // 6. Force parent containers
+    document.body.style.maxWidth = "100vw";
+    document.body.style.overflowX = "hidden";
+    document.body.style.margin = "0";
+    document.body.style.padding = "0";
+
+    const main = document.querySelector("main");
+    if (main) {
+      main.style.maxWidth = "100vw";
+      main.style.padding = "0";
+      main.style.margin = "0";
+    }
+
+    const codexContainer = document.querySelector(".codex-container");
+    if (codexContainer) {
+      codexContainer.style.maxWidth = "100vw";
+      codexContainer.style.padding = "0";
+      codexContainer.style.margin = "0";
+    }
+
+    const studyContent = document.querySelector(".study-content");
+    if (studyContent) {
+      studyContent.style.cssText = `
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    flex: 1 !important;
+    min-height: 80vh !important;
+  `;
+    }
+    console.log("✅ FINAL mobile card size fix complete");
+  }
 }
 
 // =====================================================

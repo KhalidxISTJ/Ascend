@@ -23,6 +23,13 @@
   font-family: "Space Grotesk", sans-serif !important;
 }
 
+.ascend-logo {
+  height: 60px; /* adjust to match your header height */
+  width: auto;
+  display: inline-block;
+  vertical-align: middle;
+}
+
 .library-new-page-btn {
   padding: 12px 24px;
   border: none;

@@ -21,7 +21,12 @@
   font-weight: 800;
   letter-spacing: 1px;
 }
-
+.ascend-logo {
+  height: 60px; /* adjust to match your header height */
+  width: auto;
+  display: inline-block;
+  vertical-align: middle;
+}
 .dashboard {
   width: min(1400px, 95%);
   margin: 30px auto;
