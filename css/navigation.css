@@ -67,7 +67,7 @@ hr {
   gap: 10px;
 }
 
-.right-placeholder {
+.left-placeholder, .right-placeholder {
   flex: 1;
 }
 
