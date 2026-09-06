@@ -22,7 +22,7 @@
   letter-spacing: 1px;
 }
 .ascend-logo {
-  height: 60px; /* adjust to match your header height */
+  height: 60px;
   width: auto;
   display: inline-block;
   vertical-align: middle;
@@ -177,4 +177,59 @@ hr {
   font-size: 0.9rem;
   color: #9ca3af;
   margin-bottom: 6px;
+}
+
+/* Day selector styles */
+#daySelectorContainer {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 10px;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
+#daySelectorContainer label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: #e5e7eb;
+}
+
+#daySelectorContainer input[type="checkbox"] {
+  accent-color: #3b82f6;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+#daySelectorContainer label:has(input[type="checkbox"]) {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: #d1d5db;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+#daySelectorContainer label:has(input[type="checkbox"]):hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Repeat days display on quest cards */
+.quest-repeat-days {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.quest-repeat-days span {
+  display: inline-block;
+  background: rgba(59, 130, 246, 0.1);
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-right: 2px;
+  font-size: 0.65rem;
+  color: #60a5fa;
 }

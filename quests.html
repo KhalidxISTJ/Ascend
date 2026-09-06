@@ -19,8 +19,7 @@
     />
     <!-- PWA -->
     <link rel="manifest" href="manifest.json" />
-    <link rel="apple-touch-icon" href="icons\Ascend Logo PWA 192x192.png" />
-    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+    <link rel="icon" href="Images\icons\Ascend Logo PWA 512x.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta
       name="apple-mobile-web-app-status-bar-style"
@@ -33,7 +32,7 @@
     <header>
       <div class="header-top">
         <img
-          src="Icons\Ascend Logo PWA 512x.png"
+          src="Images/icons/Ascend Logo PWA 512x.png"
           alt="Ascend"
           class="ascend-logo"
         />
@@ -94,13 +93,164 @@
             <option value="daily">Daily</option>
             <option value="weekly">Weekly</option>
           </select>
+
+          <!-- DAY SELECTOR - Shows when Weekly is selected -->
+          <div
+            id="daySelectorContainer"
+            style="
+              display: none;
+              background: rgba(255, 255, 255, 0.04);
+              padding: 14px;
+              border-radius: 10px;
+              margin: 10px 0;
+              border: 1px solid rgba(255, 255, 255, 0.06);
+            "
+          >
+            <label
+              style="
+                display: block;
+                font-weight: 500;
+                margin-bottom: 10px;
+                color: #e5e7eb;
+                font-size: 0.9rem;
+              "
+              >📅 Repeat on:</label
+            >
+            <div style="display: flex; gap: 8px; flex-wrap: wrap">
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 5px;
+                  font-size: 0.85rem;
+                  color: #d1d5db;
+                  cursor: pointer;
+                  padding: 5px 12px;
+                  border-radius: 6px;
+                  background: rgba(255, 255, 255, 0.05);
+                  border: 1px solid rgba(255, 255, 255, 0.08);
+                  transition: all 0.2s;
+                "
+              >
+                <input type="checkbox" class="repeat-day" value="0" /> Sun
+              </label>
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 5px;
+                  font-size: 0.85rem;
+                  color: #d1d5db;
+                  cursor: pointer;
+                  padding: 5px 12px;
+                  border-radius: 6px;
+                  background: rgba(255, 255, 255, 0.05);
+                  border: 1px solid rgba(255, 255, 255, 0.08);
+                  transition: all 0.2s;
+                "
+              >
+                <input type="checkbox" class="repeat-day" value="1" /> Mon
+              </label>
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 5px;
+                  font-size: 0.85rem;
+                  color: #d1d5db;
+                  cursor: pointer;
+                  padding: 5px 12px;
+                  border-radius: 6px;
+                  background: rgba(255, 255, 255, 0.05);
+                  border: 1px solid rgba(255, 255, 255, 0.08);
+                  transition: all 0.2s;
+                "
+              >
+                <input type="checkbox" class="repeat-day" value="2" /> Tue
+              </label>
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 5px;
+                  font-size: 0.85rem;
+                  color: #d1d5db;
+                  cursor: pointer;
+                  padding: 5px 12px;
+                  border-radius: 6px;
+                  background: rgba(255, 255, 255, 0.05);
+                  border: 1px solid rgba(255, 255, 255, 0.08);
+                  transition: all 0.2s;
+                "
+              >
+                <input type="checkbox" class="repeat-day" value="3" /> Wed
+              </label>
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 5px;
+                  font-size: 0.85rem;
+                  color: #d1d5db;
+                  cursor: pointer;
+                  padding: 5px 12px;
+                  border-radius: 6px;
+                  background: rgba(255, 255, 255, 0.05);
+                  border: 1px solid rgba(255, 255, 255, 0.08);
+                  transition: all 0.2s;
+                "
+              >
+                <input type="checkbox" class="repeat-day" value="4" /> Thu
+              </label>
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 5px;
+                  font-size: 0.85rem;
+                  color: #d1d5db;
+                  cursor: pointer;
+                  padding: 5px 12px;
+                  border-radius: 6px;
+                  background: rgba(255, 255, 255, 0.05);
+                  border: 1px solid rgba(255, 255, 255, 0.08);
+                  transition: all 0.2s;
+                "
+              >
+                <input type="checkbox" class="repeat-day" value="5" /> Fri
+              </label>
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 5px;
+                  font-size: 0.85rem;
+                  color: #d1d5db;
+                  cursor: pointer;
+                  padding: 5px 12px;
+                  border-radius: 6px;
+                  background: rgba(255, 255, 255, 0.05);
+                  border: 1px solid rgba(255, 255, 255, 0.08);
+                  transition: all 0.2s;
+                "
+              >
+                <input type="checkbox" class="repeat-day" value="6" /> Sat
+              </label>
+            </div>
+            <div style="font-size: 0.7rem; color: #6b7280; margin-top: 8px">
+              Select the days this quest should repeat on
+            </div>
+          </div>
+
           <label>Start Time</label>
           <input type="time" id="questStartTime" />
 
           <label>End Time</label>
           <input type="time" id="questEndTime" />
+
           <label>Due Date</label>
           <input type="date" id="questDueDate" />
+
           <label for="questPriority"></label>
 
           <select id="questPriority">
