@@ -1,3 +1,8 @@
+body {
+  background-color: white;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
 .splash-title {
   font-size: 2.5rem;
   font-weight: bold;
@@ -9,12 +14,22 @@
   margin: 0 auto;
   width: 75px;
   height: auto;
+  border-style: outset;
+  border-width: 5px;
+  border-radius: 0px;
+  border-color: #000000;
+  padding: 3px;
+  float: center;
 }
 .splash-subtitle {
   font-size: 1.5rem;
   text-align: center;
   margin-bottom: 2rem;
   opacity: 0.8;
+}
+.splash-button {
+  display: block;
+  text-align: center;
 }
 .contact-links {
   display: flex;
