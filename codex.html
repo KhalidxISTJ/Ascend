@@ -1,411 +1,366 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, maximum-scale=1.0, initial-scale=1.0"
-    />
 
-    <title>Codex</title>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, maximum-scale=1.0, initial-scale=1.0" />
 
-    <!-- PWA -->
-    <link rel="manifest" href="manifest.json" />
-    <link rel="icon" href="Images\icons\Ascend Logo PWA 512x.png" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta
-      name="apple-mobile-web-app-status-bar-style"
-      content="black-translucent"
-    />
-    <meta name="apple-mobile-web-app-title" content="Ascend" />
-    <meta name="theme-color" content="#0f0f1a" />
+  <title>Codex</title>
 
-    <link rel="stylesheet" href="css/style.css" />
-    <link rel="stylesheet" href="css/navigation.css" />
-    <link rel="stylesheet" href="css/codex.css" />
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="Images\icons\ascendLogo.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Ascend" />
+  <meta name="theme-color" content="#0f0f1a" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/navigation.css" />
+  <link rel="stylesheet" href="css/codex.css" />
 
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Space+Grotesk:wght@300..700&display=swap"
-      rel="stylesheet"
-    />
-  </head>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-  <body>
-    <!-- =====================================================
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Space+Grotesk:wght@300..700&display=swap"
+    rel="stylesheet" />
+</head>
+
+<body>
+  <!-- =====================================================
          HEADER
     ====================================================== -->
 
-    <header>
-      <div class="header-top">
-        <h1>
-          <a href="index.html">
-            <img
-              src="Images\icons\ascendLogo.png"
-              alt="Ascend's Logo"
-              class="ascend-logo"
-              title="Ascend's Logo"
-            />
-          </a>
-        </h1>
-        <nav class="navigation">
-          <div class="left-placeholder"></div>
-          <div class="nav-links">
-            <a class="nav-link" href="index.html">Home</a>
-            <a class="nav-link" href="quests.html">Quests</a>
-            <a class="nav-link" href="stats.html">Stats</a>
-            <a class="nav-link active" href="codex.html">Codex</a>
-            <a class="nav-link" href="library.html">Library</a>
-            <a class="nav-link" href="calendar.html">Calendar</a>
-          </div>
-          <div class="right-placeholder"></div>
-        </nav>
-        <div id="version" class="version-badge"></div>
-      </div>
-      <hr />
-    </header>
+  <header>
+    <div class="header-top">
+      <h1>
+        <a href="index.html">
+          <img src="Images\icons\ascendLogo.png" alt="Ascend's Logo" class="ascend-logo" title="Ascend's Logo" />
+        </a>
+      </h1>
+      <nav class="navigation">
+        <div class="left-placeholder"></div>
+        <div class="nav-links">
+          <a class="nav-link" href="index.html">Home</a>
+          <a class="nav-link" href="quests.html">Quests</a>
+          <a class="nav-link" href="stats.html">Stats</a>
+          <a class="nav-link active" href="codex.html">Codex</a>
+          <a class="nav-link" href="library.html">Library</a>
+          <a class="nav-link" href="calendar.html">Calendar</a>
+        </div>
+        <div class="right-placeholder"></div>
+      </nav>
+      <div id="version" class="version-badge"></div>
+    </div>
+    <hr />
+  </header>
 
-    <!-- =====================================================
+  <!-- =====================================================
          MAIN
     ====================================================== -->
 
-    <main>
-      <h2>Codex</h2>
+  <main>
+    <h2>Codex</h2>
 
-      <div class="codex-container">
-        <!-- =================================================
+    <div class="codex-container">
+      <!-- =================================================
              STUDY WORKSPACE
         ================================================== -->
 
-        <section class="study-workspace">
-          <div class="study-content">
-            <!-- =============================================
+      <section class="study-workspace">
+        <div class="study-content">
+          <!-- =============================================
                  LEFT — FOLDERS
             ============================================== -->
 
-            <aside class="folder-panel">
-              <hr />
+          <aside class="folder-panel">
+            <hr />
 
-              <div id="folderBreadcrumb"></div>
+            <div id="folderBreadcrumb"></div>
 
-              <h4>Folders</h4>
+            <h4>Folders</h4>
 
-              <div id="folderList"></div>
+            <div id="folderList"></div>
 
-              <hr />
+            <hr />
 
-              <div class="folder-actions">
-                <button id="backBtn">← Back</button>
+            <div class="folder-actions">
+              <button id="backBtn">← Back</button>
 
-                <button id="addFolderBtn">+ Add Folder</button>
+              <button id="addFolderBtn">+ Add Folder</button>
 
-                <button id="renameFolderBtn">✏ Rename Folder</button>
+              <button id="renameFolderBtn">✏ Rename Folder</button>
 
-                <button id="deleteFolderBtn">🗑 Delete Folder</button>
+              <button id="deleteFolderBtn">🗑 Delete Folder</button>
 
-                <button id="reviewModeBtn">📚 Review</button>
+              <button id="reviewModeBtn">📚 Review</button>
 
-                <!-- Review Overlay -->
+              <!-- Review Overlay -->
 
-                <div id="reviewOverlay" class="overlay-hidden">
-                  <div class="overlay-content">
-                    <h2>Review Settings</h2>
+              <div id="reviewOverlay" class="overlay-hidden">
+                <div class="overlay-content">
+                  <h2>Review Settings</h2>
 
-                    <!-- Mode buttons -->
-                    <div class="review-mode-options">
-                      <button
-                        class="review-mode-option"
-                        data-mode="multiple-choice"
-                      >
-                        🎯 Multiple Choice
-                      </button>
-                      <button
-                        class="review-mode-option"
-                        data-mode="short-answer"
-                      >
-                        ✍️ Short Answer
-                      </button>
-                      <button class="review-mode-option" data-mode="match">
-                        🔗 Match
-                      </button>
-                      <button class="review-mode-option" data-mode="recall">
-                        🧠 Recall
-                      </button>
-                    </div>
-
-                    <!-- Random toggle -->
-                    <div id="randomOrderToggle">
-                      <label><input type="checkbox" /> Random Order</label>
-                    </div>
-
-                    <!-- Buttons -->
-                    <button id="startReviewBtn">Start Review</button>
-                    <button id="cancelReviewBtn">Cancel</button>
+                  <!-- Mode buttons -->
+                  <div class="review-mode-options">
+                    <button class="review-mode-option" data-mode="multiple-choice">
+                      🎯 Multiple Choice
+                    </button>
+                    <button class="review-mode-option" data-mode="short-answer">
+                      ✍️ Short Answer
+                    </button>
+                    <button class="review-mode-option" data-mode="match">
+                      🔗 Match
+                    </button>
+                    <button class="review-mode-option" data-mode="recall">
+                      🧠 Recall
+                    </button>
                   </div>
+
+                  <!-- Random toggle -->
+                  <div id="randomOrderToggle">
+                    <label><input type="checkbox" /> Random Order</label>
+                  </div>
+
+                  <!-- Buttons -->
+                  <button id="startReviewBtn">Start Review</button>
+                  <button id="cancelReviewBtn">Cancel</button>
                 </div>
               </div>
-            </aside>
+            </div>
+          </aside>
 
-            <!-- =============================================
+          <!-- =============================================
                  CENTER — STUDY PANEL
             ============================================== -->
 
-            <section class="study-panel">
-              <!-- =========================================
+          <section class="study-panel">
+            <!-- =========================================
                    NORMAL FLASHCARD COUNTER
               ========================================== -->
 
-              <div class="card-counter-container">
-                <span id="cardCounter"> Card 1 / 1 </span>
-              </div>
+            <div class="card-counter-container">
+              <span id="cardCounter"> Card 1 / 1 </span>
+            </div>
 
-              <!-- =========================================
+            <!-- =========================================
                    NORMAL FLASHCARD WORKSPACE
               ========================================== -->
 
-              <div id="flashcardWorkspace" class="flashcard-workspace">
-                <div class="card-container">
-                  <button id="prevBtn">&lt;</button>
+            <div id="flashcardWorkspace" class="flashcard-workspace">
+              <div class="card-container">
+                <button id="prevBtn">&lt;</button>
 
-                  <div
-                    class="flip-card"
-                    id="flipCard"
-                    style="width: 100%; min-height: 60vh"
-                  >
-                    <div class="flip-inner">
-                      <div class="flip-front" id="cardFront"></div>
+                <div class="flip-card" id="flipCard" style="width: 100%; min-height: 60vh">
+                  <div class="flip-inner">
+                    <div class="flip-front" id="cardFront"></div>
 
-                      <div class="flip-back" id="cardBack"></div>
-                    </div>
+                    <div class="flip-back" id="cardBack"></div>
                   </div>
-
-                  <button id="nextBtn">&gt;</button>
                 </div>
-              </div>
 
-              <!-- =========================================
+                <button id="nextBtn">&gt;</button>
+              </div>
+            </div>
+
+            <!-- =========================================
                    REVIEW WORKSPACE
 
                    This replaces the flashcard workspace
                    while Review Mode is active.
               ========================================== -->
 
-              <section id="reviewWorkspace" class="review-workspace hidden">
-                <!-- =======================================
+            <section id="reviewWorkspace" class="review-workspace hidden">
+              <!-- =======================================
                      REVIEW HEADER
                 ======================================== -->
 
-                <div class="review-header">
-                  <div class="review-heading">
-                    <span> CODEX REVIEW </span>
+              <div class="review-header">
+                <div class="review-heading">
+                  <span> CODEX REVIEW </span>
 
-                    <h3>Review Session</h3>
-                  </div>
+                  <h3>Review Session</h3>
                 </div>
+              </div>
 
-                <!-- =======================================
+              <!-- =======================================
                      REVIEW PROGRESS
                 ======================================== -->
 
-                <div class="review-progress">
-                  <span id="reviewProgress"> 1 / 1 </span>
-                </div>
+              <div class="review-progress">
+                <span id="reviewProgress"> 1 / 1 </span>
+              </div>
 
-                <!-- =======================================
+              <!-- =======================================
                      QUESTION
                 ======================================== -->
 
-                <div class="review-question-card">
-                  <span> QUESTION </span>
+              <div class="review-question-card">
+                <span> QUESTION </span>
 
-                  <div id="reviewQuestion"></div>
-                </div>
+                <div id="reviewQuestion"></div>
+              </div>
 
-                <!-- =======================================
+              <!-- =======================================
                      MULTIPLE CHOICE
                 ======================================== -->
 
-                <div id="multipleChoiceReview" class="review-mode-content">
-                  <div
-                    id="multipleChoiceAnswers"
-                    class="multiple-choice-answers"
-                  ></div>
-                </div>
+              <div id="multipleChoiceReview" class="review-mode-content">
+                <div id="multipleChoiceAnswers" class="multiple-choice-answers"></div>
+              </div>
 
-                <!-- =======================================
+              <!-- =======================================
                      SHORT ANSWER
                 ======================================== -->
 
-                <div id="shortAnswerReview" class="review-mode-content hidden">
-                  <textarea
-                    id="shortAnswerInput"
-                    placeholder="Type your answer..."
-                  ></textarea>
+              <div id="shortAnswerReview" class="review-mode-content hidden">
+                <textarea id="shortAnswerInput" placeholder="Type your answer..."></textarea>
 
-                  <button id="checkShortAnswerBtn" class="review-action-btn">
-                    Check Answer
-                  </button>
-                </div>
+                <button id="checkShortAnswerBtn" class="review-action-btn">
+                  Check Answer
+                </button>
+              </div>
 
-                <!-- =======================================
+              <!-- =======================================
                      MATCH
                 ======================================== -->
 
-                <div id="matchReview" class="review-mode-content hidden">
-                  <div id="matchBoard" class="match-board"></div>
+              <div id="matchReview" class="review-mode-content hidden">
+                <div id="matchBoard" class="match-board"></div>
 
-                  <button id="checkMatchBtn" class="review-action-btn">
-                    Check Matches
-                  </button>
-                </div>
+                <button id="checkMatchBtn" class="review-action-btn">
+                  Check Matches
+                </button>
+              </div>
 
-                <!-- =======================================
+              <!-- =======================================
                      RECALL
                 ======================================== -->
 
-                <div id="recallReview" class="review-mode-content hidden">
-                  <button id="revealRecallBtn" class="review-action-btn">
-                    Reveal Answer
-                  </button>
+              <div id="recallReview" class="review-mode-content hidden">
+                <button id="revealRecallBtn" class="review-action-btn">
+                  Reveal Answer
+                </button>
 
-                  <div id="recallAnswer" class="recall-answer hidden"></div>
-                </div>
+                <div id="recallAnswer" class="recall-answer hidden"></div>
+              </div>
 
-                <!-- =======================================
+              <!-- =======================================
                      RESULT
                 ======================================== -->
 
-                <div id="reviewResult" class="review-result hidden"></div>
+              <div id="reviewResult" class="review-result hidden"></div>
 
-                <!-- =======================================
+              <!-- =======================================
                      SRS RATING
                 ======================================== -->
 
-                <div id="reviewRatingArea" class="review-rating-area hidden">
-                  <span> How well did you know this? </span>
+              <div id="reviewRatingArea" class="review-rating-area hidden">
+                <span> How well did you know this? </span>
 
-                  <div class="review-rating-buttons">
-                    <button
-                      class="review-rating-btn"
-                      data-rating="again"
-                      type="button"
-                    >
-                      <strong> Again </strong>
+                <div class="review-rating-buttons">
+                  <button class="review-rating-btn" data-rating="again" type="button">
+                    <strong> Again </strong>
 
-                      <small> 10m </small>
-                    </button>
+                    <small> 10m </small>
+                  </button>
 
-                    <button
-                      class="review-rating-btn"
-                      data-rating="hard"
-                      type="button"
-                    >
-                      <strong> Hard </strong>
+                  <button class="review-rating-btn" data-rating="hard" type="button">
+                    <strong> Hard </strong>
 
-                      <small> 1d </small>
-                    </button>
+                    <small> 1d </small>
+                  </button>
 
-                    <button
-                      class="review-rating-btn"
-                      data-rating="good"
-                      type="button"
-                    >
-                      <strong> Good </strong>
+                  <button class="review-rating-btn" data-rating="good" type="button">
+                    <strong> Good </strong>
 
-                      <small> 3d </small>
-                    </button>
+                    <small> 3d </small>
+                  </button>
 
-                    <button
-                      class="review-rating-btn"
-                      data-rating="easy"
-                      type="button"
-                    >
-                      <strong> Easy </strong>
+                  <button class="review-rating-btn" data-rating="easy" type="button">
+                    <strong> Easy </strong>
 
-                      <small> 7d </small>
-                    </button>
-                  </div>
+                    <small> 7d </small>
+                  </button>
                 </div>
-                <!-- =======================================
+              </div>
+              <!-- =======================================
                   REVIEW NAVIGATION
                   ======================================== -->
 
-                <div id="reviewNavigation" class="review-navigation">
-                  <button id="reviewPreviousBtn" type="button">
-                    ← Previous
-                  </button>
+              <div id="reviewNavigation" class="review-navigation">
+                <button id="reviewPreviousBtn" type="button">
+                  ← Previous
+                </button>
 
-                  <button id="reviewNextBtn" type="button">Next →</button>
-                </div>
-                <!-- =======================================
+                <button id="reviewNextBtn" type="button">Next →</button>
+              </div>
+              <!-- =======================================
                      NEXT CARD
 
                      JS can also generate this dynamically,
                      but keeping the element here lets CSS
                      handle it cleanly.
                 ======================================== -->
-              </section>
             </section>
+          </section>
 
-            <!-- =============================================
+          <!-- =============================================
                  RIGHT — CARD EDITOR
             ============================================== -->
 
-            <aside class="add-card-panel">
-              <h3>Card Editor</h3>
+          <aside class="add-card-panel">
+            <h3>Card Editor</h3>
 
-              <input id="frontInput" type="text" placeholder="Question" />
+            <input id="frontInput" type="text" placeholder="Question" />
 
-              <input id="backInput" type="text" placeholder="Answer" />
+            <input id="backInput" type="text" placeholder="Answer" />
 
-              <button id="addCardBtn">Add Card</button>
+            <button id="addCardBtn">Add Card</button>
 
-              <button id="editCardBtn">Edit Card</button>
+            <button id="editCardBtn">Edit Card</button>
 
-              <button id="deleteCardBtn">Delete Card</button>
-            </aside>
-            <div id="nextReviewPanel" class="next-review-panel hidden">
-              <div class="next-review-title">Next Reviews</div>
+            <button id="deleteCardBtn">Delete Card</button>
+          </aside>
+          <div id="nextReviewPanel" class="next-review-panel hidden">
+            <div class="next-review-title">Next Reviews</div>
 
-              <div id="nextReviewList" class="next-review-list"></div>
-            </div>
+            <div id="nextReviewList" class="next-review-list"></div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <!-- =================================================
+      <!-- =================================================
              BULK IMPORT
         ================================================== -->
 
-        <section class="bulk-panel">
-          <h3>Bulk Import</h3>
+      <section class="bulk-panel">
+        <h3>Bulk Import</h3>
 
-          <textarea
-            id="bulkCardInput"
-            placeholder="Question | Answer&#10;"
-          ></textarea>
+        <textarea id="bulkCardInput" placeholder="Question | Answer&#10;"></textarea>
 
-          <button id="bulkAddBtn">Bulk Add</button>
-        </section>
+        <button id="bulkAddBtn">Bulk Add</button>
+      </section>
 
-        <!-- =================================================
+      <!-- =================================================
              BACKUP
         ================================================== -->
 
-        <button id="exportCodexBtn">Export Codex</button>
+      <button id="exportCodexBtn">Export Codex</button>
 
-        <button id="importCodexBtn">Import Codex</button>
+      <button id="importCodexBtn">Import Codex</button>
 
-        <input type="file" id="importCodexInput" accept=".json" hidden />
-      </div>
-    </main>
+      <input type="file" id="importCodexInput" accept=".json" hidden />
+    </div>
+  </main>
 
-    <!-- =====================================================
+  <!-- =====================================================
          SCRIPTS
     ====================================================== -->
 
-    <script src="js/player.js"></script>
-    <script src="js/codex.js"></script>
-  </body>
+  <script src="js/player.js"></script>
+  <script src="js/codex.js"></script>
+</body>
+
 </html>

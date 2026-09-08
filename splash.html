@@ -1,36 +1,61 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Welcome</title>
-    <link rel="icon" href="Images\icons\ascendLogo.png" />
-    <link rel="stylesheet" href="css/splash.css" />
-  </head>
-  <body>
-    <img
-      src="Images\icons\ascendLogo.png"
-      alt="Ascend's Logo"
-      class="splash-logo"
-    />
-    <h1 class="splash-title">Welcome to Ascend</h1>
-    <p class="splash-subtitle">
-      <small>Reach Mastery one step at a time</small>
-    </p>
-    <a href="index.html" class="splash-button">Enter</a>
-    <footer class="splash-footer">
-      <ul class="contact-links">
-        <li>
-          <a href="https://www.youtube.com/@TecBlueprints" _target="_blank"
-            >My YouTube Channel</a
-          >
-        </li>
-        <li>
-          <a href="https://www.instagram.com/ur.cgk/" _target="_blank"
-            >My Instagram Page</a
-          >
-        </li>
-      </ul>
-    </footer>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome</title>
+  <link rel="icon" href="Images\icons\ascendLogo.png" />
+  <link rel="stylesheet" href="css/splash.css" />
+</head>
+
+<body>
+  <div class="splashContanier">
+    <div class="leftSide">
+      <img src="Images\icons\ascendLogo.png" alt="Ascend's Logo" class="splash-logo" />
+      <div class="intro-splash">
+        <h1 class="splash-title">Welcome to Ascend</h1>
+        <p class="splash-subtitle">
+          <small>Reach Mastery one step at a time</small>
+        </p>
+      </div>
+    </div>
+
+    <div class="vertical-line"></div>
+
+    <!-- Sign-in form -->
+    <div class="rightSide">
+      <form action="">
+        <div class="sign-in">
+          <label for="username">Username:</label>
+          <input type="text" id="username" name="username" required placeholder="User0" />
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" required placeholder="1100100" />
+        </div>
+        <div class="sign-in-btns">
+          <input type="reset" />
+          <input type="submit" />
+        </div>
+    </div>
+    </form>
+  </div>
+  <hr class="divider">
+  <footer class="splash-footer">
+    <h2>Links</h2>
+
+    <table class="contact-links">
+      <tr>
+        <th>Socials</th>
+        <td>
+          <a href="https://www.youtube.com/@TecBlueprints" target="_blank">My YouTube Channel</a>
+        </td>
+      </tr>
+      <td>
+        <a href="https://www.instagram.com/ur.cgk/" target="_blank">My Instagram Page</a>
+      </td>
+    </table>
+
+  </footer>
+</body>
+
 </html>

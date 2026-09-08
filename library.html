@@ -1,146 +1,118 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width,maximum-scale=1.0, initial-scale=1.0"
-    />
-    <title>Library</title>
 
-    <!-- Quill CSS -->
-    <link
-      href="https://cdn.quilljs.com/1.3.7/quill.snow.css"
-      rel="stylesheet"
-    />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,maximum-scale=1.0, initial-scale=1.0" />
+  <title>Library</title>
 
-    <!-- Your existing CSS -->
-    <link rel="stylesheet" href="css/style.css" />
-    <link rel="stylesheet" href="css/navigation.css" />
-    <link rel="stylesheet" href="css/library.css" />
+  <!-- Quill CSS -->
+  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet" />
 
-    <!-- PWA -->
-    <link rel="manifest" href="manifest.json" />
-    <link rel="icon" href="Images\icons\Ascend Logo PWA 512x.png" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta
-      name="apple-mobile-web-app-status-bar-style"
-      content="black-translucent"
-    />
-    <meta name="apple-mobile-web-app-title" content="Ascend" />
-    <meta name="theme-color" content="#0f0f1a" />
-  </head>
+  <!-- Your existing CSS -->
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/navigation.css" />
+  <link rel="stylesheet" href="css/library.css" />
 
-  <body>
-    <!-- Library -->
-    <main class="library-page">
-      <!-- Header -->
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="Images\icons\ascendLogo.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Ascend" />
+  <meta name="theme-color" content="#0f0f1a" />
+</head>
 
-      <header>
-        <div class="header-top">
-          <h1>
-            <a href="index.html">
-              <img
-                src="Images\icons\ascendLogo.png"
-                alt="Ascend's Logo"
-                class="ascend-logo"
-                title="Ascend's Logo"
-              />
-            </a>
-          </h1>
-          <nav class="navigation">
-            <div class="left-placeholder"></div>
-            <div class="nav-links">
-              <a class="nav-link" href="index.html">Home</a>
-              <a class="nav-link" href="quests.html">Quests</a>
-              <a class="nav-link" href="stats.html">Stats</a>
-              <a class="nav-link" href="codex.html">Codex</a>
-              <a class="nav-link active" href="library.html">Library</a>
-              <a class="nav-link" href="calendar.html">Calendar</a>
-            </div>
-            <div class="right-placeholder"></div>
-          </nav>
-          <div id="version" class="version-badge"></div>
+<body>
+  <!-- Library -->
+  <main class="library-page">
+    <!-- Header -->
+
+    <header>
+      <div class="header-top">
+        <h1>
+          <a href="index.html">
+            <img src="Images\icons\ascendLogo.png" alt="Ascend's Logo" class="ascend-logo" title="Ascend's Logo" />
+          </a>
+        </h1>
+        <nav class="navigation">
+          <div class="left-placeholder"></div>
+          <div class="nav-links">
+            <a class="nav-link" href="index.html">Home</a>
+            <a class="nav-link" href="quests.html">Quests</a>
+            <a class="nav-link" href="stats.html">Stats</a>
+            <a class="nav-link" href="codex.html">Codex</a>
+            <a class="nav-link active" href="library.html">Library</a>
+            <a class="nav-link" href="calendar.html">Calendar</a>
+          </div>
+          <div class="right-placeholder"></div>
+        </nav>
+        <div id="version" class="version-badge"></div>
+      </div>
+      <hr />
+    </header>
+
+    <!-- Main Layout -->
+    <section class="library-layout">
+      <!-- Sidebar -->
+      <aside class="library-sidebar">
+        <div class="library-sidebar-header">
+          <h2>Folders</h2>
+          <button id="newLibraryFolderBtnSidebar" type="button">
+            + Folder
+          </button>
         </div>
-        <hr />
-      </header>
+        <div id="libraryPageList" class="library-page-list"></div>
+      </aside>
 
-      <!-- Main Layout -->
-      <section class="library-layout">
-        <!-- Sidebar -->
-        <aside class="library-sidebar">
-          <div class="library-sidebar-header">
-            <h2>Folders</h2>
-            <button id="newLibraryFolderBtnSidebar" type="button">
-              + Folder
-            </button>
-          </div>
-          <div id="libraryPageList" class="library-page-list"></div>
-        </aside>
+      <!-- Editor -->
+      <section class="library-editor">
+        <!-- Empty State -->
+        <div id="libraryEmptyState" class="library-empty-state">
+          <div class="library-empty-icon">📚</div>
+          <h2>Select a page</h2>
+          <p>Choose a page from the Library or create a new one.</p>
+        </div>
 
-        <!-- Editor -->
-        <section class="library-editor">
-          <!-- Empty State -->
-          <div id="libraryEmptyState" class="library-empty-state">
-            <div class="library-empty-icon">📚</div>
-            <h2>Select a page</h2>
-            <p>Choose a page from the Library or create a new one.</p>
-          </div>
-
-          <!-- Page View -->
-          <div id="libraryPageView" class="library-page-view hidden">
-            <!-- Document Header -->
-            <div class="library-document-header">
-              <input
-                id="libraryPageTitle"
-                class="library-page-title"
-                type="text"
-                placeholder="Untitled"
-                autocomplete="off"
-              />
-              <div class="library-page-actions">
-                <button id="newLibraryFolderBtn" type="button">+ Folder</button>
-                <button id="newLibrarySubpageBtn" type="button">
-                  + Subpage
-                </button>
-                <button
-                  id="deleteLibraryPageBtn"
-                  type="button"
-                  class="library-danger-btn"
-                >
-                  Delete
-                </button>
-              </div>
+        <!-- Page View -->
+        <div id="libraryPageView" class="library-page-view hidden">
+          <!-- Document Header -->
+          <div class="library-document-header">
+            <input id="libraryPageTitle" class="library-page-title" type="text" placeholder="Untitled"
+              autocomplete="off" />
+            <div class="library-page-actions">
+              <button id="newLibraryFolderBtn" type="button">+ Folder</button>
+              <button id="newLibrarySubpageBtn" type="button">
+                + Subpage
+              </button>
+              <button id="deleteLibraryPageBtn" type="button" class="library-danger-btn">
+                Delete
+              </button>
             </div>
-
-            <!-- Search Bar -->
-            <div id="librarySearchBar" class="library-search-bar hidden">
-              <input
-                id="librarySearchInput"
-                type="text"
-                placeholder="Search this page..."
-                autocomplete="off"
-              />
-              <span id="librarySearchCount" class="library-search-count"
-                >0 results</span
-              >
-              <button id="librarySearchClose" type="button">×</button>
-            </div>
-
-            <!-- Quill Editor Container -->
-            <div id="editor-container"></div>
           </div>
-        </section>
+
+          <!-- Search Bar -->
+          <div id="librarySearchBar" class="library-search-bar hidden">
+            <input id="librarySearchInput" type="text" placeholder="Search this page..." autocomplete="off" />
+            <span id="librarySearchCount" class="library-search-count">0 results</span>
+            <button id="librarySearchClose" type="button">×</button>
+          </div>
+
+          <!-- Quill Editor Container -->
+          <div id="editor-container"></div>
+        </div>
       </section>
-    </main>
+    </section>
+  </main>
 
-    <!-- Quill JS -->
-    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+  <!-- Quill JS -->
+  <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 
-    <!-- Library JS -->
-    <script src="js/library.js"></script>
-    <script src="js/version.js"></script>
-    <script src="js/versionUI.js"></script>
-    <script src="js/player.js"></script>
-  </body>
+  <!-- Library JS -->
+  <script src="js/library.js"></script>
+  <script src="js/version.js"></script>
+  <script src="js/versionUI.js"></script>
+  <script src="js/player.js"></script>
+</body>
+
 </html>

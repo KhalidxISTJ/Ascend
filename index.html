@@ -1,164 +1,150 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, user-scalable=yes"
-    />
-    <title>Ascend</title>
 
-    <!-- PWA -->
-    <link rel="manifest" href="manifest.json" />
-    <link rel="icon" href="Images\icons\Test.png" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta
-      name="apple-mobile-web-app-status-bar-style"
-      content="black-translucent"
-    />
-    <meta name="apple-mobile-web-app-title" content="Ascend" />
-    <meta name="theme-color" content="#0f0f1a" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Ascend</title>
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Space+Grotesk:wght@300..700&display=swap"
-      rel="stylesheet"
-    />
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="Images\icons\ascendLogo.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Ascend" />
+  <meta name="theme-color" content="#0f0f1a" />
 
-    <!-- CSS -->
-    <link rel="stylesheet" href="css/style.css" />
-    <link rel="stylesheet" href="css/navigation.css" />
-    <link rel="stylesheet" href="css/index.css" />
-    <link rel="stylesheet" href="css/profile.css" />
-  </head>
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Space+Grotesk:wght@300..700&display=swap"
+    rel="stylesheet" />
 
-  <body data-page="home">
-    <header>
-      <div class="header-top">
-        <h1>
-          <a href="index.html">
-            <img
-              src="Images\icons\ascendLogo.png"
-              alt="Ascend's Logo"
-              class="ascend-logo"
-              title="Ascend's Logo"
-            />
-          </a>
-        </h1>
-        <nav class="navigation">
-          <div class="left-placeholder"></div>
-          <div class="nav-links">
-            <a class="nav-link active" href="index.html">Home</a>
-            <a class="nav-link" href="quests.html">Quests</a>
-            <a class="nav-link" href="stats.html">Stats</a>
-            <a class="nav-link" href="codex.html">Codex</a>
-            <a class="nav-link" href="library.html">Library</a>
-            <a class="nav-link" href="calendar.html">Calendar</a>
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/navigation.css" />
+  <link rel="stylesheet" href="css/index.css" />
+  <link rel="stylesheet" href="css/profile.css" />
+</head>
+
+<body data-page="home">
+  <header>
+    <div class="header-top">
+      <h1>
+        <a href="index.html">
+          <img src="Images\icons\ascendLogo.png" alt="Ascend's Logo" class="ascend-logo" title="Ascend's Logo" />
+        </a>
+      </h1>
+      <nav class="navigation">
+        <div class="left-placeholder"></div>
+        <div class="nav-links">
+          <a class="nav-link active" href="index.html">Home</a>
+          <a class="nav-link" href="quests.html">Quests</a>
+          <a class="nav-link" href="stats.html">Stats</a>
+          <a class="nav-link" href="codex.html">Codex</a>
+          <a class="nav-link" href="library.html">Library</a>
+          <a class="nav-link" href="calendar.html">Calendar</a>
+        </div>
+        <div class="right-placeholder"></div>
+      </nav>
+      <div id="version" class="version-badge"></div>
+    </div>
+    <hr />
+  </header>
+
+  <main>
+    <section class="dashboard">
+      <!-- Profile Panel -->
+      <div class="profile-panel">
+        <div class="profile-left">
+          <img alt="Profile Picture" id="profile-img" class="profile-picture" />
+          <form class="profile-form" id="profile-form">
+            <input type="file" id="profile-picture" />
+            <input type="text" id="name" placeholder="Enter your name" />
+            <button type="submit">Save</button>
+          </form>
+        </div>
+        <div class="profile-right">
+          <div class="stat-card" id="display-name">Name:</div>
+          <div class="stat-card" id="level">Level:</div>
+          <div class="stat-card xp-card">
+            <strong>XP</strong>
+            <span id="xp-number">0</span>
+            <div class="xp-track">
+              <div class="xp-fill" id="xp-fill"></div>
+            </div>
           </div>
-          <div class="right-placeholder"></div>
-        </nav>
-        <div id="version" class="version-badge"></div>
+          <div class="stat-card" id="activeQuestCount">Active Quests: 0</div>
+          <div class="stat-card" id="completedQuestCount">
+            Completed Quests: 0
+          </div>
+          <div class="stat-card" id="completionRate">Completion: 0%</div>
+        </div>
       </div>
-      <hr />
-    </header>
 
-    <main>
-      <section class="dashboard">
-        <!-- Profile Panel -->
-        <div class="profile-panel">
-          <div class="profile-left">
-            <img
-              alt="Profile Picture"
-              id="profile-img"
-              class="profile-picture"
-            />
-            <form class="profile-form" id="profile-form">
-              <input type="file" id="profile-picture" />
-              <input type="text" id="name" placeholder="Enter your name" />
-              <button type="submit">Save</button>
-            </form>
-          </div>
-          <div class="profile-right">
-            <div class="stat-card" id="display-name">Name:</div>
-            <div class="stat-card" id="level">Level:</div>
-            <div class="stat-card xp-card">
-              <strong>XP</strong>
-              <span id="xp-number">0</span>
-              <div class="xp-track">
-                <div class="xp-fill" id="xp-fill"></div>
-              </div>
-            </div>
-            <div class="stat-card" id="activeQuestCount">Active Quests: 0</div>
-            <div class="stat-card" id="completedQuestCount">
-              Completed Quests: 0
-            </div>
-            <div class="stat-card" id="completionRate">Completion: 0%</div>
+      <!-- Home Grid -->
+      <div class="home-grid">
+        <!-- Current Quest -->
+        <div class="home-card">
+          <h3>🎯 Current Quest</h3>
+          <div id="current-quest" class="current-quest">No active quest.</div>
+          <div class="quest-actions">
+            <button id="completeCurrentQuest" hidden>Complete</button>
+            <button id="skipCurrentQuest" hidden>Skip</button>
           </div>
         </div>
 
-        <!-- Home Grid -->
-        <div class="home-grid">
-          <!-- Current Quest -->
-          <div class="home-card">
-            <h3>🎯 Current Quest</h3>
-            <div id="current-quest" class="current-quest">No active quest.</div>
-            <div class="quest-actions">
-              <button id="completeCurrentQuest" hidden>Complete</button>
-              <button id="skipCurrentQuest" hidden>Skip</button>
-            </div>
-          </div>
-
-          <!-- Overdue -->
-          <div class="home-card">
-            <h3>🔴 Overdue</h3>
-            <div id="overdueQuests" class="quest-list">
-              <p class="empty-state">No overdue quests.</p>
-            </div>
-          </div>
-
-          <!-- Upcoming -->
-          <div class="home-card">
-            <h3>🟡 Upcoming</h3>
-            <div id="upcomingQuests" class="quest-list">
-              <p class="empty-state">Nothing upcoming.</p>
-            </div>
-          </div>
-
-          <!-- Timer -->
-          <div class="home-card">
-            <h3>⏱ Focus Timer</h3>
-            <div id="timerStatus" class="timer-status">⚪ Ready</div>
-            <h2 id="timerDisplay">00:00:00</h2>
-            <input type="number" id="timerMinutes" min="0" value="0" />
-            <div class="timer-buttons">
-              <button id="startTimer">Start</button>
-              <button id="pauseTimer">Pause</button>
-              <button id="resetTimer">Reset</button>
-            </div>
+        <!-- Overdue -->
+        <div class="home-card">
+          <h3>🔴 Overdue</h3>
+          <div id="overdueQuests" class="quest-list">
+            <p class="empty-state">No overdue quests.</p>
           </div>
         </div>
-        <a href="about.html">About Ascend</a>
-      </section>
-    </main>
 
-    <!-- Service Worker -->
-    <script>
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker
-          .register("/Ascend/sw.js")
-          .then(() => console.log("✅ Service Worker registered"))
-          .catch((err) => console.log("❌ Service Worker failed:", err));
-      }
-    </script>
+        <!-- Upcoming -->
+        <div class="home-card">
+          <h3>🟡 Upcoming</h3>
+          <div id="upcomingQuests" class="quest-list">
+            <p class="empty-state">Nothing upcoming.</p>
+          </div>
+        </div>
 
-    <!-- Scripts -->
-    <script src="js/version.js"></script>
-    <script src="js/versionUI.js"></script>
-    <script src="js/player.js"></script>
-    <script src="js/quests.js"></script>
-    <script src="js/config.js"></script>
-    <script src="js/index.js"></script>
-  </body>
+        <!-- Timer -->
+        <div class="home-card">
+          <h3>⏱ Focus Timer</h3>
+          <div id="timerStatus" class="timer-status">⚪ Ready</div>
+          <h2 id="timerDisplay">00:00:00</h2>
+          <input type="number" id="timerMinutes" min="0" value="0" />
+          <div class="timer-buttons">
+            <button id="startTimer">Start</button>
+            <button id="pauseTimer">Pause</button>
+            <button id="resetTimer">Reset</button>
+          </div>
+        </div>
+      </div>
+      <a href="about.html">About Ascend</a>
+    </section>
+  </main>
+
+  <!-- Service Worker -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("/Ascend/sw.js")
+        .then(() => console.log("✅ Service Worker registered"))
+        .catch((err) => console.log("❌ Service Worker failed:", err));
+    }
+  </script>
+
+  <!-- Scripts -->
+  <script src="js/version.js"></script>
+  <script src="js/versionUI.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/quests.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/index.js"></script>
+</body>
+
 </html>

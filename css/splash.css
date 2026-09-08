@@ -1,14 +1,32 @@
 body {
-  background-color: white;
+  background:
+    rgba(255, 255, 255, );
   background-repeat: no-repeat;
   background-attachment: fixed;
 }
-.splash-title {
-  font-size: 2.5rem;
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 1rem;
+
+.intro-splash {
+  animation: body 8s;
 }
+
+h2 {
+  text-align: center;
+}
+
+.vertical-line {
+  border: 2px solid black;
+  border-width: 1px;
+  height: 200px;
+  opacity: 60%;
+}
+
+.divider {
+  border-width: 3px;
+  border-style: solid;
+}
+
+
+
 .splash-logo {
   display: block;
   margin: 0 auto;
@@ -19,18 +37,68 @@ body {
   border-radius: 0px;
   border-color: #000000;
   padding: 3px;
-  float: center;
+  animation: Ascendlogo 4s;
 }
+
+.splashContanier {
+  display: flex;
+  flex: 1;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 100px;
+}
+
+.rightSide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+}
+
+.lefSide {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+}
+
+.splash-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
 .splash-subtitle {
   font-size: 1.5rem;
+  margin-top: -15px;
   text-align: center;
   margin-bottom: 2rem;
   opacity: 0.8;
 }
+
 .splash-button {
-  display: block;
-  text-align: center;
+  display: flex;
+  justify-content: center;
+  color: #000000;
 }
+
+.sign-in {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 200px;
+  gap: 5px;
+}
+
+.sign-in-btns {
+  display: flex;
+  flex-direction: row;
+  margin: 10px;
+  gap: 10px;
+}
+
 .contact-links {
   display: flex;
   flex-direction: row;
@@ -39,6 +107,38 @@ body {
   text-decoration: none;
   gap: 1rem;
 }
+
 a {
   text-decoration: none;
 }
+
+a:link {
+  color: #000000;
+}
+
+a:visited {
+  color: #000000;
+}
+
+a:link:hover {
+  color: #0d00ff;
+}
+
+/*
+  @keyframes Ascendlogo {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes body {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }

@@ -1,117 +1,96 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, maximum-scale=1.0,  initial-scale=1.0"
-    />
-    <title>Quests</title>
-    <link rel="stylesheet" href="css/style.css" />
-    <link rel="stylesheet" href="css/navigation.css" />
-    <link rel="stylesheet" href="css/quests.css" />
-    <link rel="stylesheet" href="css/ai.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Space+Grotesk:wght@300..700&display=swap"
-      rel="stylesheet"
-    />
-    <!-- PWA -->
-    <link rel="manifest" href="manifest.json" />
-    <link rel="icon" href="Images\icons\Ascend Logo PWA 512x.png" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta
-      name="apple-mobile-web-app-status-bar-style"
-      content="black-translucent"
-    />
-    <meta name="apple-mobile-web-app-title" content="Ascend" />
-    <meta name="theme-color" content="#0f0f1a" />
-  </head>
-  <body data-page="quests">
-    <header>
-      <div class="header-top">
-        <h1>
-          <a href="index.html">
-            <img
-              src="Images\icons\ascendLogo.png"
-              alt="Ascend's Logo"
-              class="ascend-logo"
-              title="Ascend's Logo"
-            />
-          </a>
-        </h1>
-        <nav class="navigation">
-          <div class="left-placeholder"></div>
-          <div class="nav-links">
-            <a class="nav-link" href="index.html">Home</a>
-            <a class="nav-link active" href="quests.html">Quests</a>
-            <a class="nav-link" href="stats.html">Stats</a>
-            <a class="nav-link" href="codex.html">Codex</a>
-            <a class="nav-link" href="library.html">Library</a>
-            <a class="nav-link" href="calendar.html">Calendar</a>
-          </div>
-          <div class="right-placeholder"></div>
-        </nav>
-        <div id="version" class="version-badge"></div>
-      </div>
-      <hr />
-    </header>
-    <main>
-      <h2>Quest System</h2>
 
-      <div class="quest-layout">
-        <!-- CREATE QUEST -->
-        <section class="quest-creator" hidden>
-          <h3>Create Quest</h3>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, maximum-scale=1.0,  initial-scale=1.0" />
+  <title>Quests</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/navigation.css" />
+  <link rel="stylesheet" href="css/quests.css" />
+  <link rel="stylesheet" href="css/ai.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Space+Grotesk:wght@300..700&display=swap"
+    rel="stylesheet" />
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="Images\icons\ascendLogo.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Ascend" />
+  <meta name="theme-color" content="#0f0f1a" />
+</head>
 
-          <input
-            type="text"
-            id="questInput"
-            placeholder="Enter a new quest..."
-          />
+<body data-page="quests">
+  <header>
+    <div class="header-top">
+      <h1>
+        <a href="index.html">
+          <img src="Images\icons\ascendLogo.png" alt="Ascend's Logo" class="ascend-logo" title="Ascend's Logo" />
+        </a>
+      </h1>
+      <nav class="navigation">
+        <div class="left-placeholder"></div>
+        <div class="nav-links">
+          <a class="nav-link" href="index.html">Home</a>
+          <a class="nav-link active" href="quests.html">Quests</a>
+          <a class="nav-link" href="stats.html">Stats</a>
+          <a class="nav-link" href="codex.html">Codex</a>
+          <a class="nav-link" href="library.html">Library</a>
+          <a class="nav-link" href="calendar.html">Calendar</a>
+        </div>
+        <div class="right-placeholder"></div>
+      </nav>
+      <div id="version" class="version-badge"></div>
+    </div>
+    <hr />
+  </header>
+  <main>
+    <h2>Quest System</h2>
 
-          <select id="questCategory"></select>
+    <div class="quest-layout">
+      <!-- CREATE QUEST -->
+      <section class="quest-creator" hidden>
+        <h3>Create Quest</h3>
 
-          <button id="addCategoryBtn" type="button">+</button>
+        <input type="text" id="questInput" placeholder="Enter a new quest..." />
 
-          <select id="questDifficulty">
-            <option value="Easy">Easy</option>
-            <option value="Medium">Medium</option>
-            <option value="Hard">Hard</option>
-          </select>
+        <select id="questCategory"></select>
 
-          <select id="questRecurring">
-            <option value="none">None</option>
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-          </select>
+        <button id="addCategoryBtn" type="button">+</button>
 
-          <!-- DAY SELECTOR - Shows when Weekly is selected -->
-          <div
-            id="daySelectorContainer"
-            style="
+        <select id="questDifficulty">
+          <option value="Easy">Easy</option>
+          <option value="Medium">Medium</option>
+          <option value="Hard">Hard</option>
+        </select>
+
+        <select id="questRecurring">
+          <option value="none">None</option>
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+        </select>
+
+        <!-- DAY SELECTOR - Shows when Weekly is selected -->
+        <div id="daySelectorContainer" style="
               display: none;
               background: rgba(255, 255, 255, 0.04);
               padding: 14px;
               border-radius: 10px;
               margin: 10px 0;
               border: 1px solid rgba(255, 255, 255, 0.06);
-            "
-          >
-            <label
-              style="
+            ">
+          <label style="
                 display: block;
                 font-weight: 500;
                 margin-bottom: 10px;
                 color: #e5e7eb;
                 font-size: 0.9rem;
-              "
-              >📅 Repeat on:</label
-            >
-            <div style="display: flex; gap: 8px; flex-wrap: wrap">
-              <label
-                style="
+              ">📅 Repeat on:</label>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap">
+            <label style="
                   display: flex;
                   align-items: center;
                   gap: 5px;
@@ -123,12 +102,10 @@
                   background: rgba(255, 255, 255, 0.05);
                   border: 1px solid rgba(255, 255, 255, 0.08);
                   transition: all 0.2s;
-                "
-              >
-                <input type="checkbox" class="repeat-day" value="0" /> Sun
-              </label>
-              <label
-                style="
+                ">
+              <input type="checkbox" class="repeat-day" value="0" /> Sun
+            </label>
+            <label style="
                   display: flex;
                   align-items: center;
                   gap: 5px;
@@ -140,12 +117,10 @@
                   background: rgba(255, 255, 255, 0.05);
                   border: 1px solid rgba(255, 255, 255, 0.08);
                   transition: all 0.2s;
-                "
-              >
-                <input type="checkbox" class="repeat-day" value="1" /> Mon
-              </label>
-              <label
-                style="
+                ">
+              <input type="checkbox" class="repeat-day" value="1" /> Mon
+            </label>
+            <label style="
                   display: flex;
                   align-items: center;
                   gap: 5px;
@@ -157,12 +132,10 @@
                   background: rgba(255, 255, 255, 0.05);
                   border: 1px solid rgba(255, 255, 255, 0.08);
                   transition: all 0.2s;
-                "
-              >
-                <input type="checkbox" class="repeat-day" value="2" /> Tue
-              </label>
-              <label
-                style="
+                ">
+              <input type="checkbox" class="repeat-day" value="2" /> Tue
+            </label>
+            <label style="
                   display: flex;
                   align-items: center;
                   gap: 5px;
@@ -174,12 +147,10 @@
                   background: rgba(255, 255, 255, 0.05);
                   border: 1px solid rgba(255, 255, 255, 0.08);
                   transition: all 0.2s;
-                "
-              >
-                <input type="checkbox" class="repeat-day" value="3" /> Wed
-              </label>
-              <label
-                style="
+                ">
+              <input type="checkbox" class="repeat-day" value="3" /> Wed
+            </label>
+            <label style="
                   display: flex;
                   align-items: center;
                   gap: 5px;
@@ -191,12 +162,10 @@
                   background: rgba(255, 255, 255, 0.05);
                   border: 1px solid rgba(255, 255, 255, 0.08);
                   transition: all 0.2s;
-                "
-              >
-                <input type="checkbox" class="repeat-day" value="4" /> Thu
-              </label>
-              <label
-                style="
+                ">
+              <input type="checkbox" class="repeat-day" value="4" /> Thu
+            </label>
+            <label style="
                   display: flex;
                   align-items: center;
                   gap: 5px;
@@ -208,12 +177,10 @@
                   background: rgba(255, 255, 255, 0.05);
                   border: 1px solid rgba(255, 255, 255, 0.08);
                   transition: all 0.2s;
-                "
-              >
-                <input type="checkbox" class="repeat-day" value="5" /> Fri
-              </label>
-              <label
-                style="
+                ">
+              <input type="checkbox" class="repeat-day" value="5" /> Fri
+            </label>
+            <label style="
                   display: flex;
                   align-items: center;
                   gap: 5px;
@@ -225,73 +192,73 @@
                   background: rgba(255, 255, 255, 0.05);
                   border: 1px solid rgba(255, 255, 255, 0.08);
                   transition: all 0.2s;
-                "
-              >
-                <input type="checkbox" class="repeat-day" value="6" /> Sat
-              </label>
-            </div>
-            <div style="font-size: 0.7rem; color: #6b7280; margin-top: 8px">
-              Select the days this quest should repeat on
-            </div>
+                ">
+              <input type="checkbox" class="repeat-day" value="6" /> Sat
+            </label>
           </div>
-
-          <label>Start Time</label>
-          <input type="time" id="questStartTime" />
-
-          <label>End Time</label>
-          <input type="time" id="questEndTime" />
-
-          <label>Due Date</label>
-          <input type="date" id="questDueDate" />
-
-          <label for="questPriority"></label>
-
-          <select id="questPriority">
-            <option value="Critical">🔴 Critical</option>
-            <option value="High">🟠 High</option>
-            <option value="Medium" selected>🟡 Medium</option>
-            <option value="Low">🟢 Low</option>
-          </select>
-          <button id="addQuestBtn">Add Quest</button>
-        </section>
-
-        <div class="quest-toolbar">
-          <button id="newQuestBtn">+ New Quest</button>
-
-          <input type="text" id="questSearch" placeholder="Search quests..." />
+          <div style="font-size: 0.7rem; color: #6b7280; margin-top: 8px">
+            Select the days this quest should repeat on
+          </div>
         </div>
-        <label for="sortQuests">Sort:</label>
 
-        <select id="sortQuests">
-          <option value="date">Due Date</option>
-          <option value="priority">Priority</option>
-          <option value="category">Category</option>
-          <option value="section">Section</option>
-          <option value="difficulty">Difficulty</option>
-          <option value="name">Name (A-Z)</option>
-          <option value="created">Date Created</option>
+        <label>Start Time</label>
+        <input type="time" id="questStartTime" />
+
+        <label>End Time</label>
+        <input type="time" id="questEndTime" />
+
+        <label>Due Date</label>
+        <input type="date" id="questDueDate" />
+
+        <label for="questPriority"></label>
+
+        <select id="questPriority">
+          <option value="Critical">🔴 Critical</option>
+          <option value="High">🟠 High</option>
+          <option value="Medium" selected>🟡 Medium</option>
+          <option value="Low">🟢 Low</option>
         </select>
+        <button id="addQuestBtn">Add Quest</button>
+      </section>
 
-        <!-- ACTIVE QUESTS -->
-        <div class="quest-sections">
-          <div id="questSections" class="quest-sections"></div>
-        </div>
+      <div class="quest-toolbar">
+        <button id="newQuestBtn">+ New Quest</button>
 
-        <section class="quest-display">
-          <ul id="questList"></ul>
-        </section>
-
-        <!-- COMPLETED QUESTS -->
-        <section class="completed-quests">
-          <h3>Completed Quests</h3>
-          <ul id="completedQuestList"></ul>
-        </section>
+        <input type="text" id="questSearch" placeholder="Search quests..." />
       </div>
-    </main>
-    <script src="js/player.js"></script>
-    <script src="js/skillTree.js"></script>
-    <script src="js/quests.js"></script>
-    <script src="js/aiContext.js"></script>
-    <script src="js/ascendAI.js"></script>
-  </body>
+      <label for="sortQuests">Sort:</label>
+
+      <select id="sortQuests">
+        <option value="date">Due Date</option>
+        <option value="priority">Priority</option>
+        <option value="category">Category</option>
+        <option value="section">Section</option>
+        <option value="difficulty">Difficulty</option>
+        <option value="name">Name (A-Z)</option>
+        <option value="created">Date Created</option>
+      </select>
+
+      <!-- ACTIVE QUESTS -->
+      <div class="quest-sections">
+        <div id="questSections" class="quest-sections"></div>
+      </div>
+
+      <section class="quest-display">
+        <ul id="questList"></ul>
+      </section>
+
+      <!-- COMPLETED QUESTS -->
+      <section class="completed-quests">
+        <h3>Completed Quests</h3>
+        <ul id="completedQuestList"></ul>
+      </section>
+    </div>
+  </main>
+  <script src="js/player.js"></script>
+  <script src="js/skillTree.js"></script>
+  <script src="js/quests.js"></script>
+  <script src="js/aiContext.js"></script>
+  <script src="js/ascendAI.js"></script>
+</body>
+
 </html>
