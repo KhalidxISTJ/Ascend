@@ -10,7 +10,7 @@
 </head>
 
 <body>
-  <div class="splashContanier">
+  <div class="splash-container">
     <div class="leftSide">
       <img src="Images\icons\ascendLogo.png" alt="Ascend's Logo" class="splash-logo" />
       <div class="intro-splash">
@@ -25,36 +25,48 @@
 
     <!-- Sign-in form -->
     <div class="rightSide">
+      <h2>Sign in</h2>
       <form action="">
-        <div class="sign-in">
-          <label for="username">Username:</label>
+        <div class="sign-in-fields">
+          <label for="username" class="username-label">Username:</label>
           <input type="text" id="username" name="username" required placeholder="User0" />
-          <label for="password">Password:</label>
+        </div>
+        <div class="sign-in-fields">
+          <label for="password" class="pass-label">Password:</label>
           <input type="password" id="password" name="password" required placeholder="1100100" />
         </div>
-        <div class="sign-in-btns">
-          <input type="reset" />
-          <input type="submit" />
+        <div class="sign-in">
+          <div class="sign-in-options">
+            <input type="checkbox" id="remember" name="remember" value="yes">
+            <label for="remember" class="forgot-pass">Remember me</label>
+            <a href="">Reset Password?</a>
+          </div>
+          <div class="sign-in-actions">
+            <button type="reset">Clear</button>
+            <button type="submit">Login</button>
+          </div>
         </div>
+      </form>
     </div>
-    </form>
   </div>
+
   <hr class="divider">
   <footer class="splash-footer">
     <h2>Links</h2>
-
-    <table class="contact-links">
-      <tr>
-        <th>Socials</th>
-        <td>
-          <a href="https://www.youtube.com/@TecBlueprints" target="_blank">My YouTube Channel</a>
-        </td>
-      </tr>
-      <td>
+    <div class="grid-container">
+      <div class="footer-column">
+        <div class="link-titles">Socials</div>
+        <a href="https://www.youtube.com/@TecBlueprints" target="_blank">My YouTube Channel</a>
         <a href="https://www.instagram.com/ur.cgk/" target="_blank">My Instagram Page</a>
-      </td>
-    </table>
-
+      </div>
+      <div class="footer-column">
+        <div class="link-titles">Info</div>
+        <a href="about.html">About Ascend</a>
+      </div>
+      <div class="footer-column">
+        <div class="link-titles">Other Stuff</div>
+      </div>
+    </div>
   </footer>
 </body>
 
