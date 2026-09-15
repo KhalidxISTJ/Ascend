@@ -38,10 +38,10 @@ function renderQuestList(element, quests) {
   element.innerHTML = quests
     .map(
       (q) => `
-        <div class="dashboard-quest">
-            ${q.name}
-        </div>
-    `,
+          <div class="dashboard-quest">
+              ${q.name}
+          </div>
+      `,
     )
     .join("");
 }
@@ -111,9 +111,9 @@ function updateDashboard() {
 
   if (mission) {
     currentQuestElement.innerHTML = `
-      <strong>${mission.name}</strong><br>
-      ${mission.priority} Priority
-    `;
+        <strong>${mission.name}</strong><br>
+        ${mission.priority} Priority
+      `;
 
     completeCurrentQuest.hidden = false;
     skipCurrentQuest.hidden = false;
