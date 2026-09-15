@@ -21,17 +21,20 @@
   font-weight: 800;
   letter-spacing: 1px;
 }
+
 .ascend-logo {
   height: 60px;
   width: auto;
   display: inline-block;
   vertical-align: middle;
 }
+
 hr {
   margin: 8px 20px;
   border: none;
   border-top: 2px solid #d1d5db;
 }
+
 
 /* QUEST PAGE */
 
@@ -46,6 +49,7 @@ hr {
 .completed-list {
   border: 0cap;
 }
+
 .quest-title {
   font-size: 1.1rem;
   font-weight: bold;
@@ -108,6 +112,7 @@ hr {
   list-style: none;
   padding: 0;
 }
+
 .quest-card {
   background: rgba(255, 255, 255, 0.92);
 
@@ -123,6 +128,7 @@ hr {
 
   transition: all 0.2s ease;
 }
+
 .quest-card {
   transition:
     transform 0.2s ease,
@@ -173,6 +179,7 @@ hr {
 .add-section {
   margin-left: auto;
 }
+
 .quest-time {
   font-size: 0.9rem;
   color: #9ca3af;

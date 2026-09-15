@@ -31,11 +31,17 @@
 <body data-page="home">
   <header>
     <div class="header-top">
-      <h1>
-        <a href="index.html">
-          <img src="Images\icons\ascendLogo.png" alt="Ascend's Logo" class="ascend-logo" title="Ascend's Logo" />
-        </a>
-      </h1>
+      <div class="header-left"> <button id="hamburger-nav">
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+        </button>
+        <h1>
+          <a href="index.html">
+            <img src="Images\icons\ascendLogo.png" alt="Ascend's Logo" class="ascend-logo" title="Ascend's Logo" />
+          </a>
+        </h1>
+      </div>
       <nav class="navigation">
         <div class="left-placeholder"></div>
         <div class="nav-links">
@@ -48,11 +54,22 @@
         </div>
         <div class="right-placeholder"></div>
       </nav>
-      <div id="version" class="version-badge"></div>
+      <div class="header-right">
+        <div id="version" class="version-badge"></div>
+      </div>
     </div>
-    <hr />
+    <hr>
   </header>
-
+  <div id="sidebar-overlay" class="sidebar-overlay"></div>
+  <aside id="sidebar" class="sidebar">
+    <h2>Account</h2>
+    <p id="sidebar-username">User0</p>
+    <img class="pfp" alt="Profile" src="">
+    <button>Import data</button>
+    <button id="export-btn">export data</button>
+    <button id="logout-btn">Log out</button>
+    <button>Delete account</button>
+  </aside>
   <main>
     <section class="dashboard">
       <!-- Profile Panel -->

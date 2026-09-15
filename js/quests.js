@@ -38,7 +38,7 @@ const sortQuestsElement = document.getElementById("sortQuests");
 // Day selector elements
 const daySelectorContainer = document.getElementById("daySelectorContainer");
 const repeatDayCheckboxes = document.querySelectorAll(".repeat-day");
-
+const questUser = localStorage.getItem("username");
 /* =======================================================
    PRAYER TIMES API (Albany, NY - ISNA Method)
 ======================================================= */
@@ -74,7 +74,7 @@ async function updatePrayerQuests() {
   const times = await getPrayerTimes();
   if (!times) return;
 
-  const saved = localStorage.getItem("quests");
+  const saved = localStorage.getItem(questUser + "_quests")
   if (!saved) return;
 
   const quests = JSON.parse(saved);
@@ -92,7 +92,7 @@ async function updatePrayerQuests() {
   });
 
   if (updated) {
-    localStorage.setItem("quests", JSON.stringify(quests));
+    localStorage.setItem(questUser + "_quests", JSON.stringify(quests))
     loadQuests();
     renderQuests();
     if (typeof updateDashboard === "function") {
@@ -127,7 +127,7 @@ function getTodayDateKey() {
 
 // NEW: Check if it's a new day since last reset
 function isNewDay() {
-  const lastReset = localStorage.getItem("lastResetDate");
+  const lastReset = localStorage.getItem(questUser + "_lastResetDate");
   const today = getTodayDateKey();
 
   if (!lastReset) {
@@ -183,16 +183,16 @@ if (questRecurringElement) {
 // =====================
 function saveQuests() {
   const data = JSON.stringify(quests);
-  localStorage.setItem("quests", data);
+  localStorage.setItem(questUser + "_quests", data)
 }
 
 function saveSections() {
-  localStorage.setItem("questSections", JSON.stringify(sections));
+  localStorage.setItem(questUser + "_questSections", JSON.stringify(sections));
 }
 
 function saveCategories() {
   categories.sort((a, b) => a.localeCompare(b));
-  localStorage.setItem("questCategories", JSON.stringify(categories));
+  localStorage.setItem(questUser + "_questCategories", JSON.stringify(categories));
 }
 
 // =====================
@@ -200,7 +200,7 @@ function saveCategories() {
 // =====================
 
 function loadQuests() {
-  const saved = localStorage.getItem("quests");
+  const saved = localStorage.getItem(questUser + "_quests")
 
   if (saved) {
     quests = JSON.parse(saved);
@@ -221,7 +221,7 @@ function loadQuests() {
 }
 
 function loadSections() {
-  const saved = localStorage.getItem("questSections");
+  const saved = localStorage.getItem(questUser + "_questSections");
 
   if (saved) {
     sections = JSON.parse(saved);
@@ -232,7 +232,7 @@ function loadSections() {
 }
 
 function loadCategories() {
-  const saved = localStorage.getItem("questCategories");
+  const saved = localStorage.getItem(questUser + "_questCategories");
 
   if (saved) {
     categories = JSON.parse(saved);
@@ -976,22 +976,6 @@ if (questSearch) {
 }
 
 // =====================
-// QUEST SYSTEM — PART 4
-// DAILY RESET + ORDERING
-// =====================
-
-// =====================
-// DATE HELPERS
-// =====================
-
-function isNewDay() {
-  if (!playerData || !playerData.lastResetDate) {
-    return true;
-  }
-  return playerData.lastResetDate !== getTodayString();
-}
-
-// =====================
 // RECURRING RESET
 // =====================
 
@@ -1028,7 +1012,7 @@ function resetRecurringQuests() {
 
 function runDailyReset() {
   const today = getTodayDateKey();
-  const lastReset = localStorage.getItem("lastResetDate");
+  const lastReset = localStorage.getItem(questUser + "_lastResetDate")
 
   // If already reset today, skip
   if (lastReset === today) {
@@ -1039,9 +1023,9 @@ function runDailyReset() {
   console.log("🔄 Running daily reset...");
 
   // Load fresh quests
-  const saved = localStorage.getItem("quests");
+  const saved = localStorage.getItem(questUser + "_quests")
   if (!saved) {
-    localStorage.setItem("lastResetDate", today);
+    localStorage.setItem(questUser + "_lastResetDate", today);
     return;
   }
 
@@ -1096,12 +1080,12 @@ function runDailyReset() {
   });
 
   if (changed) {
-    localStorage.setItem("quests", JSON.stringify(quests));
+    localStorage.setItem(questUser + "_quests", JSON.stringify(quests))
     console.log("✅ Quests reset for new day");
   }
 
   // Save today as the last reset date
-  localStorage.setItem("lastResetDate", today);
+  localStorage.setItem(questUser + "_lastResetDate", today);
 
   // Reload quests in memory
   loadQuests();

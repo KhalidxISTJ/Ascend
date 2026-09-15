@@ -9,7 +9,8 @@
      STORAGE
   ======================================================= */
 
-  const STORAGE_KEY = "ascendLibrary";
+  const currentUser = localStorage.getItem("username");
+  const STORAGE_KEY = currentUser + "_ascendLibrary";
 
   let library = {
     sections: [],
@@ -44,6 +45,7 @@
   const searchInput = document.getElementById("librarySearchInput");
   const searchCount = document.getElementById("librarySearchCount");
   const searchClose = document.getElementById("librarySearchClose");
+
 
   /* =======================================================
      INITIALIZATION
@@ -1141,7 +1143,7 @@
 
   // Migration: Add sections to existing data
   const checkData = JSON.parse(
-    localStorage.getItem("ascendLibrary") || '{"pages":[]}',
+    localStorage.getItem(currentUser + "_ascendLibrary") || '{"pages":[]}',
   );
 
   if (checkData.pages && checkData.pages.length > 0 && !checkData.sections) {
@@ -1152,7 +1154,7 @@
     };
     checkData.sections = [defaultSection];
     checkData.selectedPageId = checkData.selectedPageId || null;
-    localStorage.setItem("ascendLibrary", JSON.stringify(checkData));
+    localStorage.setItem(currentUser + "_ascendLibrary", JSON.stringify(checkData));
   }
 
   if (checkData.pages && checkData.pages.length === 0) {
@@ -1181,7 +1183,7 @@
     checkData.pages = [defaultPage];
     checkData.sections = [defaultSection];
     checkData.selectedPageId = defaultPage.id;
-    localStorage.setItem("ascendLibrary", JSON.stringify(checkData));
+    localStorage.setItem(currentUser + "_ascendLibrary", JSON.stringify(checkData));
   }
 
   /* =======================================================

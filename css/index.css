@@ -1,5 +1,5 @@
 /* =====================================================
-   HEADER
+   HEADER LAYOUT
 ===================================================== */
 
 .header-top {
@@ -11,36 +11,98 @@
   padding: 16px 20px 8px;
 }
 
-.header-top h1 {
-  font-size: 2rem;
-  margin: 0;
-  font-weight: 700;
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.header-top .ascend {
-  font-weight: 800;
-  letter-spacing: 1px;
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
-.version-badge {
-  font-size: 0.75rem;
-  color: #6b7280;
-  background: #e5e7eb;
-  padding: 4px 14px;
-  border-radius: 20px;
-  font-weight: 600;
-}
 
-hr {
-  margin: 8px 20px;
+
+/* =====================================================
+   HAMBURGER BUTTON
+===================================================== */
+
+#hamburger-nav {
+  background: none;
   border: none;
-  border-top: 2px solid #d1d5db;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 4px;
 }
+
+.hamburger-line {
+  display: block;
+  width: 25px;
+  height: 2.5px;
+  background-color: #0f172a;
+  border-radius: 2px;
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 280px;
+  background: white;
+  padding: 20px;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sidebar.open {
+  transform: translateX(0);
+}
+
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease;
+  z-index: 999;
+}
+
+.sidebar-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.Logout-btw {
+  color: #0f172a;
+}
+
+/* =====================================================
+   LOGO
+===================================================== */
+
+.header-left h1 {
+  margin: 0;
+  font-size: 0;
+  line-height: 0;
+}
+
 .ascend-logo {
-  height: 60px; /* adjust to match your header height */
+  height: 50px;
   width: auto;
-  display: inline-block;
-  vertical-align: middle;
+  display: block;
 }
 
 /* =====================================================
@@ -359,6 +421,7 @@ hr {
 #resetGameBtn:hover {
   background: #fecaca;
 }
+
 /* =====================================================
    QUEST HISTORY
 ===================================================== */
@@ -411,6 +474,7 @@ hr {
   display: block;
   margin-bottom: 2px;
 }
+
 /* =====================================================
    RESPONSIVE
 ===================================================== */
@@ -453,18 +517,22 @@ hr {
     padding: 14px 16px;
   }
 }
+
 @media (max-width: 600px) {
   .profile-panel {
     flex-direction: column;
     align-items: stretch;
   }
+
   .profile-left {
     width: 100%;
   }
+
   .profile-right {
     grid-template-columns: 1fr;
     width: 100%;
   }
+
   .stat-card {
     padding: 12px;
     font-size: 1rem;

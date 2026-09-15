@@ -81,14 +81,15 @@ let skillTree = [
   },
 ];
 
-const savedSkillTree = localStorage.getItem("skillTree");
+const skillUser = localStorage.getItem("username");
+const savedSkillTree = localStorage.getItem(skillUser + "_skillTree");
 
 if (savedSkillTree) {
   skillTree = JSON.parse(savedSkillTree);
 }
 
 function saveSkillTree() {
-  localStorage.setItem("skillTree", JSON.stringify(skillTree));
+  localStorage.setItem(skillUser + "_skillTree", JSON.stringify(skillTree));
 }
 
 function initializeSkillProgression(nodes) {

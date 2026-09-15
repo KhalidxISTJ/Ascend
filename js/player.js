@@ -1,16 +1,11 @@
 const levelElement = document.getElementById("level");
-
 const xpNumberSpan = document.getElementById("xp-number");
-
 const xpFill = document.getElementById("xp-fill");
-
 const profileImage = document.getElementById("profile-img");
-
 const profileImageInput = document.getElementById("profile-picture");
-
 const APP_VERSION = "v1.0.0 Alpha";
-
 const versionElement = document.getElementById("version");
+const currentUser = localStorage.getItem("username");
 
 if (versionElement) {
   versionElement.textContent = APP_VERSION;
@@ -63,11 +58,11 @@ let playerData = {
 // ======================
 
 function savePlayer() {
-  localStorage.setItem("playerData", JSON.stringify(playerData));
+  localStorage.setItem(currentUser + "_playerData", JSON.stringify(playerData));
 }
 
 function loadPlayer() {
-  const savedPlayer = localStorage.getItem("playerData");
+  const savedPlayer = localStorage.getItem(currentUser + "_playerData");
 
   if (savedPlayer) {
     playerData = JSON.parse(savedPlayer);

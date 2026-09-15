@@ -7,6 +7,8 @@
 // STORAGE
 // =====================================================
 
+const codexUser = localStorage.getItem("username");
+
 let testTime = null;
 
 function getCurrentTime() {
@@ -16,7 +18,7 @@ function setTestTime(date) {
   testTime = new Date(date);
 }
 
-const savedFolders = localStorage.getItem("codexFolders");
+const savedFolders = localStorage.getItem(codexUser + "_codexFolders");
 
 let rootFolder;
 
@@ -197,7 +199,7 @@ const reviewNextBtn = document.getElementById("reviewNextBtn");
 // =====================================================
 
 function saveFolders() {
-  localStorage.setItem("codexFolders", JSON.stringify(rootFolder));
+  localStorage.setItem(codexUser + "_codexFolders", JSON.stringify(rootFolder));
 }
 
 function getCurrentCards() {
@@ -488,13 +490,11 @@ function render() {
   if (isMobile) {
     console.log("🔧 Applying FINAL mobile card size fix...");
 
-    // Get all elements
     const flipCard = document.getElementById("flipCard");
     const front = document.getElementById("cardFront");
     const back = document.getElementById("cardBack");
     const flipInner = document.querySelector(".flip-inner");
 
-    // 1. Force the flip card to fill the screen
     if (flipCard) {
       flipCard.style.cssText = `
       width: 100vw !important;
@@ -512,7 +512,6 @@ function render() {
     `;
     }
 
-    // 2. Force the flip inner
     if (flipInner) {
       flipInner.style.cssText = `
       position: relative !important;
@@ -524,7 +523,6 @@ function render() {
     `;
     }
 
-    // 3. Force front and back
     if (front) {
       front.style.cssText = `
       position: absolute !important;
@@ -572,7 +570,6 @@ function render() {
     `;
     }
 
-    // Card container
     const cardContainer = document.querySelector(".card-container");
     if (cardContainer) {
       cardContainer.style.cssText = `
@@ -588,7 +585,6 @@ function render() {
   `;
     }
 
-    // 5. Force the study panel
     const studyPanel = document.querySelector(".study-panel");
     if (studyPanel) {
       studyPanel.style.cssText = `
@@ -606,7 +602,6 @@ function render() {
   `;
     }
 
-    // 6. Force parent containers
     document.body.style.maxWidth = "100vw";
     document.body.style.overflowX = "hidden";
     document.body.style.margin = "0";
@@ -847,7 +842,7 @@ function ensureSRS(card, mode = "multipleChoice") {
   };
 
   mode = modeMap[mode] || mode;
-  // New SRS structure
+
   if (!card.srs || !card.srs.multipleChoice) {
     const oldSRS = card.srs;
 
@@ -859,7 +854,6 @@ function ensureSRS(card, mode = "multipleChoice") {
     };
   }
 
-  // Make sure every mode exists.
   if (!card.srs[mode]) {
     card.srs[mode] = createSRSData();
   }
@@ -874,6 +868,7 @@ function addMinutes(date, minutes) {
 function addDays(date, days) {
   return new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
 }
+
 function resetCurrentFolderSRS() {
   for (const card of getCurrentCards()) {
     card.srs = {
@@ -893,6 +888,7 @@ function resetCurrentFolderSRS() {
     `Reset SRS for ${getCurrentCards().length} cards in "${currentFolder.name}".`,
   );
 }
+
 function formatTimeUntil(date) {
   const diff = new Date(date).getTime() - getCurrentTime().getTime();
 
@@ -916,6 +912,7 @@ function formatTimeUntil(date) {
 
   return `${days}d`;
 }
+
 // =====================================================
 // SCHEDULE CARD
 // =====================================================
@@ -931,43 +928,27 @@ function scheduleCard(card, rating, mode = "multipleChoice") {
 
   const srs = ensureSRS(card, srsMode);
 
-  console.log("SRS before scheduling:", card.srs);
-
   const now = getCurrentTime();
 
   if (rating === "again") {
     srs.lapses++;
-
     srs.repetitions = 0;
-
     srs.interval = 0;
-
     srs.due = addMinutes(now, 10).toISOString();
   } else if (rating === "hard") {
     srs.interval = 1;
-
     srs.repetitions++;
-
     srs.due = addDays(now, 1).toISOString();
   } else if (rating === "good") {
     srs.interval = 3;
-
     srs.repetitions++;
-
     srs.due = addDays(now, 3).toISOString();
   } else if (rating === "easy") {
     srs.interval = 7;
-
     srs.repetitions++;
-
     srs.due = addDays(now, 7).toISOString();
   }
-  console.log("SRS after scheduling:", card.srs);
-  console.log("SRS scheduled:", {
-    mode,
-    rating,
-    due: srs.due,
-  });
+
   saveFolders();
 }
 
@@ -988,6 +969,7 @@ function getDueCards(mode = "multipleChoice") {
 
   return getCurrentCards().filter((card) => isCardDue(card, srsMode));
 }
+
 function getUpcomingReviews() {
   const srsModeMap = {
     "multiple-choice": "multipleChoice",
@@ -1008,6 +990,7 @@ function getUpcomingReviews() {
       (a, b) => new Date(a.srs[srsMode].due) - new Date(b.srs[srsMode].due),
     );
 }
+
 function getReviewDueCounts() {
   return {
     multipleChoice: getDueCards("multipleChoice").length,
@@ -1016,6 +999,7 @@ function getReviewDueCounts() {
     recall: getDueCards("recall").length,
   };
 }
+
 function updateReviewDueCounts() {
   const counts = getReviewDueCounts();
 
@@ -1027,6 +1011,7 @@ function updateReviewDueCounts() {
     element.textContent = `${count} due`;
   });
 }
+
 function getAllDueCards(folder = rootFolder) {
   let cards = [];
 
@@ -1056,16 +1041,12 @@ function openReview() {
 
   reviewModeBtn.textContent = "✕ Cancel";
 
-  // Hide normal flashcards.
   document.querySelector(".card-counter-container")?.classList.add("hidden");
 
   document.querySelector(".card-container")?.classList.add("hidden");
 
-  // Show Review.
   reviewWorkspace.classList.remove("hidden");
 
-  // Reset the mode BEFORE pulling due cards, so the cards we
-  // fetch actually match the mode the UI is about to show.
   reviewCards = getDueCards(reviewMode);
   originalReviewCount = reviewCards.length;
   stillNeedsReview = [];
@@ -1089,6 +1070,7 @@ function openReview() {
 
   renderReview();
 }
+
 function updateNextReviewPanel() {
   if (!nextReviewPanel || !nextReviewList) {
     return;
@@ -1134,6 +1116,7 @@ function updateNextReviewPanel() {
     nextReviewList.appendChild(item);
   }
 }
+
 // =====================================================
 // CLOSE REVIEW
 // =====================================================
@@ -1146,7 +1129,6 @@ function closeReview() {
   reviewModeBtn.textContent = "📚 Review";
   reviewWorkspace.classList.add("hidden");
 
-  // Restore normal flashcards.
   document.querySelector(".card-counter-container")?.classList.remove("hidden");
 
   document.querySelector(".card-container")?.classList.remove("hidden");
@@ -1161,21 +1143,14 @@ function closeReview() {
 }
 
 // =====================================================
-// REVIEW COUNT
-// =====================================================
-
-// =====================================================
 // REVIEW MODE LABEL
 // =====================================================
 
 function updateReviewModeLabel() {
   const modes = {
     "multiple-choice": "🎯 Multiple Choice",
-
     "short-answer": "✍️ Short Answer",
-
     match: "🔗 Match",
-
     recall: "🧠 Recall",
   };
 
@@ -1221,9 +1196,6 @@ reviewModeOptions.forEach((option) => {
 // =====================================================
 
 function renderReview() {
-  // Clear previous dynamically
-  // created next button.
-
   hideReviewModes();
 
   if (reviewCards.length === 0) {
@@ -1288,6 +1260,7 @@ function updateReviewNavigation() {
       reviewIndex === reviewCards.length - 1 ? "Finish →" : "Next →";
   }
 }
+
 if (reviewPreviousBtn) {
   reviewPreviousBtn.addEventListener("click", () => {
     if (reviewIndex <= 0) {
@@ -1301,6 +1274,7 @@ if (reviewPreviousBtn) {
     renderReview();
   });
 }
+
 if (reviewNextBtn) {
   reviewNextBtn.addEventListener("click", () => {
     if (!reviewAnswered) {
@@ -1318,6 +1292,7 @@ if (reviewNextBtn) {
     }
   });
 }
+
 // =====================================================
 // HIDE REVIEW MODES
 // =====================================================
@@ -1406,13 +1381,10 @@ function markMultipleChoiceButtons(currentCard, selectedAnswer) {
   buttons?.forEach((button) => {
     button.disabled = true;
 
-    // Always show the correct answer in green
     if (button.textContent === currentCard.back) {
       button.classList.add("correct");
     }
 
-    // If the user selected the wrong answer,
-    // show their selection in red.
     if (
       button.textContent === selectedAnswer &&
       selectedAnswer !== currentCard.back
@@ -1823,14 +1795,12 @@ document.querySelectorAll(".review-rating-btn").forEach((button) => {
 
 if (reviewModeBtn) {
   reviewModeBtn.addEventListener("click", () => {
-    // If review is active, close it
     if (!reviewWorkspace.classList.contains("hidden")) {
       closeReview();
       reviewModeBtn.textContent = "📚 Review";
       return;
     }
 
-    // Otherwise show overlay
     const overlay = document.getElementById("reviewOverlay");
     if (overlay) {
       overlay.classList.remove("overlay-hidden");
@@ -1856,18 +1826,15 @@ if (startBtn) {
       overlay.classList.add("overlay-hidden");
     }
 
-    // Get selected mode
     const selected = document.querySelector(".review-mode-option.selected");
     const mode = selected ? selected.dataset.mode : "multiple-choice";
     reviewMode = mode;
 
-    // Get random toggle
     const randomToggle = document
       .getElementById("randomOrderToggle")
       .querySelector("input");
     const isRandom = randomToggle ? randomToggle.checked : false;
 
-    // If random is on, shuffle cards
     if (isRandom) {
       const cards = getCurrentCards();
       cards.sort(() => Math.random() - 0.5);

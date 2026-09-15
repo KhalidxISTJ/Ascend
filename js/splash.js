@@ -12,7 +12,7 @@ let users = [];
 
 if (savedUsers) { users = JSON.parse(savedUsers); }
 
-let mode = localStorage.getItem("username") ? "login" : "create";
+let mode = users.length > 0 ? "login" : "create";
 
 /* functions */
 

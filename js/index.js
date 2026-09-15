@@ -1,3 +1,4 @@
+/* Variables */
 const activeQuestCount = document.getElementById("activeQuestCount");
 const completedQuestCount = document.getElementById("completedQuestCount");
 const completionRate = document.getElementById("completionRate");
@@ -12,6 +13,20 @@ const timerStatus = document.getElementById("timerStatus");
 const skipCurrentQuest = document.getElementById("skipCurrentQuest");
 const overdueQuestsElement = document.getElementById("overdueQuests");
 const upcomingQuestsElement = document.getElementById("upcomingQuests");
+const sideBar = document.getElementById("sidebar");
+const sideBarOverlay = document.getElementById("sidebar-overlay");
+const hamburgerNav = document.getElementById("hamburger-nav");
+const user = localStorage.getItem("username");
+const ascendLibrary = localStorage.getItem(user + "_ascendLibrary");
+const savedQuests = localStorage.getItem(user + "_quests");
+const savedQuestSections = localStorage.getItem(user + "_questSections");
+const questCategories = localStorage.getItem(user + "_questCategories");
+const skillTree = localStorage.getItem(user + "_skillTree");
+const savedPlayerData = localStorage.getItem(user + "_playerData");
+const codexData = localStorage.getItem(user + "_codexFolders");
+const lastResetDate = localStorage.getItem(user + "_lastResetDate");
+const exportBtn = document.getElementById("export-btn");
+const logoutBtn = document.getElementById("logout-btn");
 document.getElementById("version").textContent = APP_VERSION;
 
 function renderQuestList(element, quests) {
@@ -87,7 +102,7 @@ function skipQuest(quest) {
   window.dispatchEvent(new CustomEvent("questStateChanged"));
 }
 function updateDashboard() {
-  const quests = JSON.parse(localStorage.getItem("quests")) || [];
+  const todayQuests = JSON.parse(localStorage.getItem(user + "_quests")) || [];
   const mission = getCurrentMission();
 
   // =====================
@@ -108,7 +123,7 @@ function updateDashboard() {
     skipCurrentQuest.hidden = true;
   }
 
-  const overdueQuests = quests.filter((quest) => {
+  const overdueQuests = todayQuests.filter((quest) => {
     return quest.status === "active" && getQuestTimeState(quest) === "overdue";
   });
 
@@ -125,12 +140,12 @@ function updateDashboard() {
   // Quest Stats
   // =====================
 
-  const active = quests.filter((q) => !q.completed).length;
+  const active = todayQuests.filter((q) => !q.completed).length;
 
-  const completed = quests.filter((q) => q.completed).length;
+  const completed = todayQuests.filter((q) => q.completed).length;
 
   const completion =
-    quests.length === 0 ? 0 : Math.round((completed / quests.length) * 100);
+    todayQuests.length === 0 ? 0 : Math.round((completed / todayQuests.length) * 100);
 
   activeQuestCount.textContent = `Active Quests: ${active}`;
   completedQuestCount.textContent = `Completed Quests: ${completed}`;
@@ -277,3 +292,51 @@ function updateTimerButtons() {
     }
   }
 }
+
+function openSideBar() {
+  sideBar.classList.add("open");
+  sideBarOverlay.classList.add("open");
+}
+
+function closeSideBar() {
+  sideBar.classList.remove("open");
+  sideBarOverlay.classList.remove("open");
+}
+
+hamburgerNav.addEventListener("click", openSideBar);
+sideBarOverlay.addEventListener("click", closeSideBar);
+
+function exportUserData() {
+  const exportData = {
+    username: user,
+    exportedAt: new Date().toISOString(),
+    app: "Ascend",
+    data: {
+      ascendLibrary: localStorage.getItem(user + "_ascendLibrary"),
+      savedQuests: localStorage.getItem(user + "_quests"),
+      savedQuestSections: localStorage.getItem(user + "_questSections"),
+      questCategories: localStorage.getItem(user + "_questCategories"),
+      skillTree: localStorage.getItem(user + "_skillTree"),
+      savedPlayerData: localStorage.getItem(user + "_playerData"),
+      codexData: localStorage.getItem(user + "_codexFolders"),
+      lastResetDate: localStorage.getItem(user + "_lastResetDate"),
+    },
+  };
+  const dataStr = JSON.stringify(exportData, null, 2);
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `ascend-${user}-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+exportBtn.addEventListener("click", exportUserData);
+
+function logout(event) {
+  localStorage.removeItem("username")
+  window.location.href = "splash.html"
+}
+
+logoutBtn.addEventListener("click", logout);
