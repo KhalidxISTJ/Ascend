@@ -52,24 +52,9 @@
 
   <main class="calendar-page">
     <h2>📅 Calendar</h2>
-
-    <div class="calendar-header">
-      <div class="view-toggles">
-        <button class="view-btn active" data-view="day">📅 Day</button>
-        <button class="view-btn" data-view="week">📆 Week</button>
-        <button class="view-btn" data-view="month">🗓️ Month</button>
-      </div>
-      <div class="week-nav">
-        <button id="prev-week">←</button>
-        <span id="week-label">Today</span>
-        <button id="next-week">→</button>
-      </div>
-    </div>
-
-    <!-- SCROLLABLE CONTAINER -->
-    <div id="timeline-container" class="timeline-container">
-      <div id="timeline" class="timeline">
-        <!-- Timeline will be rendered here -->
+    <div class="calendar-wrapper">
+      <div class="time-column" id="time-column"></div>
+      <div class="event-column" id="event-column">
       </div>
     </div>
   </main>

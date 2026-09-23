@@ -18,15 +18,17 @@ const sideBarOverlay = document.getElementById("sidebar-overlay");
 const hamburgerNav = document.getElementById("hamburger-nav");
 const user = localStorage.getItem("username");
 const ascendLibrary = localStorage.getItem(user + "_ascendLibrary");
-const savedQuests = localStorage.getItem(user + "_quests");
+const savedQuests = localStorage.getItem(user + "_savedQuests");
+const codexData = localStorage.getItem(user + "_codexData");
 const savedQuestSections = localStorage.getItem(user + "_questSections");
 const questCategories = localStorage.getItem(user + "_questCategories");
 const skillTree = localStorage.getItem(user + "_skillTree");
 const savedPlayerData = localStorage.getItem(user + "_playerData");
-const codexData = localStorage.getItem(user + "_codexFolders");
 const lastResetDate = localStorage.getItem(user + "_lastResetDate");
 const exportBtn = document.getElementById("export-btn");
 const logoutBtn = document.getElementById("logout-btn");
+const importBtn = document.getElementById("import-btn");
+const importFile = document.getElementById("import-file");
 document.getElementById("version").textContent = APP_VERSION;
 
 function renderQuestList(element, quests) {
@@ -38,10 +40,10 @@ function renderQuestList(element, quests) {
   element.innerHTML = quests
     .map(
       (q) => `
-          <div class="dashboard-quest">
-              ${q.name}
-          </div>
-      `,
+            <div class="dashboard-quest">
+                ${q.name}
+            </div>
+        `,
     )
     .join("");
 }
@@ -89,7 +91,7 @@ function getQuestTimeState(quest) {
   // Currently inside the scheduled window
   return "active";
 }
-let skippedToday = JSON.parse(localStorage.getItem("skippedToday")) || [];
+let skippedToday = JSON.parse(localStorage.getItem(user + "_skippedToday")) || [];
 function skipQuest(quest) {
   if (!quest || quest.status === "completed") {
     return;
@@ -102,18 +104,18 @@ function skipQuest(quest) {
   window.dispatchEvent(new CustomEvent("questStateChanged"));
 }
 function updateDashboard() {
-  const todayQuests = JSON.parse(localStorage.getItem(user + "_quests")) || [];
+  const todayQuests = (JSON.parse(localStorage.getItem(user + "_savedQuests")) || []).filter((quest) => { return isQuestScheduledToday(quest); });
   const mission = getCurrentMission();
 
-  // =====================
+  // =====================   
   // Current Mission
-  // =====================
+  // ===================== 
 
   if (mission) {
     currentQuestElement.innerHTML = `
-        <strong>${mission.name}</strong><br>
-        ${mission.priority} Priority
-      `;
+          <strong>${mission.name}</strong><br>
+          ${mission.priority} Priority
+        `;
 
     completeCurrentQuest.hidden = false;
     skipCurrentQuest.hidden = false;
@@ -313,12 +315,12 @@ function exportUserData() {
     app: "Ascend",
     data: {
       ascendLibrary: localStorage.getItem(user + "_ascendLibrary"),
-      savedQuests: localStorage.getItem(user + "_quests"),
+      savedQuests: localStorage.getItem(user + "_savedQuests"),
+      codexData: localStorage.getItem(user + "_codexData"),
       savedQuestSections: localStorage.getItem(user + "_questSections"),
       questCategories: localStorage.getItem(user + "_questCategories"),
       skillTree: localStorage.getItem(user + "_skillTree"),
       savedPlayerData: localStorage.getItem(user + "_playerData"),
-      codexData: localStorage.getItem(user + "_codexFolders"),
       lastResetDate: localStorage.getItem(user + "_lastResetDate"),
     },
   };
@@ -331,12 +333,72 @@ function exportUserData() {
   a.click();
   URL.revokeObjectURL(url);
 }
-
 exportBtn.addEventListener("click", exportUserData);
 
 function logout(event) {
   localStorage.removeItem("username")
   window.location.href = "splash.html"
 }
-
 logoutBtn.addEventListener("click", logout);
+
+function importbtn(event) {
+  importFile.click();
+}
+importBtn.addEventListener("click", importbtn);
+
+function handleImport(event) {
+  const file = event.target.files[0];
+
+  if (!file) {
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = function () {
+    try {
+      const backup = JSON.parse(reader.result);
+
+      // Check it's an Ascend export
+      if (backup.app !== "Ascend") {
+        alert("❌ Invalid file. This isn't an Ascend backup.");
+        return;
+      }
+
+      // Check it has data
+      if (!backup.data) {
+        alert("❌ No data found in the backup.");
+        return;
+      }
+
+      // Confirm before replacing
+      const confirmed = confirm(
+        "⚠️ Importing will REPLACE all your current data with the backup.\n\nAnything you've added since the backup will be lost.\n\nContinue?",
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      // Write each key back to localStorage with the user prefix
+      Object.keys(backup.data).forEach((key) => {
+        const value = backup.data[key];
+        if (value !== null && value !== undefined) {
+          localStorage.setItem(user + "_" + key, value);
+        }
+      });
+
+      alert("✅ Import complete! Reloading...");
+      window.location.reload();
+    } catch (error) {
+      console.error("Import error:", error);
+      alert("❌ Failed to import. The file might be corrupted.");
+    } finally {
+      importFile.value = "";
+    }
+  };
+
+  reader.readAsText(file);
+}
+
+importFile.addEventListener("change", handleImport);

@@ -12,6 +12,7 @@ const questInput = document.getElementById("questInput");
 const currentQuest = document.getElementById("current-quest");
 const questList = document.getElementById("questList");
 const completedQuestList = document.getElementById("completedQuestList");
+const notTodayQuestList = document.getElementById("notTodayQuestList")
 
 const questCategoryElement = document.getElementById("questCategory");
 const questDifficultyElement = document.getElementById("questDifficulty");
@@ -39,6 +40,7 @@ const sortQuestsElement = document.getElementById("sortQuests");
 const daySelectorContainer = document.getElementById("daySelectorContainer");
 const repeatDayCheckboxes = document.querySelectorAll(".repeat-day");
 const questUser = localStorage.getItem("username");
+
 /* =======================================================
    PRAYER TIMES API (Albany, NY - ISNA Method)
 ======================================================= */
@@ -74,7 +76,7 @@ async function updatePrayerQuests() {
   const times = await getPrayerTimes();
   if (!times) return;
 
-  const saved = localStorage.getItem(questUser + "_quests")
+  const saved = localStorage.getItem(questUser + "_savedQuests");
   if (!saved) return;
 
   const quests = JSON.parse(saved);
@@ -92,7 +94,7 @@ async function updatePrayerQuests() {
   });
 
   if (updated) {
-    localStorage.setItem(questUser + "_quests", JSON.stringify(quests))
+    localStorage.setItem(questUser + "_savedQuests", JSON.stringify(quests));
     loadQuests();
     renderQuests();
     if (typeof updateDashboard === "function") {
@@ -100,6 +102,8 @@ async function updatePrayerQuests() {
     }
   }
 }
+
+
 
 // =====================================================
 // DATE HELPERS
@@ -183,7 +187,7 @@ if (questRecurringElement) {
 // =====================
 function saveQuests() {
   const data = JSON.stringify(quests);
-  localStorage.setItem(questUser + "_quests", data)
+  localStorage.setItem(questUser + "_savedQuests", data);
 }
 
 function saveSections() {
@@ -192,7 +196,10 @@ function saveSections() {
 
 function saveCategories() {
   categories.sort((a, b) => a.localeCompare(b));
-  localStorage.setItem(questUser + "_questCategories", JSON.stringify(categories));
+  localStorage.setItem(
+    questUser + "_questCategories",
+    JSON.stringify(categories),
+  );
 }
 
 // =====================
@@ -200,7 +207,7 @@ function saveCategories() {
 // =====================
 
 function loadQuests() {
-  const saved = localStorage.getItem(questUser + "_quests")
+  const saved = localStorage.getItem(questUser + "_savedQuests");
 
   if (saved) {
     quests = JSON.parse(saved);
@@ -213,6 +220,7 @@ function loadQuests() {
       name: q.name,
       dueDate: q.dueDate,
       startTime: q.startTime,
+      endTime: q.endTime,
       priority: q.priority,
       completed: q.completed,
       repeatDays: q.repeatDays || [],
@@ -522,12 +530,14 @@ function questMatchesSearch(quest) {
 // =====================
 
 function renderQuests() {
-  if (!questList || !completedQuestList) {
+  if (!questList || !completedQuestList || !notTodayQuestList) {
     return;
   }
 
+
   questList.innerHTML = "";
   completedQuestList.innerHTML = "";
+  notTodayQuestList.innerHTML = "";
 
   const sorted = sortQuests([...quests]);
 
@@ -540,7 +550,18 @@ function renderQuests() {
       continue;
     }
 
-    createQuestElement(quest);
+    if (!isQuestScheduledToday(quest)) {
+      const li = createQuestElement(quest);
+      notTodayQuestList.appendChild(li);
+      continue;
+    }
+
+    const li = createQuestElement(quest);
+    if (quest.completed) {
+      completedQuestList.appendChild(li);
+    } else {
+      questList.appendChild(li);
+    }
   }
 }
 
@@ -693,12 +714,9 @@ function createQuestElement(quest) {
   li.appendChild(buttons);
   li.appendChild(details);
 
-  if (quest.completed) {
-    completedQuestList.appendChild(li);
-  } else {
-    questList.appendChild(li);
-  }
+  return li;
 }
+
 
 // =====================
 // QUEST SYSTEM — PART 3
@@ -754,6 +772,7 @@ function createQuestObject() {
     color: isEditing ? editingQuest.color : randomColor,
   };
 }
+
 // =====================
 // RESET FORM
 // =====================
@@ -1012,7 +1031,7 @@ function resetRecurringQuests() {
 
 function runDailyReset() {
   const today = getTodayDateKey();
-  const lastReset = localStorage.getItem(questUser + "_lastResetDate")
+  const lastReset = localStorage.getItem(questUser + "_lastResetDate");
 
   // If already reset today, skip
   if (lastReset === today) {
@@ -1023,7 +1042,7 @@ function runDailyReset() {
   console.log("🔄 Running daily reset...");
 
   // Load fresh quests
-  const saved = localStorage.getItem(questUser + "_quests")
+  const saved = localStorage.getItem(questUser + "_savedQuests");
   if (!saved) {
     localStorage.setItem(questUser + "_lastResetDate", today);
     return;
@@ -1080,7 +1099,7 @@ function runDailyReset() {
   });
 
   if (changed) {
-    localStorage.setItem(questUser + "_quests", JSON.stringify(quests))
+    localStorage.setItem(questUser + "_savedQuests", JSON.stringify(quests));
     console.log("✅ Quests reset for new day");
   }
 
@@ -1248,23 +1267,6 @@ function getTodaysQuests() {
       return false;
     }
 
-    if (quest.recurring === "daily") {
-      return true;
-    }
-
-    if (quest.recurring === "weekly") {
-      // Check if today is in repeatDays
-      if (quest.repeatDays && quest.repeatDays.length > 0) {
-        return quest.repeatDays.includes(dayOfWeek);
-      }
-      // Fallback: use dueDate
-      if (quest.dueDate) {
-        const qDay = new Date(quest.dueDate).getDay();
-        return dayOfWeek === qDay;
-      }
-      return true;
-    }
-
     if (quest.dueDate) {
       const [year, month, day] = quest.dueDate.split("-").map(Number);
       const due = new Date(year, month - 1, day);
@@ -1274,6 +1276,37 @@ function getTodaysQuests() {
 
     return true;
   });
+}
+
+function isQuestScheduledToday(quest) {
+  if (quest.recurring === "daily") {
+    return true;
+  }
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dayOfWeek = today.getDay();
+
+  if (quest.recurring === "weekly") {
+    // Check if today is in repeatDays
+    if (quest.repeatDays && quest.repeatDays.length > 0) {
+      return quest.repeatDays.includes(dayOfWeek);
+    }
+    // Fallback: use dueDate
+    if (quest.dueDate) {
+      const qDay = new Date(quest.dueDate).getDay();
+      return dayOfWeek === qDay;
+    }
+    return true;
+  }
+
+  if (quest.dueDate) {
+    const [year, month, day] = quest.dueDate.split("-").map(Number);
+    const due = new Date(year, month - 1, day);
+    due.setHours(0, 0, 0, 0);
+    return due.getTime() === today.getTime();
+
+  }
+  return true;
 }
 
 function getCurrentQuest(offset = 0) {
@@ -1447,34 +1480,49 @@ function questDebug() {
 // =====================================================
 
 function initializeQuestSystem() {
-  // First load quests
-  loadQuests();
+  console.log("🔧 Initializing quest system...");
+
+  // 1. Load sections and categories first
   loadSections();
   loadCategories();
+
+  // 2. Load quests from localStorage
+  loadQuests();
+  console.log("📦 After loadQuests, quests.length =", quests.length);
+
+  // 3. Migrate old quest data (adds missing fields)
   migrateQuests();
+  console.log("📦 After migrateQuests, quests.length =", quests.length);
 
-  // Run daily reset check
+  // 4. Run daily reset (may modify quests)
   runDailyReset();
+  console.log("📦 After runDailyReset, quests.length =", quests.length);
 
-  // Update prayer times
+  // 5. Reload quests from localStorage to make sure we have the latest
+  loadQuests();
+  console.log("📦 After reload, quests.length =", quests.length);
+
+  // 6. Update prayer times
   updatePrayerQuests();
 
-  // Update order
+  // 7. Update order
   updateQuestOrder();
 
-  // Render everything
+  // 8. Render
   renderSections();
   renderCategories();
   renderQuests();
+  console.log("✅ Quest system ready. Final quests.length =", quests.length);
 
-  // Check for new day every 60 seconds
+  // 9. Check for new day every minute
   setInterval(() => {
     if (isNewDay()) {
       console.log("🔄 New day detected! Running reset...");
       runDailyReset();
+      loadQuests();
+      renderQuests();
     }
-  }, 60000); // Check every minute
+  }, 60000);
 }
 
-// Start the system
 initializeQuestSystem();

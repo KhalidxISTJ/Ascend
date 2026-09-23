@@ -18,7 +18,7 @@ function setTestTime(date) {
   testTime = new Date(date);
 }
 
-const savedFolders = localStorage.getItem(codexUser + "_codexFolders");
+const savedFolders = localStorage.getItem(codexUser + "_codexData");
 
 let rootFolder;
 
@@ -199,7 +199,7 @@ const reviewNextBtn = document.getElementById("reviewNextBtn");
 // =====================================================
 
 function saveFolders() {
-  localStorage.setItem(codexUser + "_codexFolders", JSON.stringify(rootFolder));
+  localStorage.setItem(codexUser + "_codexData", JSON.stringify(rootFolder));
 }
 
 function getCurrentCards() {

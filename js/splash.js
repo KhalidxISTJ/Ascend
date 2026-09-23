@@ -62,6 +62,8 @@ function login(event) {
     }
 }
 
+
+
 /* Function calling */
 
 createAcc.addEventListener("click", toggleMode)
