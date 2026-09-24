@@ -275,6 +275,11 @@ function migrateQuests() {
       changed = true;
     }
 
+    if (typeof quest.cancelledToday !== "boolean") {
+      quest.cancelledToday = false;
+      changed = true;
+    }
+
     if (!quest.createdAt) {
       quest.createdAt = Date.now();
       changed = true;
@@ -576,6 +581,9 @@ function createQuestElement(quest) {
   if (quest.completed) {
     li.classList.add("completed");
   }
+  if (quest.cancelledToday) {
+    li.classList.add("cancelled-today");
+  }
 
   const title = document.createElement("div");
   title.className = "quest-title";
@@ -705,6 +713,13 @@ function createQuestElement(quest) {
       completeQuest(quest);
     };
     buttons.appendChild(complete);
+    const cancel = document.createElement("button");
+    cancel.textContent = "Cancel";
+    cancel.className = "cancel-btn";
+    cancel.onclick = () => {
+      cancelQuest(quest);
+    };
+    buttons.appendChild(cancel);
   }
 
   buttons.appendChild(toggle);
@@ -764,6 +779,7 @@ function createQuestObject() {
     completed: isEditing ? editingQuest.completed : false,
     status: isEditing ? editingQuest.status : "active",
     skippedToday: isEditing ? editingQuest.skippedToday : false,
+    cancelledToday: isEditing ? editingQuest.cancelledToday : false,
     createdAt: isEditing ? editingQuest.createdAt : Date.now(),
     history: isEditing ? editingQuest.history : {},
     isPrayer: isEditing ? editingQuest.isPrayer : false,
@@ -944,6 +960,17 @@ function skipQuest(quest) {
   window.dispatchEvent(new CustomEvent("questStateChanged"));
 }
 
+function cancelQuest(quest) {
+  if (!quest || quest.completed) return;
+
+  quest.cancelledToday = true;
+  saveQuests();
+  renderQuests();
+
+  if (typeof updateDashboard === "function") {
+    updateDashboard();
+  }
+}
 // =====================
 // XP REWARD SYSTEM
 // =====================
@@ -1095,6 +1122,13 @@ function runDailyReset() {
           );
         }
       }
+    }
+
+    // === CANCELLED TODAY RESET (applies to every quest) ===
+    if (quest.cancelledToday === true) {
+      quest.cancelledToday = false;
+      changed = true;
+      console.log(`🔄 Reset cancelledToday: ${quest.name}`);
     }
   });
 
@@ -1258,24 +1292,7 @@ function getActiveQuests() {
 // =====================
 
 function getTodaysQuests() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const dayOfWeek = today.getDay();
-
-  return quests.filter((quest) => {
-    if (quest.recurring === "none" && quest.completed) {
-      return false;
-    }
-
-    if (quest.dueDate) {
-      const [year, month, day] = quest.dueDate.split("-").map(Number);
-      const due = new Date(year, month - 1, day);
-      due.setHours(0, 0, 0, 0);
-      return due.getTime() === today.getTime();
-    }
-
-    return true;
-  });
+  return quests.filter((quest) => isQuestScheduledToday(quest));
 }
 
 function isQuestScheduledToday(quest) {
@@ -1324,9 +1341,11 @@ function getCurrentQuest(offset = 0) {
 
   const eligible = todayQuests.filter((quest) => {
     if (quest.completed) return false;
+    if (quest.cancelledToday) return false;
     const timeState = getQuestTimeState(quest);
     return timeState === "active" || timeState === "overdue";
   });
+
 
   if (eligible.length === 0) {
     return null;

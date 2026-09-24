@@ -29,6 +29,7 @@ const exportBtn = document.getElementById("export-btn");
 const logoutBtn = document.getElementById("logout-btn");
 const importBtn = document.getElementById("import-btn");
 const importFile = document.getElementById("import-file");
+const cancelCurrentQuest = document.getElementById("cancelCurrentQuest");
 document.getElementById("version").textContent = APP_VERSION;
 
 function renderQuestList(element, quests) {
@@ -119,14 +120,16 @@ function updateDashboard() {
 
     completeCurrentQuest.hidden = false;
     skipCurrentQuest.hidden = false;
+    cancelCurrentQuest.hidden = false;
   } else {
     currentQuestElement.textContent = "No active quest.";
     completeCurrentQuest.hidden = true;
     skipCurrentQuest.hidden = true;
+    cancelCurrentQuest.hidden = true;
   }
 
   const overdueQuests = todayQuests.filter((quest) => {
-    return quest.status === "active" && getQuestTimeState(quest) === "overdue";
+    return quest.status === "active" && !quest.cancelledToday && getQuestTimeState(quest) === "overdue";
   });
 
   renderQuestList(overdueQuestsElement, overdueQuests);
@@ -182,6 +185,15 @@ skipCurrentQuest.onclick = function () {
 
   updateDashboard();
 };
+
+cancelCurrentQuest.onclick = function () {
+  const mission = getCurrentMission();
+  if (!mission) return;
+  cancelQuest(mission);
+  currentQuestSkipCount = 0;
+  updateDashboard();
+};
+
 updateDashboard();
 
 window.addEventListener("questStateChanged", () => {

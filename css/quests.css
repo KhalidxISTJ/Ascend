@@ -181,6 +181,19 @@ h3 {
   padding: 0;
 }
 
+.cancel-btn {
+  border-color: #dc3232;
+  color: #dc3232;
+}
+
+.cancelled-today {
+  opacity: 0.55;
+}
+
+.cancelled-today .quest-title {
+  text-decoration: line-through;
+}
+
 .quest-card {
   background: rgba(255, 255, 255, 0.92);
 
