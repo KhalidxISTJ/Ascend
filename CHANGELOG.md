@@ -26,7 +26,7 @@
 - Fixed dashboard Overdue bug — was showing quests not even scheduled for today
 - Quest overlap detection (`questsOverlap()`) — foundation for calendar side-by-side event rendering
 - Refactored `createQuestElement()` to return a card instead of appending it directly, so it can be reused across sections
-- Library bulk content structure — nested study folders (Islam/Christianity) generated via script
+- Library bulk content structure
 
 ## 🌟 Vision
 

@@ -34,3 +34,31 @@
     white-space: nowrap;
     text-overflow: ellipsis;
 }
+
+.all-day {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 3px;
+    background-color: transparent;
+    border-bottom: 3px solid rgba(255, 255, 255, 0.1);
+    padding: 5px;
+}
+
+#all-day-events {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.all-day-pill {
+    border-radius: 100px;
+    padding: 5px 10px;
+    color: #1a73e8;
+    background-color: whitesmoke;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+}
