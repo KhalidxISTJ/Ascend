@@ -1,42 +1,22 @@
-// =====================
-// QUEST SYSTEM — PART 1
-// FOUNDATION
-// =====================
-
-// =====================
-// Elements
-// =====================
-
 const addQuestBtn = document.getElementById("addQuestBtn");
 const questInput = document.getElementById("questInput");
 const currentQuest = document.getElementById("current-quest");
 const questList = document.getElementById("questList");
 const completedQuestList = document.getElementById("completedQuestList");
 const notTodayQuestList = document.getElementById("notTodayQuestList")
-
 const questCategoryElement = document.getElementById("questCategory");
 const questDifficultyElement = document.getElementById("questDifficulty");
 const questRecurringElement = document.getElementById("questRecurring");
-
 const questStartTimeElement = document.getElementById("questStartTime");
 const questEndTimeElement = document.getElementById("questEndTime");
-
 const questPriority = document.getElementById("questPriority");
-
 const questSearch = document.getElementById("questSearch");
-
 const newQuestBtn = document.getElementById("newQuestBtn");
 const questCreator = document.querySelector(".quest-creator");
-
 const questSections = document.getElementById("questSections");
-
 const questDueDateElement = document.getElementById("questDueDate");
-
 const addCategoryBtn = document.getElementById("addCategoryBtn");
-
 const sortQuestsElement = document.getElementById("sortQuests");
-
-// Day selector elements
 const daySelectorContainer = document.getElementById("daySelectorContainer");
 const repeatDayCheckboxes = document.querySelectorAll(".repeat-day");
 const questUser = localStorage.getItem("username");
@@ -207,10 +187,23 @@ function saveCategories() {
 // =====================
 
 function loadQuests() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  const todayString = `${year}-${month}-${day}`;
+
   const saved = localStorage.getItem(questUser + "_savedQuests");
 
   if (saved) {
-    quests = JSON.parse(saved);
+    // 1. Parse the saved data
+    // 2. Filter out the dead quests
+    // 3. Save the cleaned list back to localStorage
+    quests = JSON.parse(saved).filter((item) => {
+      return !(item.completed && item.recurring !== "weekly" && item.recurring !== "daily" && item.dueDate < todayString);
+    });
+
+    localStorage.setItem(questUser + "_savedQuests", JSON.stringify(quests));
   } else {
     quests = [];
   }

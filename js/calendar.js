@@ -3,6 +3,7 @@ const calendar = document.getElementById("calendar-wrapper")
 const time = document.getElementById("time-column")
 const events = document.getElementById("event-column")
 const user = localStorage.getItem("username")
+const allDayEvents = document.getElementById("all-day-events")
 
 let quests = []
 
@@ -21,7 +22,17 @@ function buildTimeLabels() {
 
 function loadQuests() {
     const saved = localStorage.getItem(user + "_savedQuests")
-    if (saved) { quests = JSON.parse(saved) }
+    const today = new Date()
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0")
+    const day = String(today.getDate()).padStart(2, "0")
+    const todayString = `${year}-${month}-${day}`
+    if (saved) {
+        quests = JSON.parse(saved).filter(item => {
+            return !(item.completed && item.recurring !== "weekly" && item.recurring !== "daily" && item.dueDate < todayString)
+        })
+        localStorage.setItem(user + "_savedQuests", JSON.stringify(quests))
+    }
 }
 
 function getTodaysQuests() {
@@ -36,6 +47,8 @@ function getTodaysQuests() {
             return true;
         if (quest.recurring === "weekly" && quest.repeatDays.includes(dayOfWeek))
             return true
+        if (quest.dueDate === todayString)
+            return true;
         return false;
     })
 }
@@ -51,6 +64,13 @@ function renderEvents() {
     const todaysQuest = getTodaysQuests()
 
     for (const quest of todaysQuest) {
+        if (!quest.startTime) {
+            const allDayEvent = document.createElement("div")
+            allDayEvent.className = "all-day-pill"
+            allDayEvent.textContent = quest.name;
+            allDayEvents.appendChild(allDayEvent);
+            continue;
+        }
         const top = timeToMinutes(quest.startTime)
         const endMinutes = timeToMinutes(quest.endTime)
         const height = Math.max(endMinutes - top, 20)
