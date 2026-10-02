@@ -568,15 +568,19 @@ function renderQuests() {
 // =====================
 
 function createQuestElement(quest) {
+  const { completed, cancelledToday } = quest
   const li = document.createElement("li");
   li.className = "quest-card";
 
-  if (quest.completed) {
+  if (completed) {
     li.classList.add("completed");
   }
-  if (quest.cancelledToday) {
+  if (cancelledToday) {
     li.classList.add("cancelled-today");
   }
+
+  /* Destructuring list */
+  const { name, isPrayer, prayerType, priority, startTime, endTime, dueDate, recurring, repeatDays, difficulty, section, type } = quest
 
   const title = document.createElement("div");
   title.className = "quest-title";
@@ -588,36 +592,36 @@ function createQuestElement(quest) {
     Low: "🟢",
   };
 
-  let nameDisplay = quest.name;
-  if (quest.isPrayer && quest.prayerType === "Fajr") {
-    nameDisplay = `🌙 ${quest.name}`;
+  let nameDisplay = name;
+  if (isPrayer && prayerType === "Fajr") {
+    nameDisplay = `🌙 ${name}`;
   }
 
   title.textContent =
-    `${quest.completed ? "✔️ " : ""}` +
-    `${priorityIcons[quest.priority] || "🟡"} ` +
+    `${completed ? "✔️ " : ""}` +
+    `${priorityIcons[priority] || "🟡"} ` +
     nameDisplay;
 
   // TIME
   const time = document.createElement("div");
   time.className = "quest-time";
 
-  const hasStartTime = quest.startTime && quest.startTime !== "";
-  const hasEndTime = quest.endTime && quest.endTime !== "";
-  const hasDueDate = quest.dueDate && quest.dueDate !== "";
+  const hasStartTime = startTime && startTime !== "";
+  const hasEndTime = endTime && endTime !== "";
+  const hasDueDate = dueDate && dueDate !== "";
 
   let info = "";
 
   if (hasStartTime || hasEndTime) {
-    if (quest.isPrayer && quest.prayerType === "Fajr") {
-      info += `🕌 Fajr: ${formatTime(quest.startTime)} (auto-updated)`;
+    if (isPrayer && prayerType === "Fajr") {
+      info += `🕌 Fajr: ${formatTime(startTime)} (auto-updated)`;
     } else {
       if (hasStartTime && hasEndTime) {
-        info += `🕓 ${formatTime(quest.startTime)} - ${formatTime(quest.endTime)}`;
+        info += `🕓 ${formatTime(startTime)} - ${formatTime(endTime)}`;
       } else if (hasStartTime) {
-        info += `🕓 ${formatTime(quest.startTime)}`;
+        info += `🕓 ${formatTime(startTime)}`;
       } else if (hasEndTime) {
-        info += `🕓 Ends at ${formatTime(quest.endTime)}`;
+        info += `🕓 Ends at ${formatTime(endTime)}`;
       }
     }
   }
@@ -626,17 +630,17 @@ function createQuestElement(quest) {
     if (info) {
       info += "<br>";
     }
-    info += `📅 ${formatDate(quest.dueDate)}`;
+    info += `📅 ${formatDate(dueDate)}`;
   }
 
   // Show repeat days if weekly
   if (
-    quest.recurring === "weekly" &&
-    quest.repeatDays &&
-    quest.repeatDays.length > 0
+    recurring === "weekly" &&
+    repeatDays &&
+    repeatDays.length > 0
   ) {
     const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const days = quest.repeatDays.map((d) => dayNames[d]).join(", ");
+    const days = repeatDays.map((d) => dayNames[d]).join(", ");
     if (info) info += "<br>";
     info += `🔄 ${days}`;
   }
@@ -654,21 +658,21 @@ function createQuestElement(quest) {
   const due = getDueStatus(quest);
 
   details.innerHTML = `
-    Priority: ${quest.priority}
+    Priority: ${priority}
     <br>
-    Type: ${quest.type}
+    Type: ${type}
     <br>
-    Difficulty: ${quest.difficulty}
+    Difficulty: ${difficulty}
     <br>
-    Recurring: ${quest.recurring}
+    Recurring: ${recurring}
     <br>
-    Section: ${quest.section}
+    Section: ${section}
     <br>
-    Due: ${quest.dueDate ? formatDate(quest.dueDate) : "None"}
+    Due: ${dueDate ? formatDate(dueDate) : "None"}
     <br>
     Status: ${due.text}
     <br>
-    🕓 ${formatTime(quest.startTime)} - ${formatTime(quest.endTime)}
+    🕓 ${formatTime(startTime)} - ${formatTime(endTime)}
   `;
 
   // BUTTON AREA
@@ -677,20 +681,28 @@ function createQuestElement(quest) {
 
   const toggle = document.createElement("button");
   toggle.textContent = "▼";
-  toggle.onclick = () => {
+  const toggleDetails = () => {
     details.classList.toggle("hidden");
     toggle.textContent = details.classList.contains("hidden") ? "▼" : "▲";
+  }
+  li.onclick = toggleDetails;
+
+  toggle.onclick = (e) => {
+    e.stopPropagation();
+    toggleDetails();
   };
 
   const edit = document.createElement("button");
   edit.textContent = "Edit";
-  edit.onclick = () => {
+  edit.onclick = (e) => {
+    e.stopPropagation();
     startEditingQuest(quest);
   };
 
   const del = document.createElement("button");
   del.textContent = "Delete";
-  del.onclick = () => {
+  del.onclick = (e) => {
+    e.stopPropagation();
     quests = quests.filter((q) => q !== quest);
     saveQuests();
     renderQuests();
@@ -699,17 +711,19 @@ function createQuestElement(quest) {
   buttons.appendChild(edit);
   buttons.appendChild(del);
 
-  if (!quest.completed) {
+  if (!completed) {
     const complete = document.createElement("button");
     complete.textContent = "Complete";
-    complete.onclick = () => {
+    complete.onclick = (e) => {
+      e.stopPropagation();
       completeQuest(quest);
     };
     buttons.appendChild(complete);
     const cancel = document.createElement("button");
     cancel.textContent = "Cancel";
     cancel.className = "cancel-btn";
-    cancel.onclick = () => {
+    cancel.onclick = (e) => {
+      e.stopPropagation();
       cancelQuest(quest);
     };
     buttons.appendChild(cancel);

@@ -149,6 +149,25 @@
   </main>
 
   <!-- Service Worker -->
+  <div id="update-panel" class="update-panel hidden">
+    <div class="update-content">
+      <h3 class="update-title">
+        <p>What's new in v1.0.0 alpha</p>
+        <button id="close-update-panel">Close</button>
+      </h3>
+
+      <h4>✨ New</h4>
+      <ul>
+        <li>All Day bar on Calendar</li>
+        <li>Update Panel feature</li>
+      </ul>
+
+      <h4>🐛 Fixed</h4>
+      <ul>
+        <li>Completed one-time quests lingering forever</li>
+      </ul>
+    </div>
+  </div>
   <script>
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
