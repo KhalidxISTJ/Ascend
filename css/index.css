@@ -475,6 +475,51 @@
   margin-bottom: 2px;
 }
 
+
+/* =====================================================
+   Update Panel
+===================================================== */
+.version-badge {
+  cursor: pointer;
+  z-index: 10000;
+}
+
+.update-title {
+  display: flex;
+  flex-direction: row;
+  font-size: 55px;
+  padding: 5px;
+}
+
+.update-panel {
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  position: fixed;
+  justify-content: center;
+  align-items: center;
+  background-color: transparent;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.update-panel.hidden {
+  display: none;
+}
+
+.update-content {
+  width: 1000px;
+  height: 700px;
+  background-color: #676769;
+  border: solid;
+  border-color: rgb(0, 0, 0);
+  border-radius: 3px;
+  padding-left: 20px;
+  color: white;
+}
+
 /* =====================================================
    RESPONSIVE
 ===================================================== */

@@ -30,6 +30,11 @@ const logoutBtn = document.getElementById("logout-btn");
 const importBtn = document.getElementById("import-btn");
 const importFile = document.getElementById("import-file");
 const cancelCurrentQuest = document.getElementById("cancelCurrentQuest");
+const version = document.getElementById("version")
+const updatePanel = document.getElementById("update-panel")
+const closeUpdatePanel = document.getElementById("close-update-panel")
+const cards = document.querySelectorAll(".stat-card")
+const xpCard = document.getElementById("xp")
 document.getElementById("version").textContent = APP_VERSION;
 
 function renderQuestList(element, quests) {
@@ -414,3 +419,6 @@ function handleImport(event) {
 }
 
 importFile.addEventListener("change", handleImport);
+
+version.addEventListener("click", () => { updatePanel.classList.toggle("hidden") })
+closeUpdatePanel.addEventListener("click", () => { updatePanel.classList.add("hidden") })
