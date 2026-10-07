@@ -35,6 +35,7 @@ const updatePanel = document.getElementById("update-panel")
 const closeUpdatePanel = document.getElementById("close-update-panel")
 const cards = document.querySelectorAll(".stat-card")
 const xpCard = document.getElementById("xp")
+const timeLeftInDay = document.getElementById("time-left-in-day")
 document.getElementById("version").textContent = APP_VERSION;
 
 function renderQuestList(element, quests) {
@@ -422,3 +423,22 @@ importFile.addEventListener("change", handleImport);
 
 version.addEventListener("click", () => { updatePanel.classList.toggle("hidden") })
 closeUpdatePanel.addEventListener("click", () => { updatePanel.classList.add("hidden") })
+
+/* Calculates how much time is left before the day ends*/
+
+function updateTimeLeft() {
+  const date = new Date()
+  const hours = date.getHours()
+  const minutes = date.getMinutes()
+  const seconds = date.getSeconds()
+  const minutesPassed = hours * 60 + minutes
+  const minutesLeft = 1440 - minutesPassed
+  const hoursLeft = Math.floor(minutesLeft / 60)
+  const minsLeft = minutesLeft % 60
+  const secondsLeft = 60 - seconds
+  const secsLeft = secondsLeft % 60
+  timeLeftInDay.textContent = `${hoursLeft}h : ${minsLeft}m : ${secsLeft}`
+}
+
+
+setInterval(updateTimeLeft, 1000) 

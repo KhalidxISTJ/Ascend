@@ -26,6 +26,7 @@
   <link rel="stylesheet" href="css/navigation.css" />
   <link rel="stylesheet" href="css/index.css" />
   <link rel="stylesheet" href="css/profile.css" />
+
 </head>
 
 <body data-page="home">
@@ -82,6 +83,8 @@
             <input type="file" id="profile-picture" />
             <input type="text" id="name" placeholder="Enter your name" />
             <button type="submit">Save</button>
+            <P>Time Left</P>
+            <div id="time-left-in-day">00:00:00</div>
           </form>
         </div>
         <div class="profile-right">
@@ -171,7 +174,7 @@
   <script>
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
-        .register("/Ascend/sw.js")
+        .register("sw.js")
         .then(() => console.log("✅ Service Worker registered"))
         .catch((err) => console.log("❌ Service Worker failed:", err));
     }
@@ -184,6 +187,7 @@
   <script src="js/quests.js"></script>
   <script src="js/config.js"></script>
   <script src="js/index.js"></script>
+
 </body>
 
 </html>
