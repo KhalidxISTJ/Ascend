@@ -17,14 +17,22 @@ const sideBar = document.getElementById("sidebar");
 const sideBarOverlay = document.getElementById("sidebar-overlay");
 const hamburgerNav = document.getElementById("hamburger-nav");
 const user = localStorage.getItem("username");
-const ascendLibrary = localStorage.getItem(user + "_ascendLibrary");
-const savedQuests = localStorage.getItem(user + "_savedQuests");
-const codexData = localStorage.getItem(user + "_codexData");
-const savedQuestSections = localStorage.getItem(user + "_questSections");
-const questCategories = localStorage.getItem(user + "_questCategories");
-const skillTree = localStorage.getItem(user + "_skillTree");
-const savedPlayerData = localStorage.getItem(user + "_playerData");
-const lastResetDate = localStorage.getItem(user + "_lastResetDate");
+let ascendLibrary, savedQuests, codexData, savedQuestSections, questCategories, skillTree, savedPlayerData, lastResetDate
+if (!user) {
+  window.location.href = "splash.html"
+} else {
+
+  ascendLibrary = localStorage.getItem(user + "_ascendLibrary");
+  savedQuests = localStorage.getItem(user + "_savedQuests");
+  codexData = localStorage.getItem(user + "_codexData");
+  savedQuestSections = localStorage.getItem(user + "_questSections");
+  questCategories = localStorage.getItem(user + "_questCategories");
+  skillTree = localStorage.getItem(user + "_skillTree");
+  savedPlayerData = localStorage.getItem(user + "_playerData");
+  lastResetDate = localStorage.getItem(user + "_lastResetDate");
+}
+
+
 const exportBtn = document.getElementById("export-btn");
 const logoutBtn = document.getElementById("logout-btn");
 const importBtn = document.getElementById("import-btn");
