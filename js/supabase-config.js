@@ -120,13 +120,18 @@ function syncPush() {
 }
 
 // Run this on page load: checks if someone's signed in, and if so, syncs
+let hasPulledOnce = false;
+
 supabaseClient.auth.onAuthStateChange((event, session) => {
     console.log('AUTH EVENT:', event);
     if (session && session.user) {
         localStorage.setItem('currentUserId', session.user.id);
         localStorage.setItem('currentUserEmail', session.user.email);
-        setTimeout(() => {
-            pullFromSupabase(session.user.id, event);
-        }, 0);
+        if (!hasPulledOnce) {
+            hasPulledOnce = true;
+            setTimeout(() => {
+                pullFromSupabase(session.user.id, event);
+            }, 0);
+        }
     }
 });
