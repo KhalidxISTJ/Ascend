@@ -53,13 +53,23 @@ function collectLocalData() {
     return bundle;
 }
 
-function applyRemoteData(bundle) {
+function applyRemoteData(bundle, remoteUpdatedAt) {
     if (bundle.username) {
         localStorage.setItem('username', bundle.username);
     }
     const prefix = getPrefix();
+    const remoteTime = remoteUpdatedAt ? new Date(remoteUpdatedAt).getTime() : 0;
+
     for (const [label, key] of Object.entries(SYNC_FEATURES)) {
         if (bundle[label] !== undefined && bundle[label] !== null) {
+            const localModifiedRaw = localStorage.getItem(prefix + key + '_modifiedAt');
+            const localModified = localModifiedRaw ? parseInt(localModifiedRaw, 10) : 0;
+
+            if (localModified > remoteTime) {
+                console.log(`Skipping ${label} — local change is newer than cloud data`);
+                continue;
+            }
+
             localStorage.setItem(prefix + key, JSON.stringify(bundle[label]));
         }
     }
@@ -80,7 +90,7 @@ async function pullFromSupabase(userId, event) {
     }
 
     if (row) {
-        applyRemoteData(row.data);
+        applyRemoteData(row.data, row.updated_at);
         console.log('Pulled synced data from Supabase');
     } else {
         console.log('No synced row yet — pushing local data as the first sync');

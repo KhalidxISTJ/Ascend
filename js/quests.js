@@ -168,6 +168,7 @@ if (questRecurringElement) {
 function saveQuests() {
   const data = JSON.stringify(quests);
   localStorage.setItem(questUser + "_savedQuests", data);
+  localStorage.setItem(questUser + "_savedQuests_modifiedAt", Date.now());
   syncPush();
 }
 
