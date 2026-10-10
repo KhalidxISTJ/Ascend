@@ -1533,21 +1533,4 @@ function initializeQuestSystem() {
   }, 60000);
 }
 
-let questsInitialized = false;
-function safeInitQuestSystem() {
-  if (questsInitialized) return;
-  questsInitialized = true;
-  initializeQuestSystem();
-}
-
-if (window.syncReady) {
-  safeInitQuestSystem();
-} else {
-  window.addEventListener('syncReady', safeInitQuestSystem, { once: true });
-  setTimeout(() => {
-    if (!questsInitialized) {
-      console.warn('Sync took too long, initializing with local data anyway');
-      safeInitQuestSystem();
-    }
-  }, 20000);
-}
+initializeQuestSystem();

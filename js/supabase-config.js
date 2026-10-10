@@ -49,29 +49,39 @@ function collectLocalData() {
     for (const [label, key] of Object.entries(SYNC_FEATURES)) {
         const raw = localStorage.getItem(prefix + key);
         bundle[label] = raw ? safeParse(raw) : null;
+        const modifiedAt = localStorage.getItem(prefix + key + '_modifiedAt');
+        bundle[label + '_modifiedAt'] = modifiedAt ? parseInt(modifiedAt, 10) : 0;
     }
     return bundle;
 }
 
-function applyRemoteData(bundle, remoteUpdatedAt) {
+function applyRemoteData(bundle) {
     if (bundle.username) {
         localStorage.setItem('username', bundle.username);
     }
     const prefix = getPrefix();
-    const remoteTime = remoteUpdatedAt ? new Date(remoteUpdatedAt).getTime() : 0;
 
     for (const [label, key] of Object.entries(SYNC_FEATURES)) {
         if (bundle[label] !== undefined && bundle[label] !== null) {
+            const remoteModified = bundle[label + '_modifiedAt'] || 0;
             const localModifiedRaw = localStorage.getItem(prefix + key + '_modifiedAt');
             const localModified = localModifiedRaw ? parseInt(localModifiedRaw, 10) : 0;
 
-            if (localModified > remoteTime) {
+            if (localModified > remoteModified) {
                 console.log(`Skipping ${label} — local change is newer than cloud data`);
                 continue;
             }
 
             localStorage.setItem(prefix + key, JSON.stringify(bundle[label]));
+            if (bundle[label + '_modifiedAt']) {
+                localStorage.setItem(prefix + key + '_modifiedAt', String(bundle[label + '_modifiedAt']));
+            }
         }
+    }
+
+    if (typeof loadQuests === 'function' && typeof renderQuests === 'function') {
+        loadQuests();
+        renderQuests();
     }
 }
 
@@ -90,7 +100,7 @@ async function pullFromSupabase(userId, event) {
     }
 
     if (row) {
-        applyRemoteData(row.data, row.updated_at);
+        applyRemoteData(row.data);
         console.log('Pulled synced data from Supabase');
     } else {
         console.log('No synced row yet — pushing local data as the first sync');
