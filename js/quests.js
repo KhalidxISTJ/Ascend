@@ -1569,5 +1569,5 @@ if (window.syncReady) {
       console.warn('Sync took too long, initializing with local data anyway');
       safeInitQuestSystem();
     }
-  }, 5000);
+  }, 20000);
 }
