@@ -1490,39 +1490,42 @@ function questDebug() {
 function initializeQuestSystem() {
   console.log("🔧 Initializing quest system...");
 
-  // 1. Load sections and categories first
+  // PHASE 1 — instant local-first display, no writes, no pushes
   loadSections();
   loadCategories();
-
-  // 2. Load quests from localStorage
   loadQuests();
-  console.log("📦 After loadQuests, quests.length =", quests.length);
-
-  // 3. Migrate old quest data (adds missing fields)
-  migrateQuests();
-  console.log("📦 After migrateQuests, quests.length =", quests.length);
-
-  // 4. Run daily reset (may modify quests)
-  runDailyReset();
-  console.log("📦 After runDailyReset, quests.length =", quests.length);
-
-  // 5. Reload quests from localStorage to make sure we have the latest
-  loadQuests();
-  console.log("📦 After reload, quests.length =", quests.length);
-
-  // 6. Update prayer times
-  updatePrayerQuests();
-
-  // 7. Update order
-  updateQuestOrder();
-
-  // 8. Render
   renderSections();
   renderCategories();
   renderQuests();
-  console.log("✅ Quest system ready. Final quests.length =", quests.length);
 
-  // 9. Check for new day every minute
+  // PHASE 2 — reconcile with the cloud BEFORE doing anything that
+  // could resave/push. Waiting for the pull first means this device
+  // never pushes a stale pre-sync copy that could resurrect a
+  // deletion made on another device.
+  let phase2Ran = false;
+  function runPhase2() {
+    if (phase2Ran) return;
+    phase2Ran = true;
+
+    migrateQuests();
+    runDailyReset();
+    loadQuests();
+    updatePrayerQuests();
+    updateQuestOrder();
+    renderSections();
+    renderCategories();
+    renderQuests();
+    console.log("✅ Quest system fully reconciled. quests.length =", quests.length);
+  }
+
+  if (window.syncReady) {
+    runPhase2();
+  } else {
+    window.addEventListener('syncReady', runPhase2, { once: true });
+    setTimeout(runPhase2, 6000); // fallback if signed out / offline / slow network
+  }
+
+  // Check for new day every minute
   setInterval(() => {
     if (isNewDay()) {
       console.log("🔄 New day detected! Running reset...");
