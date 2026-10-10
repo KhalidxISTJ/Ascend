@@ -252,57 +252,31 @@ function loadCategories() {
 // =====================
 
 function migrateQuests() {
-  let changed = false;
+  let anyChanged = false;
 
   for (const quest of quests) {
-    if (!quest.section) {
-      quest.section = "General";
-      changed = true;
-    }
+    let changed = false;
 
-    if (!quest.priority) {
-      quest.priority = "Medium";
-      changed = true;
-    }
-
-    if (typeof quest.skippedToday !== "boolean") {
-      quest.skippedToday = false;
-      changed = true;
-    }
-
-    if (typeof quest.cancelledToday !== "boolean") {
-      quest.cancelledToday = false;
-      changed = true;
-    }
-
-    if (!quest.createdAt) {
-      quest.createdAt = Date.now();
-      changed = true;
-    }
-
-    // Add repeatDays if missing
-    if (!quest.repeatDays) {
-      quest.repeatDays = [];
-      changed = true;
-    }
+    if (!quest.section) { quest.section = "General"; changed = true; }
+    if (!quest.priority) { quest.priority = "Medium"; changed = true; }
+    if (typeof quest.skippedToday !== "boolean") { quest.skippedToday = false; changed = true; }
+    if (typeof quest.cancelledToday !== "boolean") { quest.cancelledToday = false; changed = true; }
+    if (!quest.createdAt) { quest.createdAt = Date.now(); changed = true; }
+    if (!quest.repeatDays) { quest.repeatDays = []; changed = true; }
 
     if (quest.completed === true) {
-      if (quest.status !== "completed") {
-        quest.status = "completed";
-        changed = true;
-      }
+      if (quest.status !== "completed") { quest.status = "completed"; changed = true; }
       quest.skippedToday = false;
     } else {
-      if (quest.status !== "active") {
-        quest.status = "active";
-        changed = true;
-      }
+      if (quest.status !== "active") { quest.status = "active"; changed = true; }
       quest.completed = false;
     }
 
-    if (changed) {
-      saveQuests();
-    }
+    if (changed) anyChanged = true;
+  }
+
+  if (anyChanged) {
+    saveQuests();
   }
 }
 
@@ -1165,10 +1139,16 @@ function runDailyReset() {
 
 function updateQuestOrder() {
   const active = quests.filter((q) => !q.completed);
+  let changed = false;
   active.forEach((quest, index) => {
-    quest.order = index + 1;
+    if (quest.order !== index + 1) {
+      quest.order = index + 1;
+      changed = true;
+    }
   });
-  saveQuests();
+  if (changed) {
+    saveQuests();
+  }
 }
 
 // =====================
