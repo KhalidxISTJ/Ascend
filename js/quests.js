@@ -165,7 +165,10 @@ if (questRecurringElement) {
 // =====================
 // SAVE SYSTEM
 // =====================
-
+function saveQuests() {
+  const data = JSON.stringify(quests);
+  localStorage.setItem(questUser + "_savedQuests", data);
+}
 
 function saveSections() {
   localStorage.setItem(questUser + "_questSections", JSON.stringify(sections));

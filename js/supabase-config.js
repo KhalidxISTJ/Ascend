@@ -120,6 +120,6 @@ supabaseClient.auth.onAuthStateChange(async (event, session) => {
     if (session && session.user) {
         localStorage.setItem('currentUserId', session.user.id);
         localStorage.setItem('currentUserEmail', session.user.email);
-        await pullFromSupabase(session.user.id, event);
+        // await pullFromSupabase(session.user.id, event);
     }
 });
