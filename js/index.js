@@ -376,7 +376,7 @@ function importbtn(event) {
 }
 importBtn.addEventListener("click", importbtn);
 
-function handleImport(event) {
+async function handleImport(event) {
   const file = event.target.files[0];
 
   if (!file) {
@@ -385,23 +385,20 @@ function handleImport(event) {
 
   const reader = new FileReader();
 
-  reader.onload = function () {
+  reader.onload = async function () {
     try {
       const backup = JSON.parse(reader.result);
 
-      // Check it's an Ascend export
       if (backup.app !== "Ascend") {
         alert("❌ Invalid file. This isn't an Ascend backup.");
         return;
       }
 
-      // Check it has data
       if (!backup.data) {
         alert("❌ No data found in the backup.");
         return;
       }
 
-      // Confirm before replacing
       const confirmed = confirm(
         "⚠️ Importing will REPLACE all your current data with the backup.\n\nAnything you've added since the backup will be lost.\n\nContinue?",
       );
@@ -410,13 +407,19 @@ function handleImport(event) {
         return;
       }
 
-      // Write each key back to localStorage with the user prefix
+      const now = Date.now();
       Object.keys(backup.data).forEach((key) => {
         const value = backup.data[key];
         if (value !== null && value !== undefined) {
           localStorage.setItem(user + "_" + key, value);
+          localStorage.setItem(user + "_" + key + "_modifiedAt", now);
         }
       });
+
+      const userId = localStorage.getItem("currentUserId");
+      if (userId && typeof pushToSupabase === "function") {
+        await pushToSupabase(userId);
+      }
 
       alert("✅ Import complete! Reloading...");
       window.location.reload();
