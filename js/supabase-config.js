@@ -74,6 +74,8 @@ async function pullFromSupabase(userId, event) {
 
     if (error) {
         console.error('Pull error:', error.message);
+        window.syncReady = true;
+        window.dispatchEvent(new Event('syncReady'));
         return;
     }
 
@@ -84,6 +86,9 @@ async function pullFromSupabase(userId, event) {
         console.log('No synced row yet — pushing local data as the first sync');
         await pushToSupabase(userId);
     }
+
+    window.syncReady = true;
+    window.dispatchEvent(new Event('syncReady'));
 
     if (window.location.pathname.endsWith('syncing.html')) {
         window.location.href = 'index.html';

@@ -168,6 +168,7 @@ if (questRecurringElement) {
 function saveQuests() {
   const data = JSON.stringify(quests);
   localStorage.setItem(questUser + "_savedQuests", data);
+  syncPush();
 }
 
 function saveSections() {
@@ -1551,4 +1552,21 @@ function initializeQuestSystem() {
   }, 60000);
 }
 
-initializeQuestSystem();
+let questsInitialized = false;
+function safeInitQuestSystem() {
+  if (questsInitialized) return;
+  questsInitialized = true;
+  initializeQuestSystem();
+}
+
+if (window.syncReady) {
+  safeInitQuestSystem();
+} else {
+  window.addEventListener('syncReady', safeInitQuestSystem, { once: true });
+  setTimeout(() => {
+    if (!questsInitialized) {
+      console.warn('Sync took too long, initializing with local data anyway');
+      safeInitQuestSystem();
+    }
+  }, 5000);
+}
