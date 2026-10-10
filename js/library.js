@@ -1136,6 +1136,10 @@
   function saveLibrary() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(library));
+      localStorage.setItem(STORAGE_KEY + "_modifiedAt", Date.now());
+      if (typeof syncPush === "function") {
+        syncPush();
+      }
     } catch (error) {
       console.error("Ascend Library: Failed to save library.", error);
     }

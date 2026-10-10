@@ -26,6 +26,7 @@ const SYNC_FEATURES = {
     playerData: 'savedPlayerData',
     questSections: 'savedQuestSections',
     questCategories: 'questCategories',
+    library: 'ascendLibrary',
 };
 
 function getPrefix() {
