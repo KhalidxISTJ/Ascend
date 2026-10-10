@@ -26,7 +26,6 @@ const SYNC_FEATURES = {
     playerData: 'savedPlayerData',
     questSections: 'savedQuestSections',
     questCategories: 'questCategories',
-    lastResetDate: 'lastResetDate'
 };
 
 function getPrefix() {
