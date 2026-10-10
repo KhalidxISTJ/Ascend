@@ -9,7 +9,7 @@
      STORAGE
   ======================================================= */
 
-  const currentUser = localStorage.getItem("username");
+  const currentUser = localStorage.getItem("currentUserEmail");
   const STORAGE_KEY = currentUser + "_ascendLibrary";
 
   let library = {

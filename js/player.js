@@ -5,7 +5,7 @@ const profileImage = document.getElementById("profile-img");
 const profileImageInput = document.getElementById("profile-picture");
 const APP_VERSION = "v1.0.0 Alpha";
 const versionElement = document.getElementById("version");
-const currentUser = localStorage.getItem("username");
+const currentUser = localStorage.getItem("currentUserEmail");
 
 if (versionElement) {
   versionElement.textContent = APP_VERSION;

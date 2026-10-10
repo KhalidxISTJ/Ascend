@@ -19,7 +19,7 @@ const addCategoryBtn = document.getElementById("addCategoryBtn");
 const sortQuestsElement = document.getElementById("sortQuests");
 const daySelectorContainer = document.getElementById("daySelectorContainer");
 const repeatDayCheckboxes = document.querySelectorAll(".repeat-day");
-const questUser = localStorage.getItem("username");
+const questUser = localStorage.getItem("currentUserEmail");
 
 /* =======================================================
    PRAYER TIMES API (Albany, NY - ISNA Method)
@@ -168,6 +168,7 @@ if (questRecurringElement) {
 function saveQuests() {
   const data = JSON.stringify(quests);
   localStorage.setItem(questUser + "_savedQuests", data);
+  syncPush();
 }
 
 function saveSections() {

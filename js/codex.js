@@ -7,7 +7,7 @@
 // STORAGE
 // =====================================================
 
-const codexUser = localStorage.getItem("username");
+const codexUser = localStorage.getItem("currentUserEmail");
 
 let testTime = null;
 

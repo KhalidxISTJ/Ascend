@@ -2,7 +2,7 @@
 const calendar = document.getElementById("calendar-wrapper")
 const time = document.getElementById("time-column")
 const events = document.getElementById("event-column")
-const user = localStorage.getItem("username")
+const user = localStorage.getItem("currentUserEmail")
 const allDayEvents = document.getElementById("all-day-events")
 
 let quests = []

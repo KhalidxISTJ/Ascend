@@ -16,12 +16,13 @@ const upcomingQuestsElement = document.getElementById("upcomingQuests");
 const sideBar = document.getElementById("sidebar");
 const sideBarOverlay = document.getElementById("sidebar-overlay");
 const hamburgerNav = document.getElementById("hamburger-nav");
-const user = localStorage.getItem("username");
+const user = localStorage.getItem("currentUserEmail");
 let ascendLibrary, savedQuests, codexData, savedQuestSections, questCategories, skillTree, savedPlayerData, lastResetDate
-if (!user) {
+const justSignedIn = window.location.hash.includes('access_token');
+
+if (!user && !justSignedIn) {
   window.location.href = "splash.html"
 } else {
-
   ascendLibrary = localStorage.getItem(user + "_ascendLibrary");
   savedQuests = localStorage.getItem(user + "_savedQuests");
   codexData = localStorage.getItem(user + "_codexData");
@@ -361,9 +362,12 @@ function exportUserData() {
 }
 exportBtn.addEventListener("click", exportUserData);
 
-function logout(event) {
-  localStorage.removeItem("username")
-  window.location.href = "splash.html"
+async function logout(event) {
+  await supabaseClient.auth.signOut();
+  localStorage.removeItem("username");
+  localStorage.removeItem("currentUserEmail");
+  localStorage.removeItem("currentUserId");
+  window.location.href = "splash.html";
 }
 logoutBtn.addEventListener("click", logout);
 

@@ -81,7 +81,7 @@ let skillTree = [
   },
 ];
 
-const skillUser = localStorage.getItem("username");
+const skillUser = localStorage.getItem("currentUserEmail");
 const savedSkillTree = localStorage.getItem(skillUser + "_skillTree");
 
 if (savedSkillTree) {
