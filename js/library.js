@@ -27,6 +27,8 @@
   let savedLength = 0;
   let isApplyingSize = false;
 
+
+
   /* =======================================================
      DOM
   ======================================================= */
@@ -46,6 +48,25 @@
   const searchCount = document.getElementById("librarySearchCount");
   const searchClose = document.getElementById("librarySearchClose");
 
+
+
+  let saveDebounceTimer = null;
+
+  function debouncedSaveCurrentPage() {
+    if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
+    saveDebounceTimer = setTimeout(() => {
+      saveDebounceTimer = null;
+      saveCurrentPage();
+    }, 1000);
+  }
+
+  function flushPendingSave() {
+    if (saveDebounceTimer) {
+      clearTimeout(saveDebounceTimer);
+      saveDebounceTimer = null;
+      saveCurrentPage();
+    }
+  }
 
   /* =======================================================
      INITIALIZATION
@@ -107,7 +128,7 @@
 
     window.quill.on("text-change", () => {
       if (!isRestoringHistory) {
-        saveCurrentPage();
+        debouncedSaveCurrentPage();
       }
     });
 
@@ -709,6 +730,7 @@
   ======================================================= */
 
   function openPage(pageId) {
+    flushPendingSave();
     const page = library.pages.find((item) => item.id === pageId);
     if (!page) return;
 
@@ -886,7 +908,7 @@
       });
 
     deletePageBtn?.addEventListener("click", deleteCurrentPage);
-    pageTitle?.addEventListener("input", saveCurrentPage);
+    pageTitle?.addEventListener("input", debouncedSaveCurrentPage);
 
     undoBtn?.addEventListener("click", undo);
     redoBtn?.addEventListener("click", redo);
@@ -1193,6 +1215,6 @@
   /* =======================================================
      START
   ======================================================= */
-
+  window.addEventListener("beforeunload", flushPendingSave);
   document.addEventListener("DOMContentLoaded", init);
 })();

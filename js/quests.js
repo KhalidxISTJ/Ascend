@@ -174,6 +174,10 @@ function saveQuests() {
 
 function saveSections() {
   localStorage.setItem(questUser + "_questSections", JSON.stringify(sections));
+  localStorage.setItem(questUser + "_questSections_modifiedAt", Date.now());
+  if (typeof syncPush === "function") {
+    syncPush();
+  }
 }
 
 function saveCategories() {

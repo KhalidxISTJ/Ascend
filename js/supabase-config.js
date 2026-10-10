@@ -23,8 +23,8 @@ const SYNC_FEATURES = {
     quests: 'savedQuests',
     skillTree: 'skillTree',
     codexData: 'codexData',
-    playerData: 'savedPlayerData',
-    questSections: 'savedQuestSections',
+    playerData: 'playerData',
+    questSections: 'questSections',
     questCategories: 'questCategories',
     library: 'ascendLibrary',
 };
