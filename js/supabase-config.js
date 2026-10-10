@@ -5,10 +5,11 @@ const googleSignINBtn = document.getElementById("google-signin-btn");
 
 if (googleSignINBtn) {
     googleSignINBtn.addEventListener('click', async () => {
+        const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
         const { error } = await supabaseClient.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: window.location.origin + '/syncing.html'
+                redirectTo: window.location.origin + basePath + 'syncing.html'
             }
         });
         if (error) {
