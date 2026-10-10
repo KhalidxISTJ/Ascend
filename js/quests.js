@@ -168,7 +168,7 @@ if (questRecurringElement) {
 function saveQuests() {
   const data = JSON.stringify(quests);
   localStorage.setItem(questUser + "_savedQuests", data);
-  syncPush();
+
 }
 
 function saveSections() {
