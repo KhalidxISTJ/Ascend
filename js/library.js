@@ -71,7 +71,7 @@
         pages: library.pages.map((p) => p.id),
       };
       library.sections.push(defaultSection);
-      saveLibrary();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(library)); // local only — don't push an empty default
     }
 
     const Size = Quill.import("attributors/style/size");
