@@ -16,13 +16,25 @@ const upcomingQuestsElement = document.getElementById("upcomingQuests");
 const sideBar = document.getElementById("sidebar");
 const sideBarOverlay = document.getElementById("sidebar-overlay");
 const hamburgerNav = document.getElementById("hamburger-nav");
-const user = localStorage.getItem("currentUserEmail");
+// `user` was a const read once at script-eval time — the same bug class as
+// Library's: Supabase's session restore after login is async, so this could
+// still read null and lock the whole dashboard onto "null_"-prefixed data
+// for that page load. It's `let` now, and refreshUserScopedData() (called
+// once immediately below, then again once syncReady actually fires) keeps
+// it current instead of trusting a single early read.
+// TODO: this re-read-on-syncReady pattern is duplicated across index.js,
+// quests.js and library.js now — fold them into one shared sync module.
+let user = localStorage.getItem("currentUserEmail");
 let ascendLibrary, savedQuests, codexData, savedQuestSections, questCategories, skillTree, savedPlayerData, lastResetDate
+let skippedToday = [];
 const justSignedIn = window.location.hash.includes('access_token');
 
-if (!user && !justSignedIn) {
-  window.location.href = "splash.html"
-} else {
+function refreshUserScopedData() {
+  user = localStorage.getItem("currentUserEmail");
+  if (!user && !justSignedIn) {
+    window.location.href = "splash.html";
+    return false;
+  }
   ascendLibrary = localStorage.getItem(user + "_ascendLibrary");
   savedQuests = localStorage.getItem(user + "_savedQuests");
   codexData = localStorage.getItem(user + "_codexData");
@@ -31,7 +43,11 @@ if (!user && !justSignedIn) {
   skillTree = localStorage.getItem(user + "_skillTree");
   savedPlayerData = localStorage.getItem(user + "_playerData");
   lastResetDate = localStorage.getItem(user + "_lastResetDate");
+  skippedToday = JSON.parse(localStorage.getItem(user + "_skippedToday")) || [];
+  return true;
 }
+
+refreshUserScopedData();
 
 
 const exportBtn = document.getElementById("export-btn");
@@ -107,7 +123,6 @@ function getQuestTimeState(quest) {
   // Currently inside the scheduled window
   return "active";
 }
-let skippedToday = JSON.parse(localStorage.getItem(user + "_skippedToday")) || [];
 function skipQuest(quest) {
   if (!quest || quest.status === "completed") {
     return;
@@ -214,6 +229,17 @@ updateDashboard();
 window.addEventListener("questStateChanged", () => {
   updateDashboard();
 });
+
+// Re-read the signed-in user's actual data once Supabase's pull genuinely
+// finishes, and redraw. Covers the case where this page's very first paint
+// above ran before sign-in had resolved (see refreshUserScopedData above).
+if (!window.syncReady) {
+  window.addEventListener("syncReady", () => {
+    if (refreshUserScopedData()) {
+      updateDashboard();
+    }
+  }, { once: true });
+}
 
 // =====================
 // TIMER
@@ -456,4 +482,4 @@ function updateTimeLeft() {
 }
 
 
-setInterval(updateTimeLeft, 1000) 
+setInterval(updateTimeLeft, 1000)
