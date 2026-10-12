@@ -21,9 +21,9 @@ const hamburgerNav = document.getElementById("hamburger-nav");
 // still read null and lock the whole dashboard onto "null_"-prefixed data
 // for that page load. It's `let` now, and refreshUserScopedData() (called
 // once immediately below, then again once syncReady actually fires) keeps
-// it current instead of trusting a single early read.
-// TODO: this re-read-on-syncReady pattern is duplicated across index.js,
-// quests.js and library.js now — fold them into one shared sync module.
+// it current instead of trusting a single early read. The actual wait is
+// now whenSyncReady() in supabase-config.js, shared by every page instead
+// of each one rolling its own copy.
 let user = localStorage.getItem("currentUserEmail");
 let ascendLibrary, savedQuests, codexData, savedQuestSections, questCategories, skillTree, savedPlayerData, lastResetDate
 let skippedToday = [];
@@ -233,13 +233,14 @@ window.addEventListener("questStateChanged", () => {
 // Re-read the signed-in user's actual data once Supabase's pull genuinely
 // finishes, and redraw. Covers the case where this page's very first paint
 // above ran before sign-in had resolved (see refreshUserScopedData above).
-if (!window.syncReady) {
-  window.addEventListener("syncReady", () => {
-    if (refreshUserScopedData()) {
-      updateDashboard();
-    }
-  }, { once: true });
-}
+// whenSyncReady is shared in supabase-config.js — it also just runs
+// immediately if window.syncReady is already true, so this is safe even
+// though updateDashboard() already ran once above.
+whenSyncReady(() => {
+  if (refreshUserScopedData()) {
+    updateDashboard();
+  }
+});
 
 // =====================
 // TIMER

@@ -1232,23 +1232,11 @@
   ======================================================= */
   window.addEventListener("beforeunload", flushPendingSave);
 
-  // Same reconcile-before-load gate quests.js uses: wait for the Supabase
-  // pull to finish (or a fallback timeout if signed out/offline/slow) before
-  // running init(), so the page never loads or saves against a stale
-  // pre-sync "null_" copy while the real signed-in prefix is still resolving.
-  let libraryInitRan = false;
-  function runLibraryInit() {
-    if (libraryInitRan) return;
-    libraryInitRan = true;
-    init();
-  }
-
+  // Same reconcile-before-load gate quests.js uses (see whenSyncReady in
+  // supabase-config.js): wait for the Supabase pull to finish before running
+  // init(), so the page never loads or saves against a stale pre-sync
+  // "null_" copy while the real signed-in prefix is still resolving.
   document.addEventListener("DOMContentLoaded", () => {
-    if (window.syncReady) {
-      runLibraryInit();
-    } else {
-      window.addEventListener("syncReady", runLibraryInit, { once: true });
-      setTimeout(runLibraryInit, 6000);
-    }
+    whenSyncReady(init);
   });
 })();

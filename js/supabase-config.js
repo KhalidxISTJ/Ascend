@@ -133,6 +133,26 @@ async function pushToSupabase(userId) {
     }
 }
 
+// Shared by every page (loads before index.js/quests.js/library.js): runs
+// `callback` once Supabase's pull has genuinely finished (window.syncReady),
+// or after a 6s fallback if signed out/offline/slow. Was previously copied
+// into each page with its own local flag — call this instead of rolling a
+// new copy.
+function whenSyncReady(callback) {
+    let ran = false;
+    function run() {
+        if (ran) return;
+        ran = true;
+        callback();
+    }
+    if (window.syncReady) {
+        run();
+    } else {
+        window.addEventListener('syncReady', run, { once: true });
+        setTimeout(run, 6000);
+    }
+}
+
 function syncPush() {
     const userId = localStorage.getItem('currentUserId');
     if (userId) {

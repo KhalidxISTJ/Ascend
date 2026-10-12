@@ -1506,11 +1506,7 @@ function initializeQuestSystem() {
   // could resave/push. Waiting for the pull first means this device
   // never pushes a stale pre-sync copy that could resurrect a
   // deletion made on another device.
-  let phase2Ran = false;
   function runPhase2() {
-    if (phase2Ran) return;
-    phase2Ran = true;
-
     migrateQuests();
     runDailyReset();
     loadQuests();
@@ -1522,12 +1518,7 @@ function initializeQuestSystem() {
     console.log("✅ Quest system fully reconciled. quests.length =", quests.length);
   }
 
-  if (window.syncReady) {
-    runPhase2();
-  } else {
-    window.addEventListener('syncReady', runPhase2, { once: true });
-    setTimeout(runPhase2, 6000); // fallback if signed out / offline / slow network
-  }
+  whenSyncReady(runPhase2);
 
   // Check for new day every minute
   setInterval(() => {
