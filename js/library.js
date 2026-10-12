@@ -9,8 +9,15 @@
      STORAGE
   ======================================================= */
 
-  const currentUser = localStorage.getItem("currentUserEmail");
-  const STORAGE_KEY = currentUser + "_ascendLibrary";
+  // Resolved fresh on every call instead of once at script-load time.
+  // Reading it once at the top was the Library sync bug: this script can
+  // evaluate before Supabase finishes restoring the signed-in session, so
+  // currentUserEmail could still be null here, locking the whole page onto
+  // "null_ascendLibrary" even after sign-in resolved a moment later.
+  function getStorageKey() {
+    const currentUser = localStorage.getItem("currentUserEmail");
+    return currentUser + "_ascendLibrary";
+  }
 
   let library = {
     sections: [],
@@ -81,6 +88,7 @@
 
     console.log("Init started");
 
+    runLegacyLibraryMigration();
     loadLibrary();
 
     console.log("Library loaded:", library);
@@ -92,7 +100,7 @@
         pages: library.pages.map((p) => p.id),
       };
       library.sections.push(defaultSection);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(library)); // local only — don't push an empty default
+      localStorage.setItem(getStorageKey(), JSON.stringify(library)); // local only — don't push an empty default
     }
 
     const Size = Quill.import("attributors/style/size");
@@ -1138,7 +1146,7 @@
 
   function loadLibrary() {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = localStorage.getItem(getStorageKey());
       if (!saved) return;
 
       const parsed = JSON.parse(saved);
@@ -1157,8 +1165,9 @@
 
   function saveLibrary() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(library));
-      localStorage.setItem(STORAGE_KEY + "_modifiedAt", Date.now());
+      const key = getStorageKey();
+      localStorage.setItem(key, JSON.stringify(library));
+      localStorage.setItem(key + "_modifiedAt", Date.now());
       if (typeof syncPush === "function") {
         syncPush();
       }
@@ -1167,54 +1176,79 @@
     }
   }
 
-  // Migration: Add sections to existing data
-  const checkData = JSON.parse(
-    localStorage.getItem(currentUser + "_ascendLibrary") || '{"pages":[]}',
-  );
+  // Migration: Add sections to existing data.
+  // Moved into a function (was top-level IIFE code that ran at script-eval
+  // time, before DOMContentLoaded and before Supabase could resolve the
+  // signed-in session) and is now called from init(), after the syncReady
+  // gate below — see getStorageKey() for why that ordering matters.
+  function runLegacyLibraryMigration() {
+    const checkData = JSON.parse(
+      localStorage.getItem(getStorageKey()) || '{"pages":[]}',
+    );
 
-  if (checkData.pages && checkData.pages.length > 0 && !checkData.sections) {
-    const defaultSection = {
-      id: createId(),
-      title: "📁 Uncategorized",
-      pages: checkData.pages.map((p) => p.id),
-    };
-    checkData.sections = [defaultSection];
-    checkData.selectedPageId = checkData.selectedPageId || null;
-    localStorage.setItem(currentUser + "_ascendLibrary", JSON.stringify(checkData));
-  }
+    if (checkData.pages && checkData.pages.length > 0 && !checkData.sections) {
+      const defaultSection = {
+        id: createId(),
+        title: "📁 Uncategorized",
+        pages: checkData.pages.map((p) => p.id),
+      };
+      checkData.sections = [defaultSection];
+      checkData.selectedPageId = checkData.selectedPageId || null;
+      localStorage.setItem(getStorageKey(), JSON.stringify(checkData));
+    }
 
-  if (checkData.pages && checkData.pages.length === 0) {
-    const defaultPage = {
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2),
-      title: "Welcome",
-      parentId: null,
-      content: JSON.stringify({
-        ops: [
-          {
-            insert:
-              "Welcome to Ascend Library! Create sections and organize your knowledge.",
-          },
-        ],
-      }),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    if (checkData.pages && checkData.pages.length === 0) {
+      const defaultPage = {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+        title: "Welcome",
+        parentId: null,
+        content: JSON.stringify({
+          ops: [
+            {
+              insert:
+                "Welcome to Ascend Library! Create sections and organize your knowledge.",
+            },
+          ],
+        }),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
 
-    const defaultSection = {
-      id: createId(),
-      title: "📁 Uncategorized",
-      pages: [defaultPage.id],
-    };
+      const defaultSection = {
+        id: createId(),
+        title: "📁 Uncategorized",
+        pages: [defaultPage.id],
+      };
 
-    checkData.pages = [defaultPage];
-    checkData.sections = [defaultSection];
-    checkData.selectedPageId = defaultPage.id;
-    localStorage.setItem(currentUser + "_ascendLibrary", JSON.stringify(checkData));
+      checkData.pages = [defaultPage];
+      checkData.sections = [defaultSection];
+      checkData.selectedPageId = defaultPage.id;
+      localStorage.setItem(getStorageKey(), JSON.stringify(checkData));
+    }
   }
 
   /* =======================================================
      START
   ======================================================= */
   window.addEventListener("beforeunload", flushPendingSave);
-  document.addEventListener("DOMContentLoaded", init);
+
+  // Same reconcile-before-load gate quests.js uses: wait for the Supabase
+  // pull to finish (or a fallback timeout if signed out/offline/slow) before
+  // running init(), so the page never loads or saves against a stale
+  // pre-sync "null_" copy while the real signed-in prefix is still resolving.
+  let libraryInitRan = false;
+  function runLibraryInit() {
+    if (libraryInitRan) return;
+    libraryInitRan = true;
+    init();
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    if (window.syncReady) {
+      runLibraryInit();
+    } else {
+      window.addEventListener("syncReady", runLibraryInit, { once: true });
+      setTimeout(runLibraryInit, 6000);
+    }
+  });
 })();
