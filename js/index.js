@@ -16,14 +16,6 @@ const upcomingQuestsElement = document.getElementById("upcomingQuests");
 const sideBar = document.getElementById("sidebar");
 const sideBarOverlay = document.getElementById("sidebar-overlay");
 const hamburgerNav = document.getElementById("hamburger-nav");
-// `user` was a const read once at script-eval time — the same bug class as
-// Library's: Supabase's session restore after login is async, so this could
-// still read null and lock the whole dashboard onto "null_"-prefixed data
-// for that page load. It's `let` now, and refreshUserScopedData() (called
-// once immediately below, then again once syncReady actually fires) keeps
-// it current instead of trusting a single early read. The actual wait is
-// now whenSyncReady() in supabase-config.js, shared by every page instead
-// of each one rolling its own copy.
 let user = localStorage.getItem("currentUserEmail");
 let ascendLibrary, savedQuests, codexData, savedQuestSections, questCategories, skillTree, savedPlayerData, lastResetDate
 let skippedToday = [];

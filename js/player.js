@@ -6,6 +6,7 @@ const profileImageInput = document.getElementById("profile-picture");
 const APP_VERSION = "v1.0.0 Alpha";
 const versionElement = document.getElementById("version");
 const currentUser = localStorage.getItem("currentUserEmail");
+const sideBarName = document.getElementById("sidebar-username")
 
 if (versionElement) {
     versionElement.textContent = APP_VERSION;
@@ -104,7 +105,7 @@ function updateUI() {
     if (xpNumberSpan) {
         const xpRequired = getXPRequired(playerData.level);
 
-        xpNumberSpan.textContent = `${playerData.xp} / ${xpRequired} XP`;
+        xpNumberSpan.textContent = `${playerData.xp} / ${xpRequired}`;
     }
 
     if (xpFill) {
@@ -197,8 +198,7 @@ if (profileImage && playerData.profileImage) {
     profileImage.src = playerData.profileImage;
 }
 
-// TEST
-// addXP(10);
+sideBarName.textContent = playerData.name;
 
 // ======================
 // PLAYER NAME

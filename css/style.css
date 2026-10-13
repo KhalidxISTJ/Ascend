@@ -1,4 +1,13 @@
 /* =====================================================
+   ROOT STYLES
+===================================================== */
+
+:root {
+  --bg-top: #1a2340;
+  --bg-bottom: #0a0e1a;
+}
+
+/* =====================================================
    RESET
 ===================================================== */
 
@@ -11,7 +20,7 @@
 }
 
 /* =====================================================
-   BODY 
+   BODY
 ===================================================== */
 
 body {
@@ -20,22 +29,42 @@ body {
   font-size: 1rem;
   line-height: 1.6;
   color: #111;
-  background-color: white;
-  background-image: linear-gradient(
-    rgba(255, 255, 255, 0.35),
-    rgba(0, 0, 0, 0.25)
-  );
-  background-repeat: no-repeat;
+  background-image:
+    /*linear-gradient(to bottom, rgba(245, 243, 243, 0.8), rgba(245, 243, 243, 0.8) 1px, transparent, transparent 1px),*/
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.25'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    repeating-linear-gradient(to right, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.04) 1px, transparent 1px, transparent 40px),
+    repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.04) 1px, transparent 1px, transparent 40px),
+    linear-gradient(var(--bg-top), var(--bg-bottom));
   background-position: center;
-  background-size: contain;
-  background-attachment: fixed;
+  background-size:
+    /*100% 60px,*/
+    150px 150px, contain, contain, contain;
+  background-attachment: fixed, fixed, fixed, fixed;
+  background-repeat:
+    /*no-repeat,*/
+    repeat, repeat, repeat, repeat;
+  /*  animation: crt-scanline 20s linear infinite; */
 }
+
+/*@ keyframes crt-scanline {
+  0% {
+    background-position: center -60px, center, center, center, center;
+  }
+
+  100% {
+    background-position: center calc(100vh + 60px), center, center, center, center;
+  }
+} */
+
+
+
 .ascend-logo {
-  height: 60px; /* adjust to match your header height */
+  height: 60px;
   width: auto;
   display: inline-block;
   vertical-align: middle;
 }
+
 /* =====================================================
    TYPOGRAPHY
 ===================================================== */

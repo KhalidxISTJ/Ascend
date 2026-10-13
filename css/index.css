@@ -43,7 +43,7 @@
   display: block;
   width: 25px;
   height: 2.5px;
-  background-color: #0f172a;
+  background-color: #ffffff;
   border-radius: 2px;
 }
 
@@ -123,9 +123,9 @@
   display: flex;
   flex-wrap: wrap;
   gap: 28px;
-  background: #f8fafc;
-  border: 2px solid #cbd5e1;
-  border-radius: 16px;
+  background: rgba(26, 35, 64, 0.25);
+  border: 2px solid #7dd3fc;
+  border-radius: 1px;
   padding: 24px 28px;
   margin-bottom: 28px;
   align-items: flex-start;
@@ -212,18 +212,18 @@
 }
 
 .stat-card {
-  background: #ffffff;
-  border: 2px solid #cbd5e1;
-  border-radius: 10px;
+  background: rgba(26, 35, 64, 0.4);
+  border: 2px solid #7dd3fc;
+  border-radius: 1px;
   padding: 12px 16px;
   font-size: 0.95rem;
   font-weight: 500;
-  color: #1e293b;
+  color: #e2e8f0;
 }
 
 .stat-card strong {
-  color: #0f172a;
-  font-weight: 700;
+  color: #e2e8f0;
+  font-weight: 72200;
 }
 
 /* XP Card */
@@ -260,9 +260,9 @@
 }
 
 .home-card {
-  background: #f8fafc;
-  border: 2px solid #cbd5e1;
-  border-radius: 14px;
+  background: rgba(26, 35, 64, 0.3);
+  border: 2px solid #7dd3fc;
+  border-radius: 1px;
   padding: 18px 20px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
 }
@@ -270,7 +270,7 @@
 .home-card h3 {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #475569;
+  color: #94c5e0;
   margin: 0 0 12px 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -279,13 +279,13 @@
 .current-quest {
   font-size: 1.05rem;
   font-weight: 600;
-  color: #0f172a;
+  color: #e2e8f0;
   min-height: 44px;
 }
 
 .quest-list {
   font-size: 0.95rem;
-  color: #1e293b;
+  color: #e2e8f0;
   font-weight: 500;
 }
 
@@ -293,6 +293,14 @@
   color: #94a3b8;
   font-style: italic;
   font-weight: 400;
+}
+
+#profile-form p {
+  color: #e2e8f0;
+}
+
+#time-left-in-day {
+  color: #e2e8f0;
 }
 
 /* Timer */
@@ -308,7 +316,7 @@
   font-weight: 700;
   font-family: "Space Grotesk", monospace;
   margin: 4px 0 10px;
-  color: #0f172a;
+  color: #e2e8f0;
   text-align: center;
   letter-spacing: 2px;
 }
@@ -330,33 +338,35 @@
   gap: 8px;
   justify-content: center;
   flex-wrap: wrap;
+
 }
 
 .timer-buttons button {
   padding: 8px 20px;
-  border: 2px solid #cbd5e1;
-  border-radius: 8px;
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
-  background: #ffffff;
-  color: #1e293b;
   transition: all 0.15s;
+  background: rgba(26, 35, 64, 0.3);
+  border: 2px solid #7dd3fc;
+  border-radius: 1px;
+  color: #e2e8f0;
 }
 
 .timer-buttons button:hover {
-  background: #f1f5f9;
-  border-color: #94a3b8;
+  background: rgba(15, 23, 42, 0.8);
+  box-shadow: 0 0 8px rgba(125, 211, 252, 0.6);
 }
 
 .timer-buttons #startTimer {
-  background: #1e293b;
-  color: white;
-  border-color: #1e293b;
+  background: #7dd3fc;
+  color: #0f172a;
+  border-color: #7dd3fc;
 }
 
 .timer-buttons #startTimer:hover {
   background: #0f172a;
+  color: #e2e8f0
 }
 
 /* Quest Actions */
@@ -534,6 +544,8 @@
     align-items: center;
     padding: 18px;
     gap: 18px;
+    color: #e2e8f0;
+    border-color: #7dd3fc;
   }
 
   .profile-left {
