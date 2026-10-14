@@ -86,6 +86,8 @@ function applyRemoteData(bundle) {
     }
 }
 
+let hasPulledSuccessfully = false;
+
 async function pullFromSupabase(userId, event) {
     const { data: row, error } = await supabaseClient
         .from('user_data')
@@ -95,6 +97,7 @@ async function pullFromSupabase(userId, event) {
 
     if (error) {
         console.error('Pull error:', error.message);
+        hasPulledSuccessfully = true;
         window.syncReady = true;
         window.dispatchEvent(new Event('syncReady'));
         return;
@@ -105,6 +108,13 @@ async function pullFromSupabase(userId, event) {
         console.log('Pulled synced data from Supabase');
     } else {
         console.log('No synced row yet — pushing local data as the first sync');
+    }
+
+    // Mark the pull as resolved before the first-sync push below, so that
+    // push isn't blocked by the very gate it needs to pass.
+    hasPulledSuccessfully = true;
+
+    if (!row) {
         await pushToSupabase(userId);
     }
 
@@ -117,6 +127,11 @@ async function pullFromSupabase(userId, event) {
 }
 
 async function pushToSupabase(userId) {
+    if (!hasPulledSuccessfully) {
+        console.log('Skipping push — this device has not confirmed cloud data yet');
+        return;
+    }
+
     const bundle = collectLocalData();
     const { error } = await supabaseClient
         .from('user_data')
