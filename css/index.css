@@ -248,6 +248,16 @@
   transition: width 0.3s ease;
 }
 
+#timer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+#timer span {
+  color: #ffffff;
+}
+
 /* =====================================================
    HOME GRID — HEAVY
 ===================================================== */

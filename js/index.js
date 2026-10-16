@@ -20,6 +20,7 @@ let user = localStorage.getItem("currentUserEmail");
 let ascendLibrary, savedQuests, codexData, savedQuestSections, questCategories, skillTree, savedPlayerData, lastResetDate
 let skippedToday = [];
 const justSignedIn = window.location.hash.includes('access_token');
+const timeTill = document.getElementById("time-till")
 
 function refreshUserScopedData() {
   user = localStorage.getItem("currentUserEmail");
@@ -476,3 +477,28 @@ function updateTimeLeft() {
 
 
 setInterval(updateTimeLeft, 1000)
+
+/* Calculates how much time is till a quest starts */
+
+function updateTimeTill() {
+  const upcomingQuests = getUpcomingQuests()
+  const upcomingQuest = upcomingQuests[0]
+  if (!upcomingQuest) {
+    timeTill.textContent = ""
+    return
+  }
+  const upcomingQuestStart = upcomingQuest.startTime
+  const startTime = upcomingQuestStart.split(":")
+  const [hours, minutes] = startTime.map(Number)
+  const today = new Date()
+  const target = new Date()
+  target.setHours(hours, minutes, 0, 0)
+  const diff = target - today
+  const totalSeconds = Math.floor(diff / 1000)
+  const hoursLeft = Math.floor(totalSeconds / 3600)
+  const minutesLeft = Math.floor((totalSeconds % 3600) / 60)
+  const secondsLeft = totalSeconds % 60
+  timeTill.textContent = `${hoursLeft}h: ${minutesLeft}m : ${secondsLeft} `
+}
+
+setInterval(updateTimeTill, 1000)

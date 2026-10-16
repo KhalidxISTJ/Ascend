@@ -75,6 +75,10 @@ async function updatePrayerQuests() {
 
   if (updated) {
     localStorage.setItem(questUser + "_savedQuests", JSON.stringify(quests));
+    localStorage.setItem(questUser + "_savedQuests_modifiedAt", Date.now());
+    if (typeof syncPush === "function") {
+      syncPush();
+    }
     loadQuests();
     renderQuests();
     if (typeof updateDashboard === "function") {
@@ -205,11 +209,23 @@ function loadQuests() {
     // 1. Parse the saved data
     // 2. Filter out the dead quests
     // 3. Save the cleaned list back to localStorage
-    quests = JSON.parse(saved).filter((item) => {
+    const parsed = JSON.parse(saved);
+    const beforeCount = parsed.length;
+    quests = parsed.filter((item) => {
       return !(item.completed && item.recurring !== "weekly" && item.recurring !== "daily" && item.dueDate < todayString);
     });
 
     localStorage.setItem(questUser + "_savedQuests", JSON.stringify(quests));
+    // Only bump modifiedAt (and sync) when this filter actually removed
+    // something — otherwise every routine loadQuests() call would stamp a
+    // new modifiedAt on unchanged data and make every other device's pull
+    // think local just "won" for no reason.
+    if (quests.length !== beforeCount) {
+      localStorage.setItem(questUser + "_savedQuests_modifiedAt", Date.now());
+      if (typeof syncPush === "function") {
+        syncPush();
+      }
+    }
   } else {
     quests = [];
   }
@@ -1121,6 +1137,10 @@ function runDailyReset() {
 
   if (changed) {
     localStorage.setItem(questUser + "_savedQuests", JSON.stringify(quests));
+    localStorage.setItem(questUser + "_savedQuests_modifiedAt", Date.now());
+    if (typeof syncPush === "function") {
+      syncPush();
+    }
     console.log("✅ Quests reset for new day");
   }
 
