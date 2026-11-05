@@ -86,11 +86,6 @@ function applyRemoteData(bundle) {
             const localModifiedRaw = localStorage.getItem(prefix + key + '_modifiedAt');
             const localModified = localModifiedRaw ? parseInt(localModifiedRaw, 10) : 0;
 
-            if (localModified > remoteModified) {
-                console.log(`Skipping ${label} — local change is newer than cloud data`);
-                continue;
-            }
-
             localStorage.setItem(prefix + key, JSON.stringify(bundle[label]));
             if (bundle[label + '_modifiedAt']) {
                 localStorage.setItem(prefix + key + '_modifiedAt', String(bundle[label + '_modifiedAt']));
