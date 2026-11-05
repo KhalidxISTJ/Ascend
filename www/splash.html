@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome</title>
+  <link rel="icon" href="Images\icons\ascendLogo.png" />
+  <link rel="stylesheet" href="css/splash.css" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="css/index.css" />
+</head>
+
+<body>
+  <div class="splash-container">
+    <div class="leftSide">
+      <img src="Images\icons\ascendLogo.png" alt="Ascend's Logo" class="splash-logo" />
+      <div class="intro-splash">
+        <h1 class="splash-title">Welcome to Ascend</h1>
+        <p class="splash-subtitle">
+          <small>Reach Mastery one step at a time</small>
+        </p>
+      </div>
+    </div>
+
+    <div class="vertical-line"></div>
+
+    <!-- Sign-in form -->
+    <div class="rightSide">
+      <h2 id="form-title">Sign in</h2>
+      <form action="" id="login-form">
+        <div class="sign-in-fields">
+          <label for="username" class="username-label">Username:</label>
+          <input type="text" id="username" name="username" required placeholder="User0" />
+        </div>
+        <div class="sign-in-fields">
+          <label for="password" class="pass-label">Password:</label>
+          <input type="password" id="password" name="password" required placeholder="1100100" />
+        </div>
+        <div class="sign-in">
+          <div class="sign-in-options">
+            <input type="checkbox" id="remember" name="remember" value="yes">
+            <label for="remember" class="forgot-pass">Remember me</label>
+            <a href="">Reset Password?</a>
+          </div>
+          <div class="sign-in-actions">
+            <button type="reset">Clear</button>
+            <button type="submit" id="submit-btn">Login</button>
+          </div>
+          <div><Button type="button" id="google-signin-btn">Sign in with google</Button></div>
+        </div>
+      </form>
+      <a href="" id="show-create">Create account</a>
+    </div>
+  </div>
+
+  <hr class="divider">
+  <footer class="splash-footer">
+    <h2>Links</h2>
+    <div class="grid-container">
+      <div class="footer-column">
+        <div class="link-titles">Socials</div>
+        <a href="" target="_blank">My YouTube Channel</a>
+        <a href="https://www.instagram.com/ur.cgk/" target="_blank">My Instagram Page</a>
+      </div>
+      <div class="footer-column">
+        <div class="link-titles">Info</div>
+        <a href="about.html">About Ascend</a>
+      </div>
+      <div class="footer-column">
+        <div class="link-titles">Other Stuff</div>
+      </div>
+    </div>
+  </footer>
+  <!-- =====================================================
+         SCRIPTS
+    ====================================================== -->
+  <script> navigator.serviceWorker.register('sw.js');</script>
+  <script src="js/splash.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+
+</body>
+
+</html>

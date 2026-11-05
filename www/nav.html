@@ -1,0 +1,69 @@
+<header>
+    <div class="header-top">
+        <div class="header-left"> <button id="hamburger-nav">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+            <h1>
+                <a href="index.html">
+                    <img src="Images\icons\ascendLogo.png" alt="Ascend's Logo" class="ascend-logo"
+                        title="Ascend's Logo" />
+                </a>
+            </h1>
+        </div>
+        <nav class="navigation">
+            <div class="left-placeholder"></div>
+            <div class="nav-links">
+                <a class="nav-link" href="index.html">Home</a>
+                <a class="nav-link" href="quests.html">Quests</a>
+                <a class="nav-link" href="stats.html">Stats</a>
+                <a class="nav-link" href="codex.html">Codex</a>
+                <a class="nav-link" href="library.html">Library</a>
+                <a class="nav-link" href="calendar.html">Calendar</a>
+                <a class="nav-link" href="misc.html">Misc</a>
+            </div>
+            <div class="right-placeholder"></div>
+        </nav>
+        <div class="header-right">
+            <div id="version" class="version-badge"></div>
+        </div>
+    </div>
+    <hr>
+</header>
+
+<div id="update-panel" class="update-panel hidden">
+    <div class="update-content">
+        <h3 class="update-title">
+            <p>What's new in v1.0.0 alpha</p>
+            <button id="close-update-panel">Close</button>
+        </h3>
+
+        <h4>✨ New</h4>
+        <ul>
+            <li>All Day bar on Calendar</li>
+            <li>Update Panel feature</li>
+        </ul>
+
+        <h4>🐛 Fixed</h4>
+        <ul>
+            <li>Completed one-time quests lingering forever</li>
+        </ul>
+    </div>
+</div>
+
+<!--Side Bar Settings-->
+<div id="sidebar-overlay" class="sidebar-overlay"></div>
+<aside id="sidebar" class="sidebar">
+    <h2>Account</h2>
+    <p id="sidebar-username">User0</p>
+    <img class="pfp" alt="Profile" src="">
+    <button id="import-btn">Import data
+    </button>
+    <input type="file" id="import-file" accept=".json" hidden />
+    <button id="export-btn">export data</button>
+    <button id="logout-btn">Log out</button>
+    <button>Delete account</button>
+    <hr>
+    <a href="about.html">About Ascend</a>
+</aside>

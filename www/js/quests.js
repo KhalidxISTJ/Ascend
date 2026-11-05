@@ -1,0 +1,1708 @@
+const addQuestBtn = document.getElementById("addQuestBtn");
+const questInput = document.getElementById("questInput");
+const currentQuest = document.getElementById("current-quest");
+const questList = document.getElementById("questList");
+const completedQuestList = document.getElementById("completedQuestList");
+const notTodayQuestList = document.getElementById("notTodayQuestList")
+const questCategoryElement = document.getElementById("questCategory");
+const questDifficultyElement = document.getElementById("questDifficulty");
+const questRecurringElement = document.getElementById("questRecurring");
+const questStartTimeElement = document.getElementById("questStartTime");
+const questEndTimeElement = document.getElementById("questEndTime");
+const questPriority = document.getElementById("questPriority");
+const questSearch = document.getElementById("questSearch");
+const newQuestBtn = document.getElementById("newQuestBtn");
+const questCreator = document.querySelector(".quest-creator");
+const questSections = document.getElementById("questSections");
+const questDueDateElement = document.getElementById("questDueDate");
+const addCategoryBtn = document.getElementById("addCategoryBtn");
+const sortQuestsElement = document.getElementById("sortQuests");
+const daySelectorContainer = document.getElementById("daySelectorContainer");
+const repeatDayCheckboxes = document.querySelectorAll(".repeat-day");
+const questUser = localStorage.getItem("currentUserEmail");
+const questStreakEnabledElement = document.getElementById("questStreakEnabled");
+const wizardSteps = document.querySelectorAll(".wizard-step")
+const wizardBack = document.getElementById("wizardBack")
+const wizardNext = document.getElementById("wizardNext")
+const wizardCancel = document.getElementById("wizardCancel")
+const reviewSummary = document.getElementById("reviewSummary")
+const questAdaptiveElement = document.getElementById("questAdaptive")
+const startingGap = { Easy: 2880, Medium: 1440, Hard: 720, Extreme: 360 };
+const ratingMultiplier = { 1: "2", 2: "1.2", 3: "0.5" }
+const { LocalNotifications } = (typeof Capacitor !== "undefined") ? Capacitor.Plugins : {};
+let currentStep = 1
+
+
+/* =======================================================
+   PRAYER TIMES API (Albany, NY - ISNA Method)
+======================================================= */
+
+const ALBANY_COORDS = {
+  latitude: 42.6526,
+  longitude: -73.7562,
+  method: 99, // Custom
+  fajrAngle: 15,
+  ishaAngle: 15,
+};
+
+async function getPrayerTimes() {
+  try {
+    const response = await fetch(
+      `https://api.aladhan.com/v1/timings?latitude=${ALBANY_COORDS.latitude}&longitude=${ALBANY_COORDS.longitude}&method=99&fajrAngle=${ALBANY_COORDS.fajrAngle}&ishaAngle=${ALBANY_COORDS.ishaAngle}`,
+    );
+    const data = await response.json();
+    return data.data.timings;
+  } catch (error) {
+    console.error("Failed to fetch prayer times:", error);
+    return null;
+  }
+}
+
+function formatTimeForQuest(timeStr) {
+  if (!timeStr) return "00:00";
+  const [hours, minutes] = timeStr.split(":");
+  return `${hours}:${minutes}`;
+}
+
+async function updatePrayerQuests() {
+  const times = await getPrayerTimes();
+  if (!times) return;
+
+  const saved = localStorage.getItem(questUser + "_savedQuests");
+  if (!saved) return;
+
+  const quests = JSON.parse(saved);
+  let updated = false;
+
+  quests.forEach((quest) => {
+    if (quest.isPrayer && times[quest.prayerType]) {
+      const newTime = formatTimeForQuest(times[quest.prayerType]);
+      if (quest.startTime !== newTime) {
+        quest.startTime = newTime;
+        updated = true;
+        console.log(`🕌 Updated ${quest.prayerType} to ${newTime}`);
+      }
+    }
+  });
+
+  if (updated) {
+    localStorage.setItem(questUser + "_savedQuests", JSON.stringify(quests));
+    localStorage.setItem(questUser + "_savedQuests_modifiedAt", Date.now());
+    if (typeof syncPush === "function") {
+      syncPush();
+    }
+    loadQuests();
+    renderQuests();
+    if (typeof updateDashboard === "function") {
+      updateDashboard();
+    }
+  }
+}
+
+
+
+// =====================================================
+// DATE HELPERS
+// =====================================================
+
+function getTodayString() {
+  return new Date().toISOString().split("T")[0];
+}
+
+function getYesterdayString() {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return yesterday.toISOString().split("T")[0];
+}
+function getDaysAgoString(daysAgo) {
+  const d = new Date()
+  d.setDate(d.getDate() - daysAgo)
+  return d.toISOString().split("T")[0]
+}
+function getDateString(date) {
+  return date.toISOString().split("T")[0];
+}
+
+// NEW: Get today's date as a simple string (no time)
+function getTodayDateKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+}
+
+// NEW: Check if it's a new day since last reset
+function isNewDay() {
+  const lastReset = localStorage.getItem(questUser + "_lastResetDate");
+  const today = getTodayDateKey();
+
+  if (!lastReset) {
+    return true;
+  }
+
+  return lastReset !== today;
+}
+
+// =====================
+// Quest Data
+// =====================
+
+let quests = [];
+
+let sections = [];
+
+let currentSection = "Morning";
+
+let categories = [];
+
+let editingQuest = null;
+
+let searchText = "";
+
+let currentSort = "date";
+
+// =====================
+// Default Data
+// =====================
+
+const defaultSections = ["Morning", "School", "General", "Night"];
+const defaultCategories = ["Faith", "School", "Fitness", "General"];
+
+console.log("sortQuests called");
+console.log(currentSort);
+
+// =====================================================
+// RECURRING DROPDOWN - Show/Hide Day Selector
+// =====================================================
+
+if (questRecurringElement) {
+  questRecurringElement.addEventListener("change", function () {
+    if (daySelectorContainer) {
+      daySelectorContainer.style.display =
+        this.value === "weekly" ? "block" : "none";
+    }
+  });
+}
+
+// =====================
+// SAVE SYSTEM
+// =====================
+function saveQuests() {
+  const data = JSON.stringify(quests);
+  localStorage.setItem(questUser + "_savedQuests", data);
+  localStorage.setItem(questUser + "_savedQuests_modifiedAt", Date.now());
+  syncPush();
+}
+
+function saveSections() {
+  localStorage.setItem(questUser + "_questSections", JSON.stringify(sections));
+  localStorage.setItem(questUser + "_questSections_modifiedAt", Date.now());
+  if (typeof syncPush === "function") {
+    syncPush();
+  }
+}
+
+function saveCategories() {
+  categories.sort((a, b) => a.localeCompare(b));
+  localStorage.setItem(
+    questUser + "_questCategories",
+    JSON.stringify(categories),
+  );
+}
+
+// =====================
+// LOAD SYSTEM
+// =====================
+
+function loadQuests() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  const todayString = `${year}-${month}-${day}`;
+
+  const saved = localStorage.getItem(questUser + "_savedQuests");
+
+  if (saved) {
+    // 1. Parse the saved data
+    // 2. Filter out the dead quests
+    // 3. Save the cleaned list back to localStorage
+    const parsed = JSON.parse(saved);
+    const beforeCount = parsed.length;
+    quests = parsed.filter((item) => {
+      return !(item.completed && item.recurring !== "weekly" && item.recurring !== "daily" && !item.adaptive && item.dueDate < todayString);
+    });
+
+    localStorage.setItem(questUser + "_savedQuests", JSON.stringify(quests));
+    // Only bump modifiedAt (and sync) when this filter actually removed
+    // something — otherwise every routine loadQuests() call would stamp a
+    // new modifiedAt on unchanged data and make every other device's pull
+    // think local just "won" for no reason.
+    if (quests.length !== beforeCount) {
+      localStorage.setItem(questUser + "_savedQuests_modifiedAt", Date.now());
+      if (typeof syncPush === "function") {
+        syncPush();
+      }
+    }
+  } else {
+    quests = [];
+  }
+
+
+}
+
+function loadSections() {
+  const saved = localStorage.getItem(questUser + "_questSections");
+
+  if (saved) {
+    sections = JSON.parse(saved);
+  } else {
+    sections = [...defaultSections];
+    saveSections();
+  }
+}
+
+function loadCategories() {
+  const saved = localStorage.getItem(questUser + "_questCategories");
+
+  if (saved) {
+    categories = JSON.parse(saved);
+  } else {
+    categories = [...defaultCategories];
+  }
+
+  categories.sort((a, b) => a.localeCompare(b));
+  saveCategories();
+}
+
+// =====================
+// QUEST DATA MIGRATION
+// =====================
+
+function migrateQuests() {
+  let anyChanged = false;
+
+  for (const quest of quests) {
+    let changed = false;
+
+    if (!quest.section) { quest.section = "General"; changed = true; }
+    if (!quest.priority) { quest.priority = "Medium"; changed = true; }
+    if (typeof quest.skippedToday !== "boolean") { quest.skippedToday = false; changed = true; }
+    if (typeof quest.cancelledToday !== "boolean") { quest.cancelledToday = false; changed = true; }
+    if (!quest.createdAt) { quest.createdAt = Date.now(); changed = true; }
+    if (!quest.repeatDays) { quest.repeatDays = []; changed = true; }
+    if (typeof quest.streakEnabled !== "boolean") { quest.streakEnabled = false; changed = true; }
+    if (typeof quest.adaptive !== "boolean") { quest.adaptive = false; changed = true; }
+    if (typeof quest.interval !== "number") { quest.interval = 0; changed = true; }
+    if (quest.nextReview === undefined) { quest.nextReview = null; changed = true; }
+
+
+    if (quest.completed === true) {
+      if (quest.status !== "completed") { quest.status = "completed"; changed = true; }
+      quest.skippedToday = false;
+    } else {
+      if (quest.status !== "active") { quest.status = "active"; changed = true; }
+      quest.completed = false;
+    }
+
+    if (changed) anyChanged = true;
+  }
+
+  if (anyChanged) {
+    saveQuests();
+  }
+}
+
+// =====================
+// TIME FUNCTIONS
+// =====================
+
+function formatTime(time) {
+  if (!time) {
+    return "No Time";
+  }
+
+  let [hours, minutes] = time.split(":");
+  hours = Number(hours);
+  const period = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12;
+  if (hours === 0) {
+    hours = 12;
+  }
+  return `${hours}:${minutes} ${period}`;
+}
+
+// =====================
+// DATE FUNCTIONS
+// =====================
+
+function formatDate(date) {
+  if (!date) {
+    return "No Date";
+  }
+
+  const [year, month, day] = date.split("-");
+  const d = new Date(year, month - 1, day);
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+// =====================
+// DUE DATE STATUS
+// =====================
+
+function getDueStatus(quest) {
+  if (!quest.dueDate) {
+    return {
+      text: "No Due Date",
+      status: "none",
+    };
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const [year, month, day] = quest.dueDate.split("-").map(Number);
+  const due = new Date(year, month - 1, day);
+  due.setHours(0, 0, 0, 0);
+
+  const difference = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
+
+  if (difference < 0) {
+    return {
+      text: "Overdue",
+      status: "overdue",
+    };
+  }
+
+  if (difference === 0) {
+    return {
+      text: "Due Today",
+      status: "today",
+    };
+  }
+
+  return {
+    text: `Due in ${difference} days`,
+    status: "upcoming",
+  };
+}
+
+// =====================
+// PRIORITY SYSTEM
+// =====================
+
+const priorityOrder = {
+  Critical: 4,
+  High: 3,
+  Medium: 2,
+  Low: 1,
+};
+
+if (sortQuestsElement) {
+  sortQuestsElement.addEventListener("change", () => {
+    currentSort = sortQuestsElement.value;
+    renderQuests();
+  });
+}
+
+// =====================
+// SECTION RENDER
+// =====================
+
+function renderSections() {
+  if (!questSections) return;
+
+  questSections.innerHTML = "";
+
+  for (const section of sections) {
+    const button = document.createElement("button");
+    button.className = "section-tab";
+    button.textContent = section;
+
+    if (section === currentSection) {
+      button.classList.add("active");
+    }
+
+    button.onclick = () => {
+      currentSection = section;
+      renderSections();
+      renderQuests();
+    };
+
+    const defaultSections = ["Morning", "School", "General", "Night"];
+    if (!defaultSections.includes(section)) {
+      const deleteBtn = document.createElement("span");
+      deleteBtn.className = "section-delete-btn";
+      deleteBtn.textContent = "✕";
+      deleteBtn.title = "Delete section";
+      deleteBtn.onclick = (e) => {
+        e.stopPropagation();
+        if (
+          !confirm(
+            `Delete section "${section}"? All quests in this section will be moved to "General".`,
+          )
+        )
+          return;
+
+        quests.forEach((q) => {
+          if (q.section === section) q.section = "General";
+        });
+        saveQuests();
+
+        sections = sections.filter((s) => s !== section);
+        saveSections();
+        renderSections();
+        renderQuests();
+      };
+      button.appendChild(deleteBtn);
+    }
+
+    questSections.appendChild(button);
+  }
+
+  const addButton = document.createElement("button");
+  addButton.className = "section-tab add-section";
+  addButton.textContent = "+";
+  addButton.onclick = () => {
+    const name = prompt("New section name:");
+    if (!name) return;
+    sections.push(name);
+    saveSections();
+    renderSections();
+  };
+
+  questSections.appendChild(addButton);
+}
+
+function renderCategories() {
+  if (!questCategoryElement) return;
+
+  questCategoryElement.innerHTML = "";
+
+  for (const category of categories) {
+    const option = document.createElement("option");
+    option.value = category;
+    option.textContent = category;
+    questCategoryElement.appendChild(option);
+  }
+}
+
+if (addCategoryBtn) {
+  addCategoryBtn.onclick = () => {
+    const name = prompt("New category name:");
+    if (!name) return;
+    if (categories.includes(name)) {
+      alert("Category already exists.");
+      return;
+    }
+    categories.push(name);
+    saveCategories();
+    renderCategories();
+    questCategoryElement.value = name;
+  };
+}
+
+// =====================
+// SEARCH FILTER
+// =====================
+
+function questMatchesSearch(quest) {
+  if (!searchText) {
+    return true;
+  }
+
+  const text = `
+    ${quest.name}
+    ${quest.type}
+    ${quest.priority}
+    ${quest.difficulty}
+    ${quest.recurring}
+    ${quest.section}
+  `.toLowerCase();
+
+  return text.includes(searchText);
+}
+
+// =====================
+// MAIN RENDER
+// =====================
+
+function renderQuests() {
+  if (!questList || !completedQuestList || !notTodayQuestList) {
+    return;
+  }
+
+
+  questList.innerHTML = "";
+  completedQuestList.innerHTML = "";
+  notTodayQuestList.innerHTML = "";
+
+  const sorted = sortQuests([...quests]);
+
+  for (const quest of sorted) {
+    if (quest.section !== currentSection) {
+      continue;
+    }
+
+    if (!questMatchesSearch(quest)) {
+      continue;
+    }
+
+    if (!isQuestScheduledToday(quest)) {
+      const li = createQuestElement(quest);
+      notTodayQuestList.appendChild(li);
+      continue;
+    }
+
+    const li = createQuestElement(quest);
+    if (quest.completed) {
+      completedQuestList.appendChild(li);
+    } else {
+      questList.appendChild(li);
+    }
+  }
+}
+
+// =====================
+// CREATE QUEST CARD
+// =====================
+
+function createQuestElement(quest) {
+  const { completed, cancelledToday } = quest
+  const li = document.createElement("li");
+  li.className = "quest-card";
+
+  if (completed) {
+    li.classList.add("completed");
+  }
+  if (cancelledToday) {
+    li.classList.add("cancelled-today");
+  }
+
+  /* Destructuring list */
+  const { name, isPrayer, prayerType, priority, startTime, endTime, dueDate, recurring, repeatDays, difficulty, section, type, streakEnabled } = quest
+  const title = document.createElement("div");
+  title.className = "quest-title";
+
+  const priorityIcons = {
+    Critical: "🔴",
+    High: "🟠",
+    Medium: "🟡",
+    Low: "🟢",
+  };
+
+  let nameDisplay = name;
+  if (isPrayer && prayerType === "Fajr") {
+    nameDisplay = `🌙 ${name}`;
+  }
+
+  title.innerHTML = ""
+
+  const titleText = document.createElement("span")
+  titleText.textContent =
+    `${completed ? "✔️ " : ""}` +
+    `${priorityIcons[priority] || "🟡"} ` +
+    nameDisplay
+  title.appendChild(titleText)
+
+  if ((recurring === "daily" || recurring === "weekly") && streakEnabled) {
+    const streakBadge = document.createElement("span")
+    streakBadge.className = "quest-streak-badge"
+    streakBadge.textContent = `🔥x${getCurrentStreak(quest)}`
+    title.appendChild(streakBadge)
+  }
+
+  // TIME
+  const time = document.createElement("div");
+  time.className = "quest-time";
+
+  const hasStartTime = startTime && startTime !== "";
+  const hasEndTime = endTime && endTime !== "";
+  const hasDueDate = dueDate && dueDate !== "";
+
+  let info = "";
+
+  if (hasStartTime || hasEndTime) {
+    if (isPrayer && prayerType === "Fajr") {
+      info += `🕌 Fajr: ${formatTime(startTime)} (auto-updated)`;
+    } else {
+      if (hasStartTime && hasEndTime) {
+        info += `🕓 ${formatTime(startTime)} - ${formatTime(endTime)}`;
+      } else if (hasStartTime) {
+        info += `🕓 ${formatTime(startTime)}`;
+      } else if (hasEndTime) {
+        info += `🕓 Ends at ${formatTime(endTime)}`;
+      }
+    }
+  }
+
+  if (hasDueDate) {
+    if (info) {
+      info += "<br>";
+    }
+    info += `📅 ${formatDate(dueDate)}`;
+  }
+
+  // Show repeat days if weekly
+  if (
+    recurring === "weekly" &&
+    repeatDays &&
+    repeatDays.length > 0
+  ) {
+    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const days = repeatDays.map((d) => dayNames[d]).join(", ");
+    if (info) info += "<br>";
+    info += `🔄 ${days}`;
+  }
+
+  if (!info) {
+    info = "No Time";
+  }
+
+  time.innerHTML = info;
+
+  // DETAILS
+  const details = document.createElement("div");
+  details.className = "quest-details hidden";
+
+  const due = getDueStatus(quest);
+
+  details.innerHTML = `
+    Priority: ${priority}
+    <br>
+    Type: ${type}
+    <br>
+    Difficulty: ${difficulty}
+    <br>
+    Recurring: ${recurring}
+    <br>
+    Section: ${section}
+    <br>
+    Due: ${dueDate ? formatDate(dueDate) : "None"}
+    <br>
+    Status: ${due.text}
+    <br>
+    🕓 ${formatTime(startTime)} - ${formatTime(endTime)}
+  `;
+  if ((recurring === "daily" || recurring === "weekly") && streakEnabled) {
+    details.appendChild(createStreakGrid(quest))
+  }
+
+  // BUTTON AREA
+  const buttons = document.createElement("div");
+  buttons.className = "quest-buttons";
+
+  const toggle = document.createElement("button");
+  toggle.textContent = "▼";
+  const toggleDetails = () => {
+    details.classList.toggle("hidden");
+    toggle.textContent = details.classList.contains("hidden") ? "▼" : "▲";
+  }
+  li.onclick = toggleDetails;
+
+  toggle.onclick = (e) => {
+    e.stopPropagation();
+    toggleDetails();
+  };
+
+  const edit = document.createElement("button");
+  edit.textContent = "Edit";
+  edit.onclick = (e) => {
+    e.stopPropagation();
+    startEditingQuest(quest);
+  };
+
+  const del = document.createElement("button");
+  del.textContent = "Delete";
+  del.onclick = (e) => {
+    e.stopPropagation();
+    quests = quests.filter((q) => q !== quest);
+    saveQuests();
+    renderQuests();
+  };
+
+  buttons.appendChild(edit);
+  buttons.appendChild(del);
+
+  if (!completed) {
+    const complete = document.createElement("button");
+    complete.textContent = "Complete";
+    complete.onclick = (e) => {
+      e.stopPropagation();
+      completeQuest(quest);
+    };
+    buttons.appendChild(complete);
+    const cancel = document.createElement("button");
+    cancel.textContent = "Cancel";
+    cancel.className = "cancel-btn";
+    cancel.onclick = (e) => {
+      e.stopPropagation();
+      cancelQuest(quest);
+    };
+    buttons.appendChild(cancel);
+  }
+
+  buttons.appendChild(toggle);
+
+  li.appendChild(time);
+  li.appendChild(title);
+  if ((recurring === "daily" || recurring === "weekly") && streakEnabled) {
+    li.appendChild(createStreakGrid(quest))
+  }
+  li.appendChild(buttons);
+  li.appendChild(details);
+
+
+  return li;
+}
+function createStreakGrid(quest) {
+  const container = document.createElement("div")
+  container.className = "quest-streak"
+
+  for (let i = 6; i >= 0; i--) {
+    const dateKey = getDaysAgoString(i)
+    const completed = quest.history && quest.history[dateKey] === true
+    const dot = document.createElement("span")
+    dot.className = completed ? "streak-dot completed" : "streak-dot"
+    container.appendChild(dot)
+  }
+
+  return container
+}
+function getCurrentStreak(quest) {
+  if (!quest.history) return 0
+  let streak = 0
+  let i = quest.history[getDaysAgoString(0)] === true ? 0 : 1
+  while (quest.history[getDaysAgoString(i)] === true) {
+    streak++
+    i++
+  }
+  return streak
+}
+
+// =====================
+// CREATE QUEST OBJECT
+// =====================
+
+function createQuestObject() {
+  // Get selected repeat days
+  const selectedDays = [];
+  document.querySelectorAll(".repeat-day:checked").forEach((cb) => {
+    selectedDays.push(parseInt(cb.value));
+  });
+
+  const isEditing = editingQuest !== null;
+
+  // Generate a random color or use existing
+  const defaultColors = [
+    "#1a73e8",
+    "#e37400",
+    "#e52592",
+    "#137333",
+    "#9334e6",
+    "#d93025",
+    "#00897b",
+    "#f9ab00",
+  ];
+  const randomColor =
+    defaultColors[Math.floor(Math.random() * defaultColors.length)];
+
+  return {
+    name: questInput.value.trim(),
+    type: questCategoryElement.value,
+    difficulty: questDifficultyElement.value,
+    recurring: questRecurringElement.value,
+    repeatDays: selectedDays,
+    startTime: questStartTimeElement.value,
+    endTime: questEndTimeElement.value,
+    dueDate: questDueDateElement.value,
+    priority: questPriority.value,
+    section: currentSection,
+    completed: isEditing ? editingQuest.completed : false,
+    status: isEditing ? editingQuest.status : "active",
+    skippedToday: isEditing ? editingQuest.skippedToday : false,
+    cancelledToday: isEditing ? editingQuest.cancelledToday : false,
+    createdAt: isEditing ? editingQuest.createdAt : Date.now(),
+    history: isEditing ? editingQuest.history : {},
+    isPrayer: isEditing ? editingQuest.isPrayer : false,
+    prayerType: isEditing ? editingQuest.prayerType : null,
+    color: isEditing ? editingQuest.color : randomColor,
+    streakEnabled: questStreakEnabledElement ? questStreakEnabledElement.checked : false,
+    adaptive: questAdaptiveElement ? questAdaptiveElement.checked : false,
+    interval: isEditing ? editingQuest.interval : 0,
+    nextReview: isEditing ? editingQuest.nextReview : null,
+  };
+}
+
+// =====================
+// RESET FORM
+// =====================
+
+function resetQuestForm() {
+  questInput.value = "";
+  questStartTimeElement.value = "";
+  questEndTimeElement.value = "";
+  questDueDateElement.value = "";
+
+  // Clear repeat day checkboxes
+  document
+    .querySelectorAll(".repeat-day")
+    .forEach((cb) => (cb.checked = false));
+
+  if (daySelectorContainer) {
+    daySelectorContainer.style.display = "none";
+  }
+  if (questCategoryElement)
+    questCategoryElement.value = questCategoryElement.options[0].value;
+  if (questDifficultyElement)
+    questDifficultyElement.value = questDifficultyElement.options[0].value;
+  if (questRecurringElement)
+    questRecurringElement.value = questRecurringElement.options[0].value;
+  if (questPriority) questPriority.value = "Medium";
+  editingQuest = null;
+  if (addQuestBtn) {
+    addQuestBtn.textContent = "Finish";
+  }
+  if (questStreakEnabledElement) questStreakEnabledElement.checked = false;
+  if (questAdaptiveElement) questAdaptiveElement.checked = false;
+}
+
+// =====================
+// START EDIT
+// =====================
+
+function startEditingQuest(quest) {
+  editingQuest = quest;
+
+  questInput.value = quest.name;
+  questCategoryElement.value = quest.type;
+  questDifficultyElement.value = quest.difficulty;
+  questRecurringElement.value = quest.recurring;
+
+  // Load repeat days if they exist
+  document.querySelectorAll(".repeat-day").forEach((cb) => {
+    cb.checked = quest.repeatDays
+      ? quest.repeatDays.includes(parseInt(cb.value))
+      : false;
+  });
+
+  // Show day selector if weekly
+  if (daySelectorContainer) {
+    daySelectorContainer.style.display =
+      quest.recurring === "weekly" ? "block" : "none";
+  }
+
+  questStartTimeElement.value = quest.startTime || "";
+  questEndTimeElement.value = quest.endTime || "";
+  questDueDateElement.value = quest.dueDate || "";
+  questPriority.value = quest.priority;
+  currentSection = quest.section;
+
+  addQuestBtn.textContent = "Save Quest";
+  if (questCreator) {
+    questCreator.hidden = false;
+  }
+  if (questStreakEnabledElement) questStreakEnabledElement.checked = !!quest.streakEnabled;
+  if (questAdaptiveElement) questAdaptiveElement.checked = !!quest.adaptive;
+}
+
+// =====================
+// SAVE QUEST
+// =====================
+
+if (addQuestBtn) {
+  addQuestBtn.onclick = () => {
+    if (!questInput.value.trim()) {
+      return;
+    }
+
+    const newQuest = createQuestObject();
+
+    if (editingQuest) {
+      // Preserve completed and status when editing
+      newQuest.completed = editingQuest.completed;
+      newQuest.status = editingQuest.status;
+      newQuest.history = editingQuest.history || {};
+      newQuest.skippedToday = editingQuest.skippedToday || false;
+
+      // Now merge everything
+      Object.assign(editingQuest, newQuest);
+    } else {
+      if (newQuest.adaptive) {
+        newQuest.interval = startingGap[newQuest.difficulty];
+      }
+      quests.push(newQuest);
+    }
+
+    saveQuests();
+    resetQuestForm();
+    renderQuests();
+    closeWizard();
+  };
+}
+
+// =====================
+// COMPLETE QUEST
+// =====================
+
+function completeQuest(quest) {
+  if (!quest || quest.status === "completed") return;
+
+  if (quest.adaptive) {
+    const answer = prompt("How was it? 1 = Easy, 2 = Okay, 3 = Struggled");
+    if (!ratingMultiplier[answer]) return;
+    if (ratingMultiplier[answer]) {
+      quest.interval = Math.max(1, quest.interval * ratingMultiplier[answer]);
+    }
+    quest.nextReview = Date.now() + quest.interval * 60 * 1000;
+  }
+
+
+  quest.status = "completed";
+  quest.completed = true;
+
+  if (quest.recurring === "daily" || quest.recurring === "weekly") {
+    const today = getTodayString();
+    if (!quest.history) quest.history = {};
+    quest.history[today] = true;
+  }
+
+  giveQuestXP(quest);
+  saveQuests();
+  scheduleQuestNotification();
+  renderQuests();
+
+  if (typeof updateDashboard === "function") {
+    updateDashboard();
+  }
+}
+
+function restoreQuest(quest) {
+  if (!quest || quest.status !== "skipped") {
+    return;
+  }
+
+  quest.status = "active";
+  quest.completed = false;
+
+  saveQuests();
+  renderQuests();
+
+  if (typeof updateDashboard === "function") {
+    updateDashboard();
+  }
+}
+
+function skipQuest(quest) {
+  if (!quest || quest.status === "completed") {
+    return;
+  }
+
+  quest.status = "active";
+  quest.completed = false;
+  quest.skippedToday = true;
+  quest.skippedAt = Date.now();
+
+  if (typeof renderQuests === "function") {
+    renderQuests();
+  }
+
+  if (typeof updateDashboard === "function") {
+    updateDashboard();
+  }
+
+  window.dispatchEvent(new CustomEvent("questStateChanged"));
+}
+
+function cancelQuest(quest) {
+  if (!quest || quest.completed) return;
+
+  quest.cancelledToday = true;
+  saveQuests();
+  renderQuests();
+
+  if (typeof updateDashboard === "function") {
+    updateDashboard();
+  }
+}
+
+function reviveDueQuests() {
+  let changed = false;
+  for (const quest of quests) {
+    if (quest.adaptive && quest.completed && quest.nextReview <= Date.now()) {
+      quest.completed = false;
+      quest.status = "active";
+      changed = true;
+    }
+  }
+  if (changed) {
+    saveQuests();
+    renderQuests();
+  }
+}
+// =====================
+// XP REWARD SYSTEM
+// =====================
+
+function giveQuestXP(quest) {
+  const rewards = {
+    Easy: 10,
+    Medium: 25,
+    Hard: 50,
+    Extreme: 100,
+  };
+
+  const reward = rewards[quest.difficulty] || 10;
+
+  if (typeof addXP === "function") {
+    addXP(reward);
+  }
+
+  const skill =
+    typeof findSkillByName === "function"
+      ? findSkillByName(skillTree, quest.type)
+      : null;
+
+  if (skill && typeof addSkillXP === "function") {
+    addSkillXP(skill, reward);
+  }
+}
+
+// =====================
+// NEW QUEST BUTTON
+// =====================
+
+if (newQuestBtn && questCreator) {
+  newQuestBtn.onclick = () => {
+    questCreator.hidden = false;
+    newQuestBtn.hidden = true;
+  };
+}
+
+// =====================
+// SEARCH
+// =====================
+
+if (questSearch) {
+  questSearch.addEventListener("input", () => {
+    searchText = questSearch.value.toLowerCase();
+    renderQuests();
+  });
+}
+
+// =====================
+// RECURRING RESET
+// =====================
+
+function resetRecurringQuests() {
+  for (const quest of quests) {
+    if (quest.recurring === "daily") {
+      quest.completed = false;
+    }
+
+    if (quest.recurring === "weekly") {
+      const lastReset = new Date(playerData.lastResetDate);
+      const today = new Date();
+      const difference = Math.floor(
+        (today - lastReset) / (1000 * 60 * 60 * 24),
+      );
+      if (difference >= 7) {
+        quest.completed = false;
+      }
+    }
+  }
+
+  quests = quests.filter((quest) => {
+    if (quest.recurring === "none" && quest.completed) {
+      return false;
+    }
+    return true;
+  });
+  runDailyReset();
+}
+
+// =====================================================
+// DAILY RESET - Fix for recurring quests
+// =====================================================
+
+function runDailyReset() {
+  const today = getTodayDateKey();
+  const lastReset = localStorage.getItem(questUser + "_lastResetDate");
+
+  // If already reset today, skip
+  if (lastReset === today) {
+    console.log("✅ Already reset today");
+    return;
+  }
+
+  console.log("🔄 Running daily reset...");
+
+  // Load fresh quests
+  const saved = localStorage.getItem(questUser + "_savedQuests");
+  if (!saved) {
+    localStorage.setItem(questUser + "_lastResetDate", today);
+    return;
+  }
+
+  let quests = JSON.parse(saved);
+  let changed = false;
+
+  quests.forEach((quest, index) => {
+    // === DAILY QUESTS ===
+    if (quest.recurring === "daily" && !quest.adaptive) {
+      // If it was completed yesterday, uncomplete it for today
+      if (quest.completed === true) {
+        quest.completed = false;
+        quest.status = "active";
+        changed = true;
+        console.log(`🔄 Reset daily quest: ${quest.name}`);
+      }
+    }
+
+    // === WEEKLY QUESTS ===
+    if (quest.recurring === "weekly" && !quest.adaptive) {
+      // Check if a week has passed since last reset
+      const lastResetDate = new Date(lastReset || today);
+      const todayDate = new Date(today);
+      const daysDiff = Math.floor(
+        (todayDate - lastResetDate) / (1000 * 60 * 60 * 24),
+      );
+
+      // Reset if 7+ days have passed or if it's a new week (Monday)
+      if (daysDiff >= 7 || todayDate.getDay() === 1) {
+        if (quest.completed === true) {
+          quest.completed = false;
+          quest.status = "active";
+          changed = true;
+          console.log(`🔄 Reset weekly quest: ${quest.name}`);
+        }
+      }
+
+      // ALSO check if today is NOT in repeatDays, reset if completed
+      if (quest.repeatDays && quest.repeatDays.length > 0) {
+        const dayOfWeek = todayDate.getDay();
+        if (!quest.repeatDays.includes(dayOfWeek) && quest.completed === true) {
+          // It's not a day this quest runs on, but it's completed - reset it
+          quest.completed = false;
+          quest.status = "active";
+          changed = true;
+          console.log(
+            `🔄 Reset quest (not on today's schedule): ${quest.name}`,
+          );
+        }
+      }
+    }
+
+    // === CANCELLED TODAY RESET (applies to every quest) ===
+    if (quest.cancelledToday === true) {
+      quest.cancelledToday = false;
+      changed = true;
+      console.log(`🔄 Reset cancelledToday: ${quest.name}`);
+    }
+  });
+
+  if (changed) {
+    localStorage.setItem(questUser + "_savedQuests", JSON.stringify(quests));
+    localStorage.setItem(questUser + "_savedQuests_modifiedAt", Date.now());
+    if (typeof syncPush === "function") {
+      syncPush();
+    }
+    console.log("✅ Quests reset for new day");
+  }
+
+  // Save today as the last reset date
+  localStorage.setItem(questUser + "_lastResetDate", today);
+  localStorage.setItem(questUser + "_lastResetDate_modifiedAt", Date.now());
+  syncPush();
+
+  // Reload quests in memory
+  loadQuests();
+  renderQuests();
+
+  // Update dashboard if it exists
+  if (typeof updateDashboard === "function") {
+    updateDashboard();
+  }
+}
+
+// =====================
+// QUEST ORDER SYSTEM
+// =====================
+
+function updateQuestOrder() {
+  const active = quests.filter((q) => !q.completed);
+  let changed = false;
+  active.forEach((quest, index) => {
+    if (quest.order !== index + 1) {
+      quest.order = index + 1;
+      changed = true;
+    }
+  });
+  if (changed) {
+    saveQuests();
+  }
+}
+
+// =====================
+// MOVE QUEST
+// =====================
+
+function moveQuest(quest, direction) {
+  const sectionQuests = quests.filter((q) => q.section === quest.section);
+  const index = sectionQuests.indexOf(quest);
+  const newIndex = index + direction;
+
+  if (newIndex < 0 || newIndex >= sectionQuests.length) {
+    return;
+  }
+
+  const other = sectionQuests[newIndex];
+  const temp = quest.order;
+  quest.order = other.order;
+  other.order = temp;
+
+  saveQuests();
+  renderQuests();
+}
+
+// =====================
+// IMPROVED SORT OVERRIDE
+// =====================
+
+function sortQuests(list) {
+  if (currentSort === "date") {
+    return list.sort((a, b) => {
+      if (a.completed !== b.completed) {
+        return a.completed - b.completed;
+      }
+
+      const dateA = new Date(
+        (a.dueDate || "9999-12-31") + "T" + (a.startTime || "23:59"),
+      );
+      const dateB = new Date(
+        (b.dueDate || "9999-12-31") + "T" + (b.startTime || "23:59"),
+      );
+
+      if (dateA.getTime() !== dateB.getTime()) {
+        return dateA - dateB;
+      }
+      return (
+        (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0)
+      );
+    });
+  }
+
+  if (currentSort === "priority") {
+    return list.sort((a, b) => {
+      if (a.completed !== b.completed) {
+        return a.completed - b.completed;
+      }
+      return (
+        (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0)
+      );
+    });
+  }
+  if (currentSort === "name") {
+    return list.sort((a, b) => {
+      return a.name.localeCompare(b.name);
+    });
+  }
+  // Default sort
+  return list.sort((a, b) => {
+    if (a.completed !== b.completed) {
+      return a.completed - b.completed;
+    }
+
+    if (a.section !== b.section) {
+      return sections.indexOf(a.section) - sections.indexOf(b.section);
+    }
+
+    if (a.order && b.order && a.order !== b.order) {
+      return a.order - b.order;
+    }
+
+    const timeA = a.startTime || "99:99";
+    const timeB = b.startTime || "99:99";
+
+    if (timeA !== timeB) {
+      return timeA.localeCompare(timeB);
+    }
+
+    return (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0);
+  });
+}
+
+function sortMissionQuests(list) {
+  return [...list].sort((a, b) => {
+    if (a.completed !== b.completed) {
+      return a.completed - b.completed;
+    }
+
+    const timeA = a.startTime || "99:99";
+    const timeB = b.startTime || "99:99";
+
+    if (timeA !== timeB) {
+      return timeA.localeCompare(timeB);
+    }
+
+    if ((priorityOrder[b.priority] || 0) !== (priorityOrder[a.priority] || 0)) {
+      return (
+        (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0)
+      );
+    }
+
+    return (a.order || 999) - (b.order || 999);
+  });
+}
+
+// =====================
+// QUEST SYSTEM — PART 5
+// DASHBOARD INTEGRATION
+// =====================
+
+// =====================
+// GET ACTIVE QUESTS
+// =====================
+
+function getActiveQuests() {
+  return quests.filter((quest) => !quest.completed);
+}
+
+// =====================
+// TODAY'S QUESTS
+// =====================
+
+function getTodaysQuests() {
+  return quests.filter((quest) => isQuestScheduledToday(quest));
+}
+
+function isQuestScheduledToday(quest) {
+  if (quest.recurring === "daily") {
+    return true;
+  }
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dayOfWeek = today.getDay();
+
+  if (quest.recurring === "weekly") {
+    // Check if today is in repeatDays
+    if (quest.repeatDays && quest.repeatDays.length > 0) {
+      return quest.repeatDays.includes(dayOfWeek);
+    }
+    // Fallback: use dueDate
+    if (quest.dueDate) {
+      const qDay = new Date(quest.dueDate).getDay();
+      return dayOfWeek === qDay;
+    }
+    return true;
+  }
+
+  if (quest.dueDate) {
+    const [year, month, day] = quest.dueDate.split("-").map(Number);
+    const due = new Date(year, month - 1, day);
+    due.setHours(0, 0, 0, 0);
+    return due.getTime() === today.getTime();
+
+  }
+  return true;
+}
+
+function getCurrentQuest(offset = 0) {
+  const todayQuests = getTodaysQuests();
+
+  if (todayQuests.length === 0) {
+    return null;
+  }
+
+  function getStartMinutes(quest) {
+    if (!quest.startTime) return 0;
+    const [hours, minutes] = quest.startTime.split(":").map(Number);
+    return hours * 60 + minutes;
+  }
+
+  const eligible = todayQuests.filter((quest) => {
+    if (quest.completed) return false;
+    if (quest.cancelledToday) return false;
+    const timeState = getQuestTimeState(quest);
+    return timeState === "active" || timeState === "overdue";
+  });
+
+
+  if (eligible.length === 0) {
+    return null;
+  }
+
+  eligible.sort((a, b) => {
+    const timeDifference = getStartMinutes(a) - getStartMinutes(b);
+    if (timeDifference !== 0) return timeDifference;
+
+    const priorityDifference =
+      (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0);
+    if (priorityDifference !== 0) return priorityDifference;
+
+    return (a.order || 0) - (b.order || 0);
+  });
+
+  return eligible[offset % eligible.length] || null;
+}
+
+function getBacklogQuests() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return quests.filter((quest) => {
+    if (quest.completed) return false;
+    if (!quest.dueDate) return false;
+
+    const [year, month, day] = quest.dueDate.split("-").map(Number);
+    const due = new Date(year, month - 1, day);
+    due.setHours(0, 0, 0, 0);
+
+    return due < today;
+  });
+}
+
+function getUpcomingQuests() {
+  const todayQuests = getTodaysQuests();
+  const upcoming = todayQuests.filter((quest) => {
+    if (quest.completed) return false;
+    return getQuestTimeState(quest) === "upcoming";
+  });
+
+  upcoming.sort((a, b) => {
+    const timeA = a.startTime || "99:99";
+    const timeB = b.startTime || "99:99";
+
+    if (timeA !== timeB) return timeA.localeCompare(timeB);
+
+    const priorityDifference =
+      (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0);
+    if (priorityDifference !== 0) return priorityDifference;
+
+    return (a.order || 0) - (b.order || 0);
+  });
+
+  return upcoming;
+}
+
+// =====================
+// CURRENT MISSION
+// =====================
+
+function getCurrentMission() {
+  return getCurrentQuest();
+}
+
+// =====================
+// TODAY PROGRESS
+// =====================
+
+function getTodayProgress() {
+  const today = getTodaysQuests();
+  const completed = today.filter((q) => q.completed).length;
+
+  return {
+    total: today.length,
+    completed,
+    percentage:
+      today.length === 0 ? 0 : Math.round((completed / today.length) * 100),
+  };
+}
+
+function getHighestPriorityToday() {
+  const today = getTodaysQuests();
+  if (today.length === 0) return null;
+
+  return [...today].sort((a, b) => {
+    return (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0);
+  })[0];
+}
+
+// =====================
+// QUEST MAKING SYSTEM
+// =====================
+
+function showStep(stepNumber) {
+  wizardSteps.forEach((step) => {
+    step.hidden = Number(step.dataset.step) != stepNumber
+  })
+  if (stepNumber === 5) {
+    updateReviewSummary()
+  }
+}
+
+function closeWizard() {
+  questCreator.hidden = true;
+  newQuestBtn.hidden = false
+  currentStep = 1
+  showStep(currentStep)
+}
+showStep(currentStep)
+
+if (wizardBack && wizardNext && wizardCancel) {
+  wizardBack.addEventListener("click", () => {
+    if (currentStep > 1) {
+      currentStep = currentStep - 1
+      showStep(currentStep)
+    }
+  })
+  wizardNext.addEventListener("click", () => {
+    if (currentStep < 5) {
+      currentStep = currentStep + 1
+      showStep(currentStep)
+    }
+  })
+
+  wizardCancel.addEventListener("click", () => {
+    resetQuestForm()
+    closeWizard()
+  })
+}
+
+function updateReviewSummary() {
+  reviewSummary.innerHTML = `Name: ${questInput.value}
+  <br>Category: ${questCategoryElement.value} Difficulty: ${questDifficultyElement.value} Priority: ${questPriority.value}
+  <br>Start Time: ${formatTime(questStartTimeElement.value)} End Time: ${formatTime(questEndTimeElement.value)}  Due Date: ${formatDate(questDueDateElement.value)} 
+  <br>Recurring: ${questRecurringElement.value} Streak: ${questStreakEnabledElement.checked ? "yes" : "No"}`
+}
+
+
+// =====================
+// AI READY DATA HELPERS
+// =====================
+
+function getQuestData() {
+  return quests.map((quest) => {
+    return {
+      id: quest.createdAt,
+      name: quest.name,
+      type: quest.type,
+      difficulty: quest.difficulty,
+      priority: quest.priority,
+      section: quest.section,
+      recurring: quest.recurring,
+      repeatDays: quest.repeatDays || [],
+      completed: quest.completed,
+      dueDate: quest.dueDate,
+      startTime: quest.startTime,
+      endTime: quest.endTime,
+    };
+  });
+}
+
+function getQuestsByType(type) {
+  return quests.filter((quest) => quest.type === type);
+}
+
+function getQuestsBySection(section) {
+  return quests.filter((quest) => quest.section === section);
+}
+
+// =====================
+// QUEST EXPORT SYSTEM
+// =====================
+
+function exportQuestData() {
+  return JSON.stringify({ quests, sections }, null, 2);
+}
+
+// =====================
+// DEBUG TOOLS
+// =====================
+
+function questDebug() {
+  console.log("QUEST DATA");
+  console.table(quests);
+  console.log("SECTIONS");
+  console.log(sections);
+  console.log("STATS");
+  console.log(getQuestStats());
+}
+
+// =====================================================
+// 
+// =====================================================
+
+function getEarliestQuestReview() {
+  let earliest = null
+  quests.forEach((quest) => {
+    if (quest.adaptive && quest.nextReview > Date.now() && (earliest === null || quest.nextReview < earliest)) {
+      earliest = quest.nextReview
+    }
+  })
+  return earliest
+}
+
+async function scheduleQuestNotification() {
+  const earliest = getEarliestQuestReview()
+  if (!LocalNotifications || !LocalNotifications.cancel) {
+    return
+  }
+  if (earliest === null) {
+    return
+  }
+
+
+  await LocalNotifications.cancel({ notifications: [{ id: 2 }] })
+  await LocalNotifications.schedule({
+    notifications: [
+      {
+        title: "Quest",
+        body: "An adaptive quest is ready!",
+        id: 2,
+        schedule: { at: new Date(earliest) }
+      }
+    ]
+  });
+}
+
+// =====================================================
+// INITIALIZATION
+// =====================================================
+
+function initializeQuestSystem() {
+  console.log("🔧 Initializing quest system...");
+
+  // PHASE 1 — instant local-first display, no writes, no pushes
+  loadSections();
+  loadCategories();
+  loadQuests();
+  renderSections();
+  renderCategories();
+  renderQuests();
+
+
+  // PHASE 2 — reconcile with the cloud BEFORE doing anything that
+  // could resave/push. Waiting for the pull first means this device
+  // never pushes a stale pre-sync copy that could resurrect a
+  // deletion made on another device.
+  function runPhase2() {
+    migrateQuests();
+    reviveDueQuests();
+    runDailyReset();
+    loadQuests();
+    updatePrayerQuests();
+    updateQuestOrder();
+    renderSections();
+    renderCategories();
+    renderQuests();
+    console.log("✅ Quest system fully reconciled. quests.length =", quests.length);
+  }
+
+  whenSyncReady(runPhase2);
+
+  // Check for new day every minute
+  setInterval(() => {
+    reviveDueQuests();
+    if (isNewDay()) {
+      console.log("🔄 New day detected! Running reset...");
+      runDailyReset();
+      loadQuests();
+      renderQuests();
+    }
+  }, 60000);
+}
+
+initializeQuestSystem();

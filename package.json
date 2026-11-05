@@ -1,0 +1,30 @@
+{
+  "name": "ascend",
+  "version": "1.0.0",
+  "description": "- Player System\r - XP & Leveling\r - Profile Picture\r - Dashboard\r - Quest System\r - Codex\r - Test Mode\r - Stats Page\r - Skill Tree\r - Skill XP Progression\r - Login System\r - Calendar (day view, time-based quest rendering)\r - Library (nested folders, rich text editor)",
+  "main": "generate-changelog.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KhalidxISTJ/Ascend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/KhalidxISTJ/Ascend/issues"
+  },
+  "homepage": "https://github.com/KhalidxISTJ/Ascend#readme",
+  "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/browser": "^8.0.5",
+    "@capacitor/cli": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/local-notifications": "^8.3.1"
+  }
+}

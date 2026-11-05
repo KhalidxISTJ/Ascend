@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, maximum-scale=1.0,  initial-scale=1.0" />
+  <title>Quests</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/navigation.css" />
+  <link rel="stylesheet" href="css/quests.css" />
+  <link rel="stylesheet" href="css/index.css" />
+  <link rel="stylesheet" href="css/ai.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Space+Grotesk:wght@300..700&display=swap"
+    rel="stylesheet" />
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="Images\icons\ascendLogo.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Ascend" />
+  <meta name="theme-color" content="#0f0f1a" />
+
+  <!--SupaBase-->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+</head>
+
+<body data-page="quests">
+  <div id="nav-placeholder"></div>
+  <main>
+    <h2>Quest System</h2>
+
+    <div class="quest-layout">
+      <!-- CREATE QUEST -->
+
+      <section class="quest-creator" hidden>
+        <div class="wizardBox">
+          <h3>Create a quest</h3>
+          <div class="wizard-step" data-step="1">
+            <label for="questInput">Quest name: </label>
+            <input type="text" id="questInput">
+          </div>
+          <div class="wizard-step" data-step="2">
+            <label for="questCategory">Category:</label>
+            <select id="questCategory"></select>
+            <button id="addCategoryBtn" type="button">+</button>
+            <label for="questDifficulty">Difficulty:</label>
+            <select id="questDifficulty">
+              <option value="Easy">Easy</option>
+              <option value="Medium">Medium</option>
+              <option value="Hard">Hard</option>
+              <option value="Extreme">Very Hard</option>
+            </select>
+            <label for="questPriority">Priority:</label>
+            <select id="questPriority">
+              <option value="Critical">Critical</option>
+              <option value="High">High</option>
+              <option value="Medium" selected>Medium</option>
+              <option value="Low">Low</option>
+            </select>
+          </div>
+          <div class="wizard-step" data-step="3">
+            <label for="questStartTime">Start time:</label>
+            <input type="time" id="questStartTime">
+            <label for="questEndTime">End time:</label>
+            <input type="time" id="questEndTime">
+            <label for="questDueDate">Due date:</label>
+            <input type="date" id="questDueDate">
+          </div>
+          <div class="wizard-step" data-step="4">
+            <label for="questRecurring">Repeating:</label>
+            <select id="questRecurring">
+              <option value="none">None</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="custom">Custom</option>
+            </select>
+            <div id="daySelectorContainer" hidden>
+              <h4>Repeat on:</h4>
+              <label><input type="checkbox" class="repeat-day" value="0"> Sun</label>
+              <label><input type="checkbox" class="repeat-day" value="1"> Mon</label>
+              <label><input type="checkbox" class="repeat-day" value="2"> Tue</label>
+              <label><input type="checkbox" class="repeat-day" value="3"> Wed</label>
+              <label><input type="checkbox" class="repeat-day" value="4"> Thu</label>
+              <label><input type="checkbox" class="repeat-day" value="5"> Fri</label>
+              <label><input type="checkbox" class="repeat-day" value="6"> Sat</label>
+            </div>
+            <label>🔥<input type="checkbox" id="questStreakEnabled"></label>
+            <label>🧠 Adaptive<input type="checkbox" id="questAdaptive"></label>
+          </div>
+          <div class="wizard-step" data-step="5">
+            <h4>Review your quest</h4>
+            <div id="reviewSummary"></div>
+          </div>
+          <button id="wizardBack" type="button">⬅️</button>
+          <button id="wizardNext" type="button">➡️</button>
+          <button id="wizardCancel" type="button">Cancel</button>
+          <button id="addQuestBtn">Finish</button>
+        </div>
+      </section>
+
+      <div class="quest-toolbar">
+        <button id="newQuestBtn">+ New Quest</button>
+        <input type="text" id="questSearch" placeholder="Search quests..." />
+      </div>
+      <label for="sortQuests">Sort:</label>
+
+      <select id="sortQuests">
+        <option value="date">Due Date</option>
+        <option value="priority">Priority</option>
+        <option value="category">Category</option>
+        <option value="section">Section</option>
+        <option value="difficulty">Difficulty</option>
+        <option value="name">Name (A-Z)</option>
+        <option value="created">Date Created</option>
+      </select>
+
+      <!-- ACTIVE QUESTS -->
+      <div class="quest-sections">
+        <div id="questSections" class="quest-sections"></div>
+      </div>
+
+      <section class="quest-display">
+        <h3>Active Quests</h3>
+        <ul id="questList"></ul>
+      </section>
+
+      <!-- COMPLETED QUESTS -->
+      <section class="completed-quests">
+        <h3>Completed Quests</h3>
+        <ul id="completedQuestList"></ul>
+      </section>
+
+      <!-- Neither active nor completed quest-->
+      <section class="not-today-quests">
+        <h3>Not today quests</h3>
+        <ul id="notTodayQuestList"></ul>
+      </section>
+    </div>
+  </main>
+  <script src="js/player.js"></script>
+  <script src="js/skillTree.js"></script>
+  <script src="js/quests.js"></script>
+  <script src="js/aiContext.js"></script>
+  <script src="js/ascendAI.js"></script>
+  <script src="js/nav.js"></script>
+</body>
+
+</html>

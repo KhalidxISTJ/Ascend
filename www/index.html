@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Ascend</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="Images\icons\ascendLogo.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Ascend" />
+  <meta name="theme-color" content="#0f0f1a" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Space+Grotesk:wght@300..700&display=swap"
+    rel="stylesheet" />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/navigation.css" />
+  <link rel="stylesheet" href="css/index.css" />
+
+  <!--SupaBase-->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+</head>
+
+<body data-page="home">
+  <main>
+    <div id="nav-placeholder"></div>
+    <section class="dashboard">
+      <!-- Profile Panel -->
+      <div class="profile-panel">
+        <div class="profile-left">
+          <img alt="Profile Picture" id="profile-img" class="profile-picture" />
+          <form class="profile-form" id="profile-form">
+            <input type="file" id="profile-picture" />
+            <input type="text" id="name" placeholder="Enter your name" />
+            <button type="submit">Save</button>
+          </form>
+        </div>
+        <div class="profile-right">
+          <div class="stat-card" id="display-name">Name:</div>
+          <div class="stat-card" id="level">Level:</div>
+          <div class="stat-card xp-card">
+            <strong>XP</strong>
+            <span id="xp-number">0</span>
+            <div class="xp-track">
+              <div class="xp-fill" id="xp-fill"></div>
+            </div>
+          </div>
+          <div class="stat-card" id="activeQuestCount">Active Quests: 0</div>
+          <div class="stat-card" id="completedQuestCount">
+            Completed Quests: 0
+          </div>
+          <div class="stat-card" id="completionRate">Completion: 0%</div>
+          <div class="stat-card">
+            <P>Time Left</P>
+            <div id="time-left-in-day">00:00:00</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Home Grid -->
+      <div class="home-grid">
+        <!-- Current Quest -->
+        <div class="home-card">
+          <h3>🎯 Current Quest</h3>
+          <div id="current-quest" class="current-quest">No active quest.</div>
+          <div class="quest-actions">
+            <button id="completeCurrentQuest" hidden>Complete</button>
+            <button id="skipCurrentQuest" hidden>Skip</button>
+            <button id="cancelCurrentQuest">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Overdue -->
+        <div class="home-card">
+          <h3>🔴 Overdue</h3>
+          <div id="overdueQuests" class="quest-list">
+            <p class="empty-state">No overdue quests.</p>
+          </div>
+        </div>
+
+        <!-- Upcoming -->
+        <div class="home-card">
+          <div id="timer">
+            <h3>🟡 Upcoming</h3>
+            <span id="time-till">00:00:00</span>
+          </div>
+          <div id="upcomingQuests" class="quest-list">
+            <p class="empty-state">Nothing upcoming.</p>
+          </div>
+        </div>
+
+        <!-- Timer -->
+        <div class="home-card">
+          <h3>⏱ Focus Timer</h3>
+          <div id="timerStatus" class="timer-status">⚪ Ready</div>
+          <h2 id="timerDisplay">00:00:00</h2>
+          <input type="number" id="timerMinutes" min="0" value="0" />
+          <div class="timer-buttons">
+            <button id="startTimer">Start</button>
+            <button id="pauseTimer">Pause</button>
+            <button id="resetTimer">Reset</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer></footer>
+
+  <!-- Service Worker -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("sw.js")
+        .then(() => console.log("✅ Service Worker registered"))
+        .catch((err) => console.log("❌ Service Worker failed:", err));
+    }
+  </script>
+
+  <!-- Scripts -->
+  <script src="js/version.js"></script>
+  <script src="js/versionUI.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/quests.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/index.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/update-check.js"></script>
+</body>
+
+</html>
