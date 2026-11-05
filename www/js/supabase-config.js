@@ -86,7 +86,8 @@ function applyRemoteData(bundle) {
             const localModifiedRaw = localStorage.getItem(prefix + key + '_modifiedAt');
             const localModified = localModifiedRaw ? parseInt(localModifiedRaw, 10) : 0;
 
-            localStorage.setItem(prefix + key, JSON.stringify(bundle[label]));
+            const value = bundle[label];
+            localStorage.setItem(prefix + key, typeof value === 'string' ? value : JSON.stringify(value));
             if (bundle[label + '_modifiedAt']) {
                 localStorage.setItem(prefix + key + '_modifiedAt', String(bundle[label + '_modifiedAt']));
             }
