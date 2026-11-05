@@ -1,5 +1,8 @@
 {
   "appId": "com.khalid.ascend",
   "appName": "Ascend",
-  "webDir": "www"
+  "webDir": "www",
+  "server": {
+    "url": "https://khalidxistj.github.io/Ascend/www/"
+  }
 }
