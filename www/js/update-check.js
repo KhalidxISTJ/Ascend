@@ -1,5 +1,5 @@
 (function () {
-    const CURRENT_VERSION = "v1.1.4 live";
+    const CURRENT_VERSION = "v1.1.4";
     const RELEASES_API = "https://api.github.com/repos/KhalidxISTJ/Ascend/releases/latest";
 
     let pendingDownloadUrl = null;

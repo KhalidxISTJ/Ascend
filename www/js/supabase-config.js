@@ -181,11 +181,15 @@ function whenSyncReady(callback) {
     }
 }
 
+let syncTimer = null;
 function syncPush() {
+    clearTimeout(syncTimer);
     const userId = localStorage.getItem('currentUserId');
-    if (userId) {
-        pushToSupabase(userId);
-    }
+    syncTimer = setTimeout(() => {
+        if (userId) {
+            pushToSupabase(userId);
+        }
+    }, 800);
 }
 
 // Run this on page load: checks if someone's signed in, and if so, syncs
