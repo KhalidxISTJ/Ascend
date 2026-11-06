@@ -99,8 +99,6 @@ async function updatePrayerQuests() {
   }
 }
 
-
-
 // =====================================================
 // DATE HELPERS
 // =====================================================
@@ -556,6 +554,12 @@ function renderQuests() {
       continue;
     }
 
+    if (quest.adaptive && quest.completed) {
+      const li = createQuestElement(quest);
+      notTodayQuestList.appendChild(li);
+      continue;
+    }
+
     const li = createQuestElement(quest);
     if (quest.completed) {
       completedQuestList.appendChild(li);
@@ -568,6 +572,18 @@ function renderQuests() {
 // =====================
 // CREATE QUEST CARD
 // =====================
+
+function formatTimeLeft(nextReview) {
+  const msLeft = nextReview - Date.now();
+  if (!(msLeft > 0)) {
+    return "Ready now";
+  }
+  const days = Math.floor(msLeft / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((msLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((msLeft % (1000 * 60)) / 1000);
+  return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+}
 
 function createQuestElement(quest) {
   const { completed, cancelledToday } = quest
@@ -643,6 +659,13 @@ function createQuestElement(quest) {
       info += "<br>";
     }
     info += `📅 ${formatDate(dueDate)}`;
+  }
+
+  if (quest.adaptive) {
+    if (info) {
+      info += "<br>";
+    }
+    info += `⏳ <span class="countdown" data-next-review="${quest.nextReview}">${formatTimeLeft(quest.nextReview)}</span>`;
   }
 
   // Show repeat days if weekly
@@ -1703,6 +1726,13 @@ function initializeQuestSystem() {
       renderQuests();
     }
   }, 60000);
+
+  // Update countdowns every second
+  setInterval(() => {
+    document.querySelectorAll(".countdown").forEach((el) => {
+      el.textContent = formatTimeLeft(Number(el.dataset.nextReview));
+    });
+  }, 1000);
 }
 
 initializeQuestSystem();
