@@ -103,8 +103,25 @@ function applyRemoteData(bundle) {
 }
 
 window.hasPulledSuccessfully = false;
+let currentSyncState = "Waiting"
+function setSyncStatus(state) {
+    currentSyncState = state
+    const syncState = document.getElementById("sync-status")
+    if (syncState === null) { return }
+    if (state === "syncing") {
+        syncState.textContent = "🔄"
+    } else if (state === "synced") {
+        syncState.textContent = "✅"
+    } else if (state === "error") {
+        syncState.textContent = "⚠️"
+    } else {
+        syncState.textContent = "⏳"
+    }
+}
+document.addEventListener("navLoaded", () => { setSyncStatus(currentSyncState) })
 
 async function pullFromSupabase(userId, event) {
+    setSyncStatus("syncing");                          // NEW (1)
     const { data: row, error } = await supabaseClient
         .from('user_data')
         .select('data, updated_at')
@@ -113,6 +130,7 @@ async function pullFromSupabase(userId, event) {
 
     if (error) {
         console.error('Pull error:', error.message);
+        setSyncStatus("error");                        // NEW (2)
         window.hasPulledSuccessfully = true;
         window.syncReady = true;
         window.dispatchEvent(new Event('syncReady'));
@@ -129,6 +147,7 @@ async function pullFromSupabase(userId, event) {
     // Mark the pull as resolved before the first-sync push below, so that
     // push isn't blocked by the very gate it needs to pass.
     window.hasPulledSuccessfully = true;
+    setSyncStatus("synced");                           // NEW (3)
 
     if (!row) {
         await pushToSupabase(userId);
@@ -149,6 +168,7 @@ async function pushToSupabase(userId) {
     }
 
     const bundle = collectLocalData();
+    setSyncStatus("syncing");
     const { error } = await supabaseClient
         .from('user_data')
         .upsert({
@@ -159,8 +179,10 @@ async function pushToSupabase(userId) {
 
     if (error) {
         console.error('Push error:', error.message);
+        setSyncStatus("error");
     } else {
         console.log('Pushed local data to Supabase');
+        setSyncStatus("synced");
     }
 }
 
