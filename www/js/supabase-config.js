@@ -208,6 +208,7 @@ function whenSyncReady(callback) {
 
 let syncTimer = null;
 function syncPush() {
+    setSyncStatus("waiting");
     clearTimeout(syncTimer);
     const userId = localStorage.getItem('currentUserId');
     syncTimer = setTimeout(() => {
