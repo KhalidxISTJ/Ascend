@@ -3,7 +3,9 @@ const deckList = document.getElementById("deck-list");
 const newDeckInput = document.getElementById("newDeckInput");
 const deckBtn = document.getElementById("deck-Btn");
 const deckDetails = document.getElementById("deck-detail")
-const decks = JSON.parse(localStorage.getItem("deckList")) || []
+const deckKey = getPrefix() + "deckList"
+const decks = JSON.parse(localStorage.getItem(deckKey)) || []
+
 
 decks.forEach((deck) => {
     deck.cards.forEach((card) => {
@@ -15,8 +17,14 @@ decks.forEach((deck) => {
         }
     })
 })
-localStorage.setItem("deckList", JSON.stringify(decks))
+localStorage.setItem(deckKey, JSON.stringify(decks))
 let currentIndex = 0
+
+function saveDecks() {
+    localStorage.setItem(deckKey, JSON.stringify(decks))
+    localStorage.setItem(deckKey + "_modifiedAt", Date.now())
+    syncPush()
+}
 
 async function testNotification() {
     const result = await LocalNotifications.requestPermissions();
@@ -35,7 +43,7 @@ deckBtn.addEventListener("click", () => {
     const input = newDeckInput.value
     const newDeck = { name: input, timerOn: false, timerSeconds: 10, cards: [] }
     decks.push(newDeck)
-    localStorage.setItem("deckList", JSON.stringify(decks))
+    saveDecks()
     renderDecks()
     newDeckInput.value = ""
 })
@@ -50,7 +58,7 @@ function renderDecks() {
         deckList.appendChild(deletebtn)
         deletebtn.addEventListener("click", () => {
             decks.splice(decks.indexOf(deck), 1)
-            localStorage.setItem("deckList", JSON.stringify(decks))
+            saveDecks()
             renderDecks()
         })
         btn.addEventListener("click", () => {
@@ -158,7 +166,7 @@ function showDeckDetails(deck) {
             nextReview: Date.now()
         }
         deck.cards.push(newCard)
-        localStorage.setItem("deckList", JSON.stringify(decks))
+        saveDecks()
         scheduleReviewNotification()
         cardFront.value = ""
         cardBack.value = ""
@@ -190,7 +198,7 @@ function showDeckDetails(deck) {
             deck.cards.push(newCard)
         })
 
-        localStorage.setItem("deckList", JSON.stringify(decks))
+        saveDecks()
         scheduleReviewNotification()
         bulkInput.value = ""
         showDeckDetails(deck)
@@ -221,7 +229,7 @@ function showDeckDetails(deck) {
             newCards.push(newCard)
         })
         deck.cards = newCards
-        localStorage.setItem("deckList", JSON.stringify(decks))
+        saveDecks()
         scheduleReviewNotification()
         showDeckDetails(deck)
     })
@@ -232,7 +240,7 @@ function showDeckDetails(deck) {
     deleteCurrent.addEventListener("click", () => {
         deck.cards.splice(currentIndex, 1)
         if (currentIndex >= deck.cards.length && currentIndex > 0) { currentIndex-- }
-        localStorage.setItem("deckList", JSON.stringify(decks))
+        saveDecks()
         showDeckDetails(deck)
     })
 }
@@ -290,7 +298,7 @@ function startReview(deck) {
         card.reviewCount = (card.reviewCount || 0) + 1
         card.nextReview = now + (newStability * 24 * 60 * 60 * 1000)
 
-        localStorage.setItem("deckList", JSON.stringify(decks))
+        saveDecks()
         scheduleReviewNotification()
         startReview(deck)
     }

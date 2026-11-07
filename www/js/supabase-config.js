@@ -39,7 +39,7 @@ if (googleSignINBtn) {
 const SYNC_FEATURES = {
     quests: 'savedQuests',
     skillTree: 'skillTree',
-    codexData: 'codexData',
+    codexDecks: 'deckList',
     playerData: 'playerData',
     questSections: 'questSections',
     questCategories: 'questCategories',
@@ -87,9 +87,11 @@ function applyRemoteData(bundle) {
             const localModified = localModifiedRaw ? parseInt(localModifiedRaw, 10) : 0;
 
             const value = bundle[label];
-            localStorage.setItem(prefix + key, typeof value === 'string' ? value : JSON.stringify(value));
-            if (bundle[label + '_modifiedAt']) {
-                localStorage.setItem(prefix + key + '_modifiedAt', String(bundle[label + '_modifiedAt']));
+            if (remoteModified > localModified) {
+                localStorage.setItem(prefix + key, typeof value === 'string' ? value : JSON.stringify(value));
+                if (bundle[label + '_modifiedAt']) {
+                    localStorage.setItem(prefix + key + '_modifiedAt', String(bundle[label + '_modifiedAt']));
+                }
             }
         }
     }
