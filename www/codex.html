@@ -33,12 +33,20 @@
 <body data-page="codex">
   <div id="nav-placeholder"></div>
   <main>
-    <h2>Codex</h2>
+    <div class="codex-top" id="codex-top">
+      <div>
+        <h2>Codex</h2>
+      </div>
+    </div>
     <div id="deck-list"></div>
     <div id="deck-detail"></div>
-    <input type="text" id="newDeckInput">
-    <button type="button" id="deck-Btn">Add</button>
 
+    <!-- JS moves this card into the deck grid -->
+    <div id="new-deck-card" class="new-deck-card">
+      <label for="newDeckInput">New deck</label>
+      <input type="text" id="newDeckInput" placeholder="Deck name">
+      <button type="button" id="deck-Btn">Add deck</button>
+    </div>
   </main>
 
   <!-- =====================================================

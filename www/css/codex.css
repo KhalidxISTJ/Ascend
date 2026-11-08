@@ -1,3 +1,87 @@
+/* ---------- Deck list ---------- */
+#deck-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.deck-card {
+  background: #2b3358;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  padding: 22px;
+}
+
+.deck-card h2 {
+  text-align: left;
+  margin: 0;
+  font-size: 24px;
+}
+
+.deck-card p {
+  color: #aab3d6;
+}
+
+/* ---------- Due badge ---------- */
+.due-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #ffb454;
+  color: #20274a;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.due-badge.caught-up {
+  background: rgba(52, 211, 153, 0.16);
+  color: #86efac;
+}
+
+/* ---------- Deck buttons ---------- */
+.deck-card button {
+  height: 46px;
+  padding: 0 20px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.deck-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+/* Open: outlined */
+.deck-actions button {
+  flex: 1;
+  background: transparent;
+  color: #eef1ff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+/* Review: white, main action */
+.deck-card .review-btn {
+  background: #ffffff;
+  color: #20274a;
+  border: none;
+  font-weight: 700;
+}
+
+/* Delete: small square icon */
+.deck-card .delete-btn {
+  flex: none;
+  width: 46px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: #aab3d6;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+/* ---------- Deck details + review screen ---------- */
 #deck-detail {
   display: flex;
   flex-direction: column;
@@ -5,27 +89,567 @@
   gap: 10px;
 }
 
-#deck-detail div {
-  display: flex;
-  flex-direction: row;
-  gap: 7px;
-}
-
-#deck-details {
-  display: flex;
-  flex-direction: row;
+.flashcard,
+.grade-buttons {
+  width: 100%;
+  max-width: 680px;
 }
 
 .flashcard {
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  padding: 24px;
-  min-width: 250px;
-  min-height: 120px;
-  text-align: center;
-  cursor: pointer;
+  background: #ffffff;
+  color: #20274a;
+  border-radius: 22px;
+  padding: 40px 24px;
+  min-height: 200px;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  margin: 20px 0;
+}
+
+.review-count,
+.review-info {
+  color: #aab3d6;
+  font-size: 14px;
+}
+
+.grade-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.grade-btn {
+  height: 72px;
+  border-radius: 14px;
+  background: #2b3358;
+  color: #eef1ff;
+  border: 2px solid;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-weight: 700;
+}
+
+.grade-btn span:last-child {
+  font-size: 13px;
+  color: #aab3d6;
+  font-weight: 400;
+}
+
+.grade-again {
+  border-color: #ff8a8a;
+}
+
+.grade-hard {
+  border-color: #ffb454;
+}
+
+.grade-good {
+  border-color: #8b9bff;
+}
+
+.grade-easy {
+  border-color: #86efac;
+}
+
+/* ---------- Deck details page ---------- */
+.deck-header,
+.card-browser,
+.card-meta,
+.add-card,
+.more-tools {
+  width: 100%;
+  max-width: 800px;
+  box-sizing: border-box;
+}
+
+.deck-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.deck-header h2 {
+  flex: 1;
+  margin: 0;
+  font-size: 28px;
+}
+
+.deck-header button,
+.add-card button,
+.more-tools button {
+  height: 46px;
+  padding: 0 20px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.back-btn {
+  background: transparent;
+  color: #eef1ff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.deck-header .review-btn {
+  background: #ffffff;
+  color: #20274a;
+  border: none;
+  font-weight: 700;
+}
+
+.card-browser {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.card-browser .flashcard {
+  flex: 1;
+  min-width: 0;
+}
+
+.nav-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: transparent;
+  color: #eef1ff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #aab3d6;
+  font-size: 14px;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #8b9bff;
+  text-decoration: underline;
+  margin-right: auto;
+  cursor: pointer;
+}
+
+.danger-btn {
+  background: transparent;
+  color: #ff8a8a;
+  border: 1px solid rgba(255, 138, 138, 0.5);
+  border-radius: 10px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+.add-card,
+.more-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #2b3358;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  padding: 18px;
+}
+
+.add-card h3,
+.more-tools h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.add-card input,
+.more-tools textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: #ffffff;
+  color: #20274a;
+  padding: 12px 14px;
+  font-size: 15px;
+  font-family: inherit;
+}
+
+.add-card input {
+  height: 46px;
+  padding: 0 14px;
+}
+
+.primary-btn {
+  background: #8b9bff;
+  color: #0d1020;
+  border: none;
+}
+
+.more-tools summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.empty-msg {
+  color: #aab3d6;
+}
+
+/* ---------- Deck card layout (top row + progress) ---------- */
+.deck-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.deck-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.deck-card-top p {
+  margin: 4px 0 0 0;
+  font-size: 14px;
+}
+
+.deck-progress p {
+  margin: 8px 0 0 0;
+  font-size: 13px;
+}
+
+.progress-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #8b9bff;
+}
+
+.deck-actions {
+  margin-top: 0;
+}
+
+.deck-card .review-btn:disabled {
+  background: rgba(255, 255, 255, 0.14);
+  color: #aab3d6;
+  cursor: not-allowed;
+}
+
+/* ---------- Review all due ---------- */
+.review-all-btn {
+  height: 48px;
+  padding: 0 24px;
+  border-radius: 12px;
+  border: none;
+  background: #ffffff;
+  color: #20274a;
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 20px 0;
+  cursor: pointer;
+}
+
+.review-all-btn:disabled {
+  background: rgba(255, 255, 255, 0.14);
+  color: #aab3d6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .review-all-btn {
+    width: 100%;
+  }
+}
+
+/* ---------- Page header ---------- */
+.codex-subtitle {
+  margin: 6px 0 20px 0;
+  color: #aab3d6;
+  font-size: 15px;
+}
+
+/* ---------- New deck card ---------- */
+.new-deck-card {
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 18px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+.new-deck-card label {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.new-deck-card input {
+  height: 46px;
+  box-sizing: border-box;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: #ffffff;
+  color: #20274a;
+  padding: 0 14px;
+  font-size: 15px;
+  font-family: inherit;
+}
+
+.new-deck-card button {
+  height: 46px;
+  border-radius: 12px;
+  border: none;
+  background: #8b9bff;
+  color: #0d1020;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ---------- Review screen: counter, progress, done ---------- */
+.review-progress {
+  width: 100%;
+  max-width: 680px;
+}
+
+.review-progress .review-count {
+  margin: 0 0 8px 0;
+  text-align: right;
+}
+
+.review-done {
+  color: #86efac;
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 30px;
+}
+
+.review-info {
+  text-align: center;
+  margin: 0;
+}
+
+/* ---------- Phone ---------- */
+@media (max-width: 600px) {
+  .deck-header {
+    flex-wrap: wrap;
+  }
+
+  .deck-header h2 {
+    font-size: 22px;
+  }
+
+  .flashcard {
+    font-size: 22px;
+    padding: 28px 16px;
+    min-height: 160px;
+  }
+
+  .card-browser {
+    gap: 8px;
+  }
+
+  .nav-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  .grade-buttons {
+    gap: 8px;
+  }
+
+  .grade-btn {
+    height: 64px;
+    font-size: 14px;
+  }
+
+  .card-meta {
+    flex-wrap: wrap;
+  }
+}
+
+/* ---------- Page layout fixes ---------- */
+body[data-page="codex"] main {
+  padding: 0 40px 40px 40px;
+  box-sizing: border-box;
+}
+
+.codex-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin: 36px 0 28px 0;
+}
+
+.codex-top h2 {
+  margin: 0;
+  text-align: left;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 44px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.codex-subtitle {
+  margin: 8px 0 0 0;
+  color: #aab3d6;
+  font-size: 16px;
+}
+
+.review-all-btn {
+  margin: 0;
+}
+
+.deck-card h2 {
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 700;
+}
+
+.deck-card .review-btn,
+.deck-actions button:not(.delete-btn) {
+  padding: 0 12px;
+  white-space: nowrap;
+}
+
+.new-deck-card label {
+  color: #eef1ff;
+}
+
+@media (max-width: 600px) {
+  body[data-page="codex"] main {
+    padding: 0 16px 32px 16px;
+  }
+
+  .codex-top h2 {
+    font-size: 36px;
+  }
+
+  .review-all-btn {
+    width: 100%;
+  }
+}
+
+/* ---------- Review/Open screen fixes ---------- */
+.review-top {
+  width: 100%;
+  max-width: 680px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.deck-header h2 {
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 700;
+  color: #eef1ff;
+}
+
+.add-card h3,
+.more-tools h3,
+.more-tools summary {
+  color: #eef1ff;
+}
+
+/* ---------- Rename + edit card ---------- */
+.deck-header input {
+  flex: 1;
+  min-width: 0;
+  height: 46px;
+  box-sizing: border-box;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: #ffffff;
+  color: #20274a;
+  padding: 0 14px;
+  font-size: 18px;
+  font-family: inherit;
+}
+
+.card-links {
+  display: flex;
+  gap: 14px;
+  margin-right: auto;
+}
+
+.card-links .link-btn {
+  margin-right: 0;
+}
+
+.add-card textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: #ffffff;
+  color: #20274a;
+  padding: 12px 14px;
+  font-size: 15px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.edit-actions button {
+  flex: 1;
+}
+
+.ghost-btn {
+  background: transparent;
+  color: #eef1ff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+/* ---------- Session size ---------- */
+.codex-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.session-size {
+  height: 48px;
+  border-radius: 12px;
+  background: #2b3358;
+  color: #eef1ff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 0 12px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+@media (max-width: 600px) {
+  .codex-actions {
+    width: 100%;
+  }
+
+  .codex-actions .review-all-btn,
+  .codex-actions .session-size {
+    flex: 1;
+    width: auto;
+  }
 }

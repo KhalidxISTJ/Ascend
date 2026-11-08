@@ -79,15 +79,19 @@ function applyRemoteData(bundle) {
         localStorage.setItem('username', bundle.username);
     }
     const prefix = getPrefix();
+    const changedLabels = [];
 
     for (const [label, key] of Object.entries(SYNC_FEATURES)) {
         if (bundle[label] !== undefined && bundle[label] !== null) {
             const remoteModified = bundle[label + '_modifiedAt'] || 0;
             const localModifiedRaw = localStorage.getItem(prefix + key + '_modifiedAt');
             const localModified = localModifiedRaw ? parseInt(localModifiedRaw, 10) : 0;
+            const localHasValue = localStorage.getItem(prefix + key) !== null;
 
             const value = bundle[label];
-            if (remoteModified > localModified) {
+            // Newer cloud wins. Also load it if this device has never had this feature at all.
+            if (remoteModified > localModified || !localHasValue) {
+                changedLabels.push(label);
                 localStorage.setItem(prefix + key, typeof value === 'string' ? value : JSON.stringify(value));
                 if (bundle[label + '_modifiedAt']) {
                     localStorage.setItem(prefix + key + '_modifiedAt', String(bundle[label + '_modifiedAt']));
@@ -100,6 +104,12 @@ function applyRemoteData(bundle) {
         loadQuests();
         renderQuests();
     }
+
+    // Tell pages which features changed so they can reload themselves
+    if (changedLabels.length > 0) {
+        document.dispatchEvent(new CustomEvent('dataPulled', { detail: { changed: changedLabels } }));
+    }
+    return changedLabels;
 }
 
 window.hasPulledSuccessfully = false;
@@ -148,6 +158,7 @@ async function pullFromSupabase(userId, event) {
     // push isn't blocked by the very gate it needs to pass.
     window.hasPulledSuccessfully = true;
     setSyncStatus("synced");                           // NEW (3)
+    startRealtime(userId);
 
     if (!row) {
         await pushToSupabase(userId);
@@ -204,6 +215,51 @@ function whenSyncReady(callback) {
         window.addEventListener('syncReady', run, { once: true });
         setTimeout(run, 6000);
     }
+}
+
+// Fetch the cloud copy again and apply anything newer. quiet = don't flash the sync icon.
+let refreshing = false;
+async function refreshFromCloud(quiet) {
+    const userId = localStorage.getItem('currentUserId');
+    if (!userId || !window.hasPulledSuccessfully || refreshing) { return; }
+    refreshing = true;
+    if (!quiet) { setSyncStatus("syncing"); }
+    const { data: row, error } = await supabaseClient
+        .from('user_data')
+        .select('data')
+        .eq('user_id', userId)
+        .maybeSingle();
+    refreshing = false;
+    if (error) {
+        console.error('Refresh error:', error.message);
+        if (!quiet) { setSyncStatus("error"); }
+        return;
+    }
+    if (row) { applyRemoteData(row.data); }
+    if (!quiet) { setSyncStatus("synced"); }
+}
+
+// Coming back to the app/tab, or getting internet back, refreshes from the cloud
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') { refreshFromCloud(false); }
+});
+window.addEventListener('online', () => { refreshFromCloud(false); });
+
+// Realtime: when the cloud row changes, refetch it. We refetch instead of reading
+// the event payload because the row is large and realtime payloads can be truncated.
+let realtimeChannel = null;
+let realtimeTimer = null;
+function startRealtime(userId) {
+    if (realtimeChannel) { return; }
+    realtimeChannel = supabaseClient
+        .channel('user-data-' + userId)
+        .on('postgres_changes',
+            { event: '*', schema: 'public', table: 'user_data', filter: 'user_id=eq.' + userId },
+            () => {
+                clearTimeout(realtimeTimer);
+                realtimeTimer = setTimeout(() => { refreshFromCloud(true); }, 500);
+            })
+        .subscribe();
 }
 
 let syncTimer = null;

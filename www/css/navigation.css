@@ -253,6 +253,11 @@ body {
   color: white;
 }
 
+.sync-label {
+  color: #aab3d6;
+  font-size: 13px;
+}
+
 @media (max-width: 700px) {
   .navigation {
     flex-wrap: wrap;
