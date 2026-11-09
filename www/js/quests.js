@@ -1735,4 +1735,10 @@ function initializeQuestSystem() {
   }, 1000);
 }
 
+document.addEventListener("dataPulled", (e) => {
+  if (!e.detail.changed.includes("quests")) return;
+  loadQuests();
+  renderQuests();
+});
+
 initializeQuestSystem();
