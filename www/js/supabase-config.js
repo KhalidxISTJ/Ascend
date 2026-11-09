@@ -312,3 +312,17 @@ if (window.Capacitor && window.Capacitor.isNativePlatform()) {
         }
     });
 }
+document.addEventListener("dataPulled", (e) => {
+    // Quests and Codex already refresh themselves
+    const handled = ["quests", "codexDecks"];
+    const needsReload = e.detail.changed.some((label) => !handled.includes(label));
+    if (!needsReload) return;
+
+
+    // Safety: never reload more than once every 10 seconds
+    const last = Number(sessionStorage.getItem("lastDataReload") || 0);
+    if (Date.now() - last < 10000) return;
+    sessionStorage.setItem("lastDataReload", Date.now());
+
+    location.reload();
+});
