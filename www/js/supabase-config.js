@@ -314,7 +314,9 @@ if (window.Capacitor && window.Capacitor.isNativePlatform()) {
 }
 document.addEventListener("dataPulled", (e) => {
     // Quests and Codex already refresh themselves
-    const handled = ["quests", "codexDecks"];
+    const handled = [];
+    if (document.getElementById("questList")) handled.push("quests");
+    if (document.getElementById("deck-list")) handled.push("codexDecks");
     const needsReload = e.detail.changed.some((label) => !handled.includes(label));
     if (!needsReload) return;
 
