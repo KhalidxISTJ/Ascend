@@ -29,6 +29,7 @@ const reviewSummary = document.getElementById("reviewSummary")
 const questAdaptiveElement = document.getElementById("questAdaptive")
 const startingGap = { Easy: 2880, Medium: 1440, Hard: 720, Extreme: 360 };
 const ratingMultiplier = { 1: "2", 2: "1.2", 3: "0.5" }
+const questNotesElement = document.getElementById("questNotes")
 const { LocalNotifications } = (typeof Capacitor !== "undefined") ? Capacitor.Plugins : {};
 let currentStep = 1
 
@@ -289,6 +290,7 @@ function migrateQuests() {
     if (!quest.repeatDays) { quest.repeatDays = []; changed = true; }
     if (typeof quest.streakEnabled !== "boolean") { quest.streakEnabled = false; changed = true; }
     if (typeof quest.adaptive !== "boolean") { quest.adaptive = false; changed = true; }
+    if (typeof quest.notes !== "string") { quest.notes = ""; changed = true; }
     if (typeof quest.interval !== "number") { quest.interval = 0; changed = true; }
     if (quest.nextReview === undefined) { quest.nextReview = null; changed = true; }
 
@@ -713,6 +715,13 @@ function createQuestElement(quest) {
     details.appendChild(createStreakGrid(quest))
   }
 
+  if (quest.notes) {
+    const notesBox = document.createElement("div");
+    notesBox.className = "quest-notes";
+    notesBox.textContent = "Notes: " + quest.notes;
+    details.appendChild(notesBox);
+  }
+
   // BUTTON AREA
   const buttons = document.createElement("div");
   buttons.className = "quest-buttons";
@@ -854,6 +863,7 @@ function createQuestObject() {
     color: isEditing ? editingQuest.color : randomColor,
     streakEnabled: questStreakEnabledElement ? questStreakEnabledElement.checked : false,
     adaptive: questAdaptiveElement ? questAdaptiveElement.checked : false,
+    notes: questNotesElement ? questNotesElement.value.trim() : "",
     interval: isEditing ? editingQuest.interval : 0,
     nextReview: isEditing ? editingQuest.nextReview : null,
   };
@@ -865,6 +875,7 @@ function createQuestObject() {
 
 function resetQuestForm() {
   questInput.value = "";
+  questNotesElement.value = "";
   questStartTimeElement.value = "";
   questEndTimeElement.value = "";
   questDueDateElement.value = "";
@@ -900,6 +911,7 @@ function startEditingQuest(quest) {
   editingQuest = quest;
 
   questInput.value = quest.name;
+  questNotesElement.value = quest.notes || "";
   questCategoryElement.value = quest.type;
   questDifficultyElement.value = quest.difficulty;
   questRecurringElement.value = quest.recurring;

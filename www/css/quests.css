@@ -119,6 +119,10 @@ h3 {
   border-top: 1px solid #444;
 }
 
+.quest-notes {
+  white-space: pre-wrap;
+}
+
 .hidden {
   display: none;
 }
