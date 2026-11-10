@@ -120,7 +120,24 @@ h3 {
 }
 
 .quest-notes {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-left: 3px solid #6c7bff;
+  background: rgba(108, 123, 255, 0.08);
+  border-radius: 6px;
+}
+
+.quest-notes-title {
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.quest-notes-text {
   white-space: pre-wrap;
+  line-height: 1.5;
 }
 
 .hidden {

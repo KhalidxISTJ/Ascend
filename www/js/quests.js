@@ -714,14 +714,22 @@ function createQuestElement(quest) {
   if ((recurring === "daily" || recurring === "weekly") && streakEnabled) {
     details.appendChild(createStreakGrid(quest))
   }
-
   if (quest.notes) {
     const notesBox = document.createElement("div");
     notesBox.className = "quest-notes";
-    notesBox.textContent = "Notes: " + quest.notes;
+
+    const notesTitle = document.createElement("div");
+    notesTitle.className = "quest-notes-title";
+    notesTitle.textContent = "Notes";
+
+    const notesText = document.createElement("div");
+    notesText.className = "quest-notes-text";
+    notesText.textContent = quest.notes;
+
+    notesBox.appendChild(notesTitle);
+    notesBox.appendChild(notesText);
     details.appendChild(notesBox);
   }
-
   // BUTTON AREA
   const buttons = document.createElement("div");
   buttons.className = "quest-buttons";
