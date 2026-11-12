@@ -24,6 +24,7 @@ const questStreakEnabledElement = document.getElementById("questStreakEnabled");
 const wizardSteps = document.querySelectorAll(".wizard-step")
 const wizardBack = document.getElementById("wizardBack")
 const wizardNext = document.getElementById("wizardNext")
+const noTimeBox = document.getElementById("questAnytime")
 const wizardCancel = document.getElementById("wizardCancel")
 const reviewSummary = document.getElementById("reviewSummary")
 const questAdaptiveElement = document.getElementById("questAdaptive")
@@ -293,6 +294,7 @@ function migrateQuests() {
     if (typeof quest.notes !== "string") { quest.notes = ""; changed = true; }
     if (typeof quest.interval !== "number") { quest.interval = 0; changed = true; }
     if (quest.nextReview === undefined) { quest.nextReview = null; changed = true; }
+    if (typeof quest.noTime !== "boolean") { quest.noTime = false; changed = true; }
 
 
     if (quest.completed === true) {
@@ -874,6 +876,7 @@ function createQuestObject() {
     notes: questNotesElement ? questNotesElement.value.trim() : "",
     interval: isEditing ? editingQuest.interval : 0,
     nextReview: isEditing ? editingQuest.nextReview : null,
+    noTime: noTimeBox ? noTimeBox.checked : false,
   };
 }
 
@@ -887,6 +890,7 @@ function resetQuestForm() {
   questStartTimeElement.value = "";
   questEndTimeElement.value = "";
   questDueDateElement.value = "";
+  noTimeBox.checked = false;
 
   // Clear repeat day checkboxes
   document
@@ -923,6 +927,7 @@ function startEditingQuest(quest) {
   questCategoryElement.value = quest.type;
   questDifficultyElement.value = quest.difficulty;
   questRecurringElement.value = quest.recurring;
+  noTimeBox.checked = quest.noTime || false;
 
   // Load repeat days if they exist
   document.querySelectorAll(".repeat-day").forEach((cb) => {
@@ -1468,6 +1473,7 @@ function getCurrentQuest(offset = 0) {
   const eligible = todayQuests.filter((quest) => {
     if (quest.completed) return false;
     if (quest.cancelledToday) return false;
+    if (quest.noTime) return false;
     const timeState = getQuestTimeState(quest);
     return timeState === "active" || timeState === "overdue";
   });

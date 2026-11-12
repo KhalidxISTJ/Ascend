@@ -69,22 +69,22 @@
 
       <!-- Home Grid -->
       <div class="home-grid">
-        <!-- Current Quest -->
-        <div class="home-card">
-          <h3>🎯 Current Quest</h3>
-          <div id="current-quest" class="current-quest">No active quest.</div>
-          <div class="quest-actions">
-            <button id="completeCurrentQuest" hidden>Complete</button>
-            <button id="skipCurrentQuest" hidden>Skip</button>
-            <button id="cancelCurrentQuest">Cancel</button>
-          </div>
-        </div>
-
         <!-- Overdue -->
         <div class="home-card">
           <h3>🔴 Overdue</h3>
           <div id="overdueQuests" class="quest-list">
             <p class="empty-state">No overdue quests.</p>
+          </div>
+        </div>
+
+        <!-- Current Quest -->
+        <div class="home-card">
+          <h3>🎯 Current Quest</h3>
+          <div id="current-quest" class="current-quest">None</div>
+          <div class="quest-actions">
+            <button id="completeCurrentQuest" hidden>Complete</button>
+            <button id="skipCurrentQuest" hidden>Skip</button>
+            <button id="cancelCurrentQuest">Cancel</button>
           </div>
         </div>
 
@@ -95,7 +95,15 @@
             <span id="time-till">00:00:00</span>
           </div>
           <div id="upcomingQuests" class="quest-list">
-            <p class="empty-state">Nothing upcoming.</p>
+            <p class="empty-state">None</p>
+          </div>
+        </div>
+
+        <!-- Anytime -->
+        <div class="home-card">
+          <h3>⚪ Anytime</h3>
+          <div id="anytimeQuests" class="quest-list">
+            <p class="empty-state">None</p>
           </div>
         </div>
 

@@ -13,6 +13,7 @@ const timerStatus = document.getElementById("timerStatus");
 const skipCurrentQuest = document.getElementById("skipCurrentQuest");
 const overdueQuestsElement = document.getElementById("overdueQuests");
 const upcomingQuestsElement = document.getElementById("upcomingQuests");
+const anytimeQuestsElement = document.getElementById("anytimeQuests")
 let user = localStorage.getItem("currentUserEmail");
 let ascendLibrary, savedQuests, codexData, savedQuestSections, questCategories, skillTree, savedPlayerData, lastResetDate
 let skippedToday = [];
@@ -137,7 +138,7 @@ function updateDashboard() {
     skipCurrentQuest.hidden = false;
     cancelCurrentQuest.hidden = false;
   } else {
-    currentQuestElement.textContent = "No active quest.";
+    currentQuestElement.textContent = "None";
     completeCurrentQuest.hidden = true;
     skipCurrentQuest.hidden = true;
     cancelCurrentQuest.hidden = true;
@@ -147,7 +148,12 @@ function updateDashboard() {
     return quest.status === "active" && !quest.cancelledToday && getQuestTimeState(quest) === "overdue";
   });
 
+  const anytimeQuests = todayQuests.filter((quest) => {
+    return quest.status === "active" && !quest.cancelledToday && quest.noTime;
+  });
+
   renderQuestList(overdueQuestsElement, overdueQuests);
+  renderQuestList(anytimeQuestsElement, anytimeQuests);
 
   const upcoming = getUpcomingQuests();
 
@@ -171,9 +177,6 @@ function updateDashboard() {
   completedQuestCount.textContent = `Completed Quests: ${completed}`;
   completionRate.textContent = `Completion Rate: ${completion}%`;
 
-  // =====================
-  // Codex
-  // =====================
 }
 
 completeCurrentQuest.onclick = function () {
