@@ -110,9 +110,7 @@ function getTodayString() {
 }
 
 function getYesterdayString() {
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  return yesterday.toISOString().split("T")[0];
+  return getDaysAgoString(1);
 }
 function getDaysAgoString(daysAgo) {
   const d = new Date();
@@ -120,7 +118,13 @@ function getDaysAgoString(daysAgo) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 function getDateString(date) {
-  return date.toISOString().split("T")[0];
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+// Turn "YYYY-MM-DD" into a LOCAL date (new Date("YYYY-MM-DD") is UTC, which is a day early in New York)
+function parseDateKey(key) {
+  const [y, m, d] = key.split("-").map(Number);
+  return new Date(y, m - 1, d);
 }
 
 // NEW: Get today's date as a simple string (no time)
@@ -166,9 +170,6 @@ let currentSort = "date";
 const defaultSections = ["Morning", "School", "General", "Night"];
 const defaultCategories = ["Faith", "School", "Fitness", "General"];
 
-console.log("sortQuests called");
-console.log(currentSort);
-
 // =====================================================
 // RECURRING DROPDOWN - Show/Hide Day Selector
 // =====================================================
@@ -180,6 +181,26 @@ if (questRecurringElement) {
         this.value === "weekly" ? "block" : "none";
     }
   });
+}
+
+// =====================================================
+// NO TIME (ANYTIME) CHECKBOX - lock the time inputs
+// =====================================================
+
+function updateTimeInputsLock() {
+  const locked = noTimeBox ? noTimeBox.checked : false;
+  if (questStartTimeElement) {
+    questStartTimeElement.disabled = locked;
+    if (locked) questStartTimeElement.value = "";
+  }
+  if (questEndTimeElement) {
+    questEndTimeElement.disabled = locked;
+    if (locked) questEndTimeElement.value = "";
+  }
+}
+
+if (noTimeBox) {
+  noTimeBox.addEventListener("change", updateTimeInputsLock);
 }
 
 // =====================
@@ -433,7 +454,6 @@ function renderSections() {
       renderQuests();
     };
 
-    const defaultSections = ["Morning", "School", "General", "Night"];
     if (!defaultSections.includes(section)) {
       const deleteBtn = document.createElement("span");
       deleteBtn.className = "section-delete-btn";
@@ -685,7 +705,9 @@ function createQuestElement(quest) {
   }
 
   if (!info) {
-    info = "No Time";
+    info = quest.noTime ? "⚪ Anytime" : "No Time";
+  } else if (quest.noTime) {
+    info = "⚪ Anytime<br>" + info;
   }
 
   time.innerHTML = info;
@@ -711,7 +733,7 @@ function createQuestElement(quest) {
     <br>
     Status: ${due.text}
     <br>
-    🕓 ${formatTime(startTime)} - ${formatTime(endTime)}
+    ${quest.noTime ? "⚪ Anytime" : `🕓 ${formatTime(startTime)} - ${formatTime(endTime)}`}
   `;
   if ((recurring === "daily" || recurring === "weekly") && streakEnabled) {
     details.appendChild(createStreakGrid(quest))
@@ -857,8 +879,8 @@ function createQuestObject() {
     difficulty: questDifficultyElement.value,
     recurring: questRecurringElement.value,
     repeatDays: selectedDays,
-    startTime: questStartTimeElement.value,
-    endTime: questEndTimeElement.value,
+    startTime: noTimeBox && noTimeBox.checked ? "" : questStartTimeElement.value,
+    endTime: noTimeBox && noTimeBox.checked ? "" : questEndTimeElement.value,
     dueDate: questDueDateElement.value,
     priority: questPriority.value,
     section: currentSection,
@@ -891,6 +913,7 @@ function resetQuestForm() {
   questEndTimeElement.value = "";
   questDueDateElement.value = "";
   noTimeBox.checked = false;
+  updateTimeInputsLock();
 
   // Clear repeat day checkboxes
   document
@@ -944,6 +967,7 @@ function startEditingQuest(quest) {
 
   questStartTimeElement.value = quest.startTime || "";
   questEndTimeElement.value = quest.endTime || "";
+  updateTimeInputsLock();
   questDueDateElement.value = quest.dueDate || "";
   questPriority.value = quest.priority;
   currentSection = quest.section;
@@ -1140,37 +1164,6 @@ if (questSearch) {
   });
 }
 
-// =====================
-// RECURRING RESET
-// =====================
-
-function resetRecurringQuests() {
-  for (const quest of quests) {
-    if (quest.recurring === "daily") {
-      quest.completed = false;
-    }
-
-    if (quest.recurring === "weekly") {
-      const lastReset = new Date(playerData.lastResetDate);
-      const today = new Date();
-      const difference = Math.floor(
-        (today - lastReset) / (1000 * 60 * 60 * 24),
-      );
-      if (difference >= 7) {
-        quest.completed = false;
-      }
-    }
-  }
-
-  quests = quests.filter((quest) => {
-    if (quest.recurring === "none" && quest.completed) {
-      return false;
-    }
-    return true;
-  });
-  runDailyReset();
-}
-
 // =====================================================
 // DAILY RESET - Fix for recurring quests
 // =====================================================
@@ -1194,10 +1187,10 @@ function runDailyReset() {
     return;
   }
 
-  let quests = JSON.parse(saved);
+  const savedList = JSON.parse(saved);
   let changed = false;
 
-  quests.forEach((quest, index) => {
+  savedList.forEach((quest) => {
     const completedToday = quest.history && quest.history[today] === true;
     // === DAILY QUESTS ===
     if (quest.recurring === "daily" && !quest.adaptive) {
@@ -1213,8 +1206,8 @@ function runDailyReset() {
     // === WEEKLY QUESTS ===
     if (quest.recurring === "weekly" && !quest.adaptive) {
       // Check if a week has passed since last reset
-      const lastResetDate = new Date(lastReset || today);
-      const todayDate = new Date(today);
+      const lastResetDate = parseDateKey(lastReset || today);
+      const todayDate = parseDateKey(today);
       const daysDiff = Math.floor(
         (todayDate - lastResetDate) / (1000 * 60 * 60 * 24),
       );
@@ -1253,18 +1246,17 @@ function runDailyReset() {
   });
 
   if (changed) {
-    localStorage.setItem(questUser + "_savedQuests", JSON.stringify(quests));
+    localStorage.setItem(questUser + "_savedQuests", JSON.stringify(savedList));
     localStorage.setItem(questUser + "_savedQuests_modifiedAt", Date.now());
-    if (typeof syncPush === "function") {
-      syncPush();
-    }
     console.log("✅ Quests reset for new day");
   }
 
   // Save today as the last reset date
   localStorage.setItem(questUser + "_lastResetDate", today);
   localStorage.setItem(questUser + "_lastResetDate_modifiedAt", Date.now());
-  syncPush();
+  if (typeof syncPush === "function") {
+    syncPush();
+  }
 
   // Reload quests in memory
   loadQuests();
@@ -1442,7 +1434,7 @@ function isQuestScheduledToday(quest) {
     }
     // Fallback: use dueDate
     if (quest.dueDate) {
-      const qDay = new Date(quest.dueDate).getDay();
+      const qDay = parseDateKey(quest.dueDate).getDay();
       return dayOfWeek === qDay;
     }
     return true;
@@ -1614,7 +1606,7 @@ if (wizardBack && wizardNext && wizardCancel) {
 function updateReviewSummary() {
   reviewSummary.innerHTML = `Name: ${questInput.value}
   <br>Category: ${questCategoryElement.value} Difficulty: ${questDifficultyElement.value} Priority: ${questPriority.value}
-  <br>Start Time: ${formatTime(questStartTimeElement.value)} End Time: ${formatTime(questEndTimeElement.value)}  Due Date: ${formatDate(questDueDateElement.value)} 
+  <br>${noTimeBox && noTimeBox.checked ? "Anytime (no set time)" : `Start Time: ${formatTime(questStartTimeElement.value)} End Time: ${formatTime(questEndTimeElement.value)}`}  Due Date: ${formatDate(questDueDateElement.value)} 
   <br>Recurring: ${questRecurringElement.value} Streak: ${questStreakEnabledElement.checked ? "yes" : "No"}`
 }
 
