@@ -130,7 +130,7 @@
 
 .stat-card strong {
   color: #e2e8f0;
-  font-weight: 72200;
+  font-weight: 700;
 }
 
 /* XP Card */
@@ -170,6 +170,83 @@
   margin-top: 10px;
   white-space: pre-wrap;
   text-align: left;
+}
+
+.anytime-row {
+  margin-bottom: 16px;
+}
+
+.anytime-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-bottom: 8px;
+}
+
+.anytime-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.anytime-complete {
+  background: #22c55e;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.anytime-notes,
+.anytime-cancel {
+  background: #fff;
+  color: #111;
+  border: 1px solid #cfd6e4;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.anytime-skip {
+  background: #f59e0b;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.more-toggle {
+  background: none;
+  border: none;
+  color: #8fb8ff;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 6px 0;
+  margin-top: 4px;
+}
+
+.more-toggle:hover {
+  text-decoration: underline;
+}
+
+.anytime-name-plain {
+  font-weight: 500;
+  font-size: 1rem;
+  margin-bottom: 6px;
+}
+
+.anytime-row:has(.anytime-name-plain) {
+  margin-bottom: 4px;
+}
+
+.anytime-notes-box {
+  margin-top: 8px;
+  color: #e6edf7;
+  white-space: pre-wrap;
 }
 
 /* =====================================================

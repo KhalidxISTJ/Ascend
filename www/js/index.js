@@ -17,6 +17,10 @@ const anytimeQuestsElement = document.getElementById("anytimeQuests")
 let user = localStorage.getItem("currentUserEmail");
 let ascendLibrary, savedQuests, codexData, savedQuestSections, questCategories, skillTree, savedPlayerData, lastResetDate
 let skippedToday = [];
+let anytimeSkipped = [];
+// Which list cards are expanded (show all) instead of the first 3
+const expanded = { overdue: false, upcoming: false, anytime: false };
+const PREVIEW_COUNT = 3;
 const justSignedIn = window.location.hash.includes('access_token');
 const timeTill = document.getElementById("time-till")
 
@@ -48,21 +52,107 @@ const cards = document.querySelectorAll(".stat-card")
 const xpCard = document.getElementById("xp")
 const timeLeftInDay = document.getElementById("time-left-in-day")
 
-function renderQuestList(element, quests) {
+// Adds the clickable "+N more" / "Show less" line under a list card
+function addMoreToggle(element, total, key) {
+  if (total <= PREVIEW_COUNT) return;
+  const toggle = document.createElement("button");
+  toggle.className = "more-toggle";
+  toggle.textContent = expanded[key] ? "Show less" : `+${total - PREVIEW_COUNT} more`;
+  toggle.onclick = () => {
+    expanded[key] = !expanded[key];
+    updateDashboard();
+  };
+  element.appendChild(toggle);
+}
+
+function renderQuestList(element, quests, key) {
+  element.innerHTML = "";
   if (quests.length === 0) {
     element.innerHTML = "<em>None</em>";
     return;
   }
 
-  element.innerHTML = quests
-    .map(
-      (q) => `
-            <div class="dashboard-quest">
-                ${q.name}
-            </div>
-        `,
-    )
-    .join("");
+  const visible = expanded[key] ? quests : quests.slice(0, PREVIEW_COUNT);
+  visible.forEach((q) => {
+    const row = document.createElement("div");
+    row.className = "dashboard-quest";
+    row.textContent = q.name;
+    element.appendChild(row);
+  });
+  addMoreToggle(element, quests.length, key);
+}
+
+function renderAnytimeList(element, list) {
+  element.innerHTML = "";
+  if (list.length === 0) {
+    element.innerHTML = "<em>None</em>";
+    return;
+  }
+
+  const visible = expanded.anytime ? list : list.slice(0, PREVIEW_COUNT);
+  visible.forEach((quest, index) => {
+    const row = document.createElement("div");
+    row.className = "anytime-row";
+
+    const name = document.createElement("div");
+    name.className = "anytime-name";
+    name.textContent = quest.name;
+
+    // Only the first anytime quest (the "current" one) gets buttons.
+    // The rest are just names, like the Overdue and Upcoming lists.
+    if (index > 0) {
+      name.classList.add("anytime-name-plain");
+      row.appendChild(name);
+      element.appendChild(row);
+      return;
+    }
+
+    const notesBox = document.createElement("div");
+    notesBox.className = "anytime-notes-box";
+    notesBox.hidden = true;
+    notesBox.textContent = quest.notes ? quest.notes : "No notes for this quest.";
+
+    const doneBtn = document.createElement("button");
+    doneBtn.className = "anytime-complete";
+    doneBtn.textContent = "Complete";
+    doneBtn.onclick = () => {
+      completeQuest(quest);
+      updateDashboard();
+    };
+
+    const skipBtn = document.createElement("button");
+    skipBtn.className = "anytime-skip";
+    skipBtn.textContent = "Skip";
+    skipBtn.onclick = () => {
+      anytimeSkipped = anytimeSkipped.filter((id) => id !== quest.createdAt);
+      anytimeSkipped.push(quest.createdAt);
+      updateDashboard();
+    };
+
+    const cancelBtn = document.createElement("button");
+    cancelBtn.className = "anytime-cancel";
+    cancelBtn.textContent = "Cancel";
+    cancelBtn.onclick = () => {
+      cancelQuest(quest);
+      updateDashboard();
+    };
+
+    const notesBtn = document.createElement("button");
+    notesBtn.className = "anytime-notes";
+    notesBtn.textContent = "Notes";
+    notesBtn.onclick = () => {
+      notesBox.hidden = !notesBox.hidden;
+      notesBtn.textContent = notesBox.hidden ? "Notes" : "Hide";
+    };
+
+    const actions = document.createElement("div");
+    actions.className = "anytime-actions";
+    actions.append(doneBtn, skipBtn, cancelBtn, notesBtn);
+
+    row.append(name, actions, notesBox);
+    element.appendChild(row);
+  });
+  addMoreToggle(element, list.length, "anytime");
 }
 let currentQuestSkipCount = 0;
 function getCurrentMission() {
@@ -129,13 +219,19 @@ function updateDashboard() {
 
   if (mission) {
     const streak = (mission.recurring === "daily" || mission.recurring === "weekly") && mission.streakEnabled ? getCurrentStreak(mission) : 0
-    currentQuestElement.innerHTML = `
-          <div class="current-quest-header">
-            <strong>${mission.name}</strong>
-            ${streak > 0 ? `<span class="quest-streak-badge">🔥x${streak}</span>` : ""}
-          </div>
-          ${mission.priority} Priority
-        `;
+    currentQuestElement.innerHTML = "";
+    const header = document.createElement("div");
+    header.className = "current-quest-header";
+    const nameEl = document.createElement("strong");
+    nameEl.textContent = mission.name;
+    header.appendChild(nameEl);
+    if (streak > 0) {
+      const badge = document.createElement("span");
+      badge.className = "quest-streak-badge";
+      badge.textContent = `🔥x${streak}`;
+      header.appendChild(badge);
+    }
+    currentQuestElement.append(header, `${mission.priority} Priority`);
     completeCurrentQuest.hidden = false;
     skipCurrentQuest.hidden = false;
     cancelCurrentQuest.hidden = false;
@@ -154,19 +250,18 @@ function updateDashboard() {
     return quest.status === "active" && !quest.cancelledToday && getQuestTimeState(quest) === "overdue";
   });
 
-  const anytimeQuests = todayQuests.filter((quest) => {
+  // Use the live quest objects (not the storage copy) so Complete/Cancel really save
+  const anytimeQuests = getTodaysQuests().filter((quest) => {
     return quest.status === "active" && !quest.cancelledToday && quest.noTime;
   });
+  anytimeQuests.sort((a, b) => anytimeSkipped.indexOf(a.createdAt) - anytimeSkipped.indexOf(b.createdAt));
 
-  renderQuestList(overdueQuestsElement, overdueQuests);
-  renderQuestList(anytimeQuestsElement, anytimeQuests);
+  renderQuestList(overdueQuestsElement, overdueQuests, "overdue");
+  renderAnytimeList(anytimeQuestsElement, anytimeQuests);
 
   const upcoming = getUpcomingQuests();
 
-  renderQuestList(
-    upcomingQuestsElement,
-    upcoming.length > 0 ? upcoming.slice(0, 5) : [],
-  );
+  renderQuestList(upcomingQuestsElement, upcoming, "upcoming");
 
   // =====================
   // Quest Stats
@@ -221,10 +316,6 @@ cancelCurrentQuest.onclick = function () {
 detailsCurrentQuest.onclick = function () {
   currentQuestDetails.hidden = !currentQuestDetails.hidden;
   detailsCurrentQuest.textContent = currentQuestDetails.hidden ? "Notes" : "Hide";
-  detailsCurrentQuest.onclick = function () {
-    currentQuestDetails.hidden = !currentQuestDetails.hidden;
-    detailsCurrentQuest.textContent = currentQuestDetails.hidden ? "Details" : "Hide";
-  };
 };
 
 updateDashboard();
@@ -376,7 +467,7 @@ setInterval(updateTimeLeft, 1000)
 function updateTimeTill() {
   const upcomingQuests = getUpcomingQuests()
   const upcomingQuest = upcomingQuests[0]
-  if (!upcomingQuest) {
+  if (!upcomingQuest || !upcomingQuest.startTime) {
     timeTill.textContent = ""
     return
   }
