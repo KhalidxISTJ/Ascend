@@ -165,6 +165,13 @@
   color: #ffffff;
 }
 
+#currentQuestDetails {
+  color: #e6edf7;
+  margin-top: 10px;
+  white-space: pre-wrap;
+  text-align: left;
+}
+
 /* =====================================================
    HOME GRID — HEAVY
 ===================================================== */

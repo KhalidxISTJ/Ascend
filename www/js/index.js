@@ -42,6 +42,8 @@ refreshUserScopedData();
 
 
 const cancelCurrentQuest = document.getElementById("cancelCurrentQuest");
+const detailsCurrentQuest = document.getElementById("detailsCurrentQuest");
+const currentQuestDetails = document.getElementById("currentQuestDetails");
 const cards = document.querySelectorAll(".stat-card")
 const xpCard = document.getElementById("xp")
 const timeLeftInDay = document.getElementById("time-left-in-day")
@@ -137,11 +139,15 @@ function updateDashboard() {
     completeCurrentQuest.hidden = false;
     skipCurrentQuest.hidden = false;
     cancelCurrentQuest.hidden = false;
+    detailsCurrentQuest.hidden = false;
+    currentQuestDetails.textContent = mission.notes ? mission.notes : "No notes for this quest.";
   } else {
     currentQuestElement.textContent = "None";
     completeCurrentQuest.hidden = true;
     skipCurrentQuest.hidden = true;
     cancelCurrentQuest.hidden = true;
+    detailsCurrentQuest.hidden = true;
+    currentQuestDetails.hidden = true;
   }
 
   const overdueQuests = todayQuests.filter((quest) => {
@@ -210,6 +216,15 @@ cancelCurrentQuest.onclick = function () {
   cancelQuest(mission);
   currentQuestSkipCount = 0;
   updateDashboard();
+};
+
+detailsCurrentQuest.onclick = function () {
+  currentQuestDetails.hidden = !currentQuestDetails.hidden;
+  detailsCurrentQuest.textContent = currentQuestDetails.hidden ? "Notes" : "Hide";
+  detailsCurrentQuest.onclick = function () {
+    currentQuestDetails.hidden = !currentQuestDetails.hidden;
+    detailsCurrentQuest.textContent = currentQuestDetails.hidden ? "Details" : "Hide";
+  };
 };
 
 updateDashboard();
