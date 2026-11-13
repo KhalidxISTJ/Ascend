@@ -106,7 +106,7 @@ async function updatePrayerQuests() {
 // =====================================================
 
 function getTodayString() {
-  return new Date().toISOString().split("T")[0];
+  return getTodayDateKey();
 }
 
 function getYesterdayString() {
@@ -115,9 +115,9 @@ function getYesterdayString() {
   return yesterday.toISOString().split("T")[0];
 }
 function getDaysAgoString(daysAgo) {
-  const d = new Date()
-  d.setDate(d.getDate() - daysAgo)
-  return d.toISOString().split("T")[0]
+  const d = new Date();
+  d.setDate(d.getDate() - daysAgo);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 function getDateString(date) {
   return date.toISOString().split("T")[0];
@@ -1198,10 +1198,11 @@ function runDailyReset() {
   let changed = false;
 
   quests.forEach((quest, index) => {
+    const completedToday = quest.history && quest.history[today] === true;
     // === DAILY QUESTS ===
     if (quest.recurring === "daily" && !quest.adaptive) {
       // If it was completed yesterday, uncomplete it for today
-      if (quest.completed === true) {
+      if (quest.completed === true && !completedToday) {
         quest.completed = false;
         quest.status = "active";
         changed = true;
@@ -1220,7 +1221,7 @@ function runDailyReset() {
 
       // Reset if 7+ days have passed or if it's a new week (Monday)
       if (daysDiff >= 7 || todayDate.getDay() === 1) {
-        if (quest.completed === true) {
+        if (quest.completed === true && !completedToday) {
           quest.completed = false;
           quest.status = "active";
           changed = true;
@@ -1229,7 +1230,7 @@ function runDailyReset() {
       }
 
       // ALSO check if today is NOT in repeatDays, reset if completed
-      if (quest.repeatDays && quest.repeatDays.length > 0) {
+      if (quest.repeatDays && quest.repeatDays.length > 0 && !completedToday) {
         const dayOfWeek = todayDate.getDay();
         if (!quest.repeatDays.includes(dayOfWeek) && quest.completed === true) {
           // It's not a day this quest runs on, but it's completed - reset it
