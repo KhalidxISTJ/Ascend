@@ -277,3 +277,37 @@ body {
     justify-content: center;
   }
 }
+
+/* =====================================================
+   SIDEBAR EXTRAS
+===================================================== */
+
+/* Let the sidebar scroll on short screens */
+.sidebar {
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+}
+
+.sidebar p,
+.sidebar a {
+  color: #e2e8f0;
+}
+
+.sidebar-link {
+  display: block;
+  text-align: center;
+  padding: 10px 18px;
+  border-radius: 8px;
+  background: #efefef;
+  color: #111;
+  font-weight: 600;
+}
+
+.sidebar .sidebar-link {
+  color: #111;
+}
+
+.sidebar-link:hover {
+  background: #ffffff;
+}

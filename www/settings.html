@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Settings</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/navigation.css" />
+    <link rel="stylesheet" href="css/settings.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Space+Grotesk:wght@300..700&display=swap"
+        rel="stylesheet" />
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="Images\icons\ascendLogo.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Ascend" />
+    <meta name="theme-color" content="#0f0f1a" />
+
+    <!--SupaBase-->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+</head>
+
+<body data-page="settings">
+    <div id="nav-placeholder"></div>
+    <main>
+        <h2>Settings</h2>
+
+        <div class="settings-page">
+
+            <!-- NOTIFICATIONS -->
+            <section class="settings-card">
+                <h3>🔔 Notifications</h3>
+
+                <div class="settings-row">
+                    <div class="settings-text">
+                        <label class="settings-label" for="set-enabled">Quest reminders</label>
+                        <div class="settings-help">Master switch for every quest reminder on this device.</div>
+                    </div>
+                    <input type="checkbox" class="switch" id="set-enabled">
+                </div>
+
+                <div id="notif-details" class="settings-group">
+                    <div class="settings-row">
+                        <div class="settings-text">
+                            <label class="settings-label" for="set-resend">Re-send if not done</label>
+                            <div class="settings-help">Remind you again if the quest still isn't completed.</div>
+                        </div>
+                        <input type="checkbox" class="switch" id="set-resend">
+                    </div>
+
+                    <div id="resend-details" class="settings-group sub">
+                        <div class="settings-row">
+                            <div class="settings-text">
+                                <label class="settings-label" for="set-resend-1">First re-send</label>
+                                <div class="settings-help">Minutes after the quest starts.</div>
+                            </div>
+                            <div class="settings-control">
+                                <input type="number" id="set-resend-1" min="1" max="120" step="1" inputmode="numeric">
+                                <span class="unit">min</span>
+                            </div>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-text">
+                                <label class="settings-label" for="set-resend-2">Second re-send</label>
+                                <div class="settings-help">Minutes after the first re-send.</div>
+                            </div>
+                            <div class="settings-control">
+                                <input type="number" id="set-resend-2" min="1" max="120" step="1" inputmode="numeric">
+                                <span class="unit">min</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-row">
+                        <div class="settings-text">
+                            <label class="settings-label" for="set-snooze">Snooze length</label>
+                            <div class="settings-help">How long the Snooze button waits.</div>
+                        </div>
+                        <div class="settings-control">
+                            <input type="number" id="set-snooze" min="1" max="120" step="1" inputmode="numeric">
+                            <span class="unit">min</span>
+                        </div>
+                    </div>
+
+                    <div class="settings-row">
+                        <div class="settings-text">
+                            <label class="settings-label" for="set-quiet">Quiet hours</label>
+                            <div class="settings-help">Mutes re-sends. Quest start reminders still arrive on time.</div>
+                        </div>
+                        <input type="checkbox" class="switch" id="set-quiet">
+                    </div>
+
+                    <div id="quiet-details" class="settings-group sub">
+                        <div class="settings-row">
+                            <div class="settings-text">
+                                <label class="settings-label" for="set-quiet-start">From</label>
+                            </div>
+                            <div class="settings-control">
+                                <input type="time" id="set-quiet-start">
+                            </div>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-text">
+                                <label class="settings-label" for="set-quiet-end">To</label>
+                            </div>
+                            <div class="settings-control">
+                                <input type="time" id="set-quiet-end">
+                            </div>
+                        </div>
+                        <p class="settings-help">A quest can override this with "Remind me even during quiet hours" in
+                            its settings.</p>
+                    </div>
+                </div>
+
+                <p id="notif-hint" class="settings-status"></p>
+            </section>
+
+            <!-- DATA -->
+            <section class="settings-card">
+                <h3>💾 Your data</h3>
+                <p class="settings-help">A backup holds everything saved on this account: quests (with focus time),
+                    Codex,
+                    Library, skill tree, progress, Motivation entries and settings.</p>
+                <p id="last-backup" class="settings-status"></p>
+                <div class="settings-buttons">
+                    <button id="export-btn" class="settings-btn primary">Back up now</button>
+                    <button id="import-btn" class="settings-btn">Restore from backup</button>
+                </div>
+                <input type="file" id="import-file" accept=".json" hidden />
+                <p id="backup-hint" class="settings-status"></p>
+            </section>
+
+            <!-- ACCOUNT -->
+            <section class="settings-card">
+                <h3>👤 Account</h3>
+                <div class="settings-row">
+                    <div class="settings-text">
+                        <div class="settings-label">Signed in as</div>
+                        <div class="settings-help" id="account-email">—</div>
+                    </div>
+                    <button id="settings-logout-btn" class="settings-btn danger">Log out</button>
+                </div>
+            </section>
+
+            <!-- ABOUT -->
+            <section class="settings-card">
+                <h3>ℹ️ About</h3>
+                <div class="settings-row">
+                    <div class="settings-text">
+                        <div class="settings-label">Ascend</div>
+                        <div class="settings-help">Version <span id="settings-version">—</span></div>
+                    </div>
+                    <a class="settings-btn" href="about.html">About Ascend</a>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="js/version.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/nav.js"></script>
+</body>
+
+</html>

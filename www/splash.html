@@ -4,11 +4,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome</title>
+  <title>Welcome to Ascend</title>
   <link rel="icon" href="Images\icons\ascendLogo.png" />
-  <link rel="stylesheet" href="css/splash.css" />
   <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="css/index.css" />
+  <meta name="theme-color" content="#0f0f1a" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Space+Grotesk:wght@300..700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/splash.css" />
 </head>
 
 <body>
@@ -31,11 +37,13 @@
       <form action="" id="login-form">
         <div class="sign-in-fields">
           <label for="username" class="username-label">Username:</label>
-          <input type="text" id="username" name="username" required placeholder="User0" />
+          <input type="text" id="username" name="username" required placeholder="Enter your username"
+            autocomplete="username" />
         </div>
         <div class="sign-in-fields">
           <label for="password" class="pass-label">Password:</label>
-          <input type="password" id="password" name="password" required placeholder="1100100" />
+          <input type="password" id="password" name="password" required placeholder="Enter your password"
+            autocomplete="current-password" />
         </div>
         <div class="sign-in">
           <div class="sign-in-options">
@@ -47,7 +55,8 @@
             <button type="reset">Clear</button>
             <button type="submit" id="submit-btn">Login</button>
           </div>
-          <div><Button type="button" id="google-signin-btn">Sign in with google</Button></div>
+          <div class="or-divider"><span>or</span></div>
+          <div><button type="button" id="google-signin-btn">Sign in with Google</button></div>
         </div>
       </form>
       <a href="" id="show-create">Create account</a>
@@ -66,9 +75,6 @@
       <div class="footer-column">
         <div class="link-titles">Info</div>
         <a href="about.html">About Ascend</a>
-      </div>
-      <div class="footer-column">
-        <div class="link-titles">Other Stuff</div>
       </div>
     </div>
   </footer>

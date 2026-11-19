@@ -334,6 +334,34 @@
   background: #ffffff;
 }
 
+.focus-quest-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #94c5e0;
+  margin-bottom: 4px;
+}
+
+#focusQuestSelect {
+  width: 100%;
+  padding: 6px 10px;
+  border: 2px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  background: #ffffff;
+  color: #0f172a;
+  margin-bottom: 6px;
+}
+
+.focus-total {
+  text-align: center;
+  font-size: 0.85rem;
+  color: #94c5e0;
+  min-height: 1.2em;
+  margin-bottom: 8px;
+}
+
 .timer-buttons {
   display: flex;
   gap: 8px;

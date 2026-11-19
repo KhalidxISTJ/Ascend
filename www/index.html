@@ -112,6 +112,11 @@
         <!-- Timer -->
         <div class="home-card">
           <h3>⏱ Focus Timer</h3>
+          <label for="focusQuestSelect" class="focus-quest-label">Focus on:</label>
+          <select id="focusQuestSelect">
+            <option value="">— No quest —</option>
+          </select>
+          <div id="focusQuestTotal" class="focus-total"></div>
           <div id="timerStatus" class="timer-status">⚪ Ready</div>
           <h2 id="timerDisplay">00:00:00</h2>
           <input type="number" id="timerMinutes" min="0" value="0" />

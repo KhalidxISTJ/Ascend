@@ -1,140 +1,363 @@
+/* =====================================================
+   SPLASH / SIGN-IN PAGE
+   Uses the app theme from style.css (dark gradient, light-blue accents).
+===================================================== */
+
 body {
-  background-repeat: no-repeat;
-  background-position: center;
-  background-attachment: fixed;
-  background-size: cover;
-  background-blend-mode: overlay;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  color: #e2e8f0;
 }
 
-.intro-splash {
-  animation: body 8s;
-}
-
-h2 {
-  text-align: center;
-  font-size: 40px;
-}
-
-.vertical-line {
-  border: 2px solid black;
-  border-width: 1px;
-  height: 200px;
-  opacity: 60%;
-}
-
-.divider {
-  border-width: 1px;
-  border-style: solid;
-}
-
-.splash-logo {
-  display: block;
-  margin: 0 auto;
-  width: 75px;
-  height: auto;
-  border-style: outset;
-  border-width: 5px;
-  border-radius: 0px;
-  border-color: #000000;
-  padding: 3px;
-  animation: Ascendlogo 4s;
-}
+/* ---------- main layout: brand on the left, sign-in card on the right ---------- */
 
 .splash-container {
-  display: flex;
   flex: 1;
+  display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 50px;
-}
-
-.rightSide {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  gap: 56px;
+  padding: 48px 24px;
 }
 
 .leftSide {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 18px;
+  max-width: 380px;
+  text-align: center;
+}
+
+.splash-logo {
+  display: block;
+  width: 96px;
+  height: auto;
+  margin: 0 auto;
+  padding: 10px;
+  border: 2px solid #7dd3fc;
+  border-radius: 1px;
+  background: rgba(26, 35, 64, 0.4);
+  box-shadow: 0 0 24px rgba(125, 211, 252, 0.25);
 }
 
 .splash-title {
-  font-size: 2.5rem;
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 1rem;
+  margin: 0 0 8px;
+  font-size: 2.6rem;
+  line-height: 1.15;
+  font-weight: 700;
+  -webkit-text-stroke: 0;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
 }
 
 .splash-subtitle {
-  font-size: 1.5rem;
-  margin-top: -15px;
-  text-align: center;
-  margin-bottom: 2rem;
-  opacity: 0.8;
+  margin: 0;
+  font-size: 1.15rem;
+  color: #94c5e0;
+  letter-spacing: 0.3px;
 }
 
-.splash-button {
+.vertical-line {
+  width: 1px;
+  height: 260px;
+  background: linear-gradient(to bottom, transparent, rgba(125, 211, 252, 0.5), transparent);
+}
+
+/* ---------- sign-in card ---------- */
+
+.rightSide {
   display: flex;
-  justify-content: center;
-  color: #000000;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  max-width: 380px;
+  padding: 28px 28px 22px;
+  background: rgba(26, 35, 64, 0.4);
+  border: 2px solid #7dd3fc;
+  border-radius: 1px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+.rightSide h2 {
+  margin: 0 0 18px;
+  font-size: 1.6rem;
+  text-align: left;
+  -webkit-text-stroke: 0;
+}
+
+#login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .sign-in-fields {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: left;
-  max-width: auto;
-  gap: 5px;
+  gap: 6px;
 }
 
+.sign-in-fields label,
 .username-label,
 .pass-label {
   display: block;
-
   text-align: left;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #94c5e0;
+}
+
+.sign-in-fields input {
+  width: 100%;
+  height: 46px;
+  padding: 0 14px;
+  background: rgba(10, 14, 26, 0.7);
+  color: #e2e8f0;
+  border: 1px solid rgba(125, 211, 252, 0.4);
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.sign-in-fields input::placeholder {
+  color: #8391a7;
+}
+
+.sign-in-fields input:focus {
+  outline: none;
+  border-color: #7dd3fc;
+  box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.25);
+}
+
+.sign-in {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .sign-in-options {
   display: flex;
   flex-direction: row;
-  margin: 10px;
-  gap: 10px;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.sign-in-options input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  accent-color: #7dd3fc;
+  cursor: pointer;
+}
+
+.sign-in-options label {
+  cursor: pointer;
+  color: #e2e8f0;
+}
+
+.sign-in-options a {
+  margin-left: auto;
+  color: #94c5e0;
+}
+
+.sign-in-options a:hover {
+  text-decoration: underline;
 }
 
 .sign-in-actions {
   display: flex;
   flex-direction: row;
-  margin: 10px;
   gap: 10px;
+  margin: 0;
+}
+
+/* all buttons inside the card share one look */
+.rightSide button {
+  height: 46px;
+  padding: 0 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: 2px solid #7dd3fc;
+  border-radius: 1px;
+  background: transparent;
+  color: #e2e8f0;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.rightSide button:hover {
+  background: rgba(15, 23, 42, 0.8);
+  box-shadow: 0 0 10px rgba(125, 211, 252, 0.5);
+}
+
+.rightSide button:focus-visible,
+.sign-in-options input:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.sign-in-actions button[type="submit"] {
+  flex: 1;
+  background: #7dd3fc;
+  color: #0f172a;
+}
+
+.sign-in-actions button[type="submit"]:hover {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.sign-in-actions button[type="reset"] {
+  border-color: rgba(125, 211, 252, 0.4);
+  color: #94a3b8;
+}
+
+#google-signin-btn {
+  width: 100%;
+}
+
+.or-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #8391a7;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.or-divider::before,
+.or-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(125, 211, 252, 0.25);
+}
+
+#show-create {
+  align-self: center;
+  margin-top: 16px;
+  font-size: 0.9rem;
+  color: #94c5e0;
+}
+
+#show-create:hover {
+  text-decoration: underline;
+}
+
+/* ---------- footer ---------- */
+
+.divider {
+  width: min(1000px, calc(100% - 48px));
+  margin: 0 auto;
+  border: none;
+  border-top: 1px solid rgba(125, 211, 252, 0.25);
+}
+
+.splash-footer {
+  padding: 8px 24px 40px;
+}
+
+.splash-footer h2 {
+  margin: 20px 0 14px;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #94c5e0;
+  -webkit-text-stroke: 0;
 }
 
 .grid-container {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  grid-auto-rows: 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 240px));
+  justify-content: center;
+  gap: 16px;
 }
 
 .footer-column {
   display: flex;
   flex-direction: column;
-  padding: 1px;
-  background-color: white;
-  color: #000000;
-  text-align: center;
+  gap: 8px;
+  padding: 14px 16px;
+  background: rgba(26, 35, 64, 0.3);
+  border: 1px solid rgba(125, 211, 252, 0.3);
   border-radius: 1px;
-  font-size: 1rem;
-  margin: 5px;
-  gap: 10px;
+  color: #e2e8f0;
+  text-align: center;
+  font-size: 0.95rem;
 }
 
 .link-titles {
-  font-style: normal;
-  color: rgb(0, 0, 0);
-  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #94c5e0;
+  text-decoration: none;
+}
+
+.footer-column a {
+  color: #e2e8f0;
+}
+
+.footer-column a:hover {
+  color: #7dd3fc;
   text-decoration: underline;
-  font-size: 25px;
+}
+
+/* ---------- gentle fade-in ---------- */
+
+@keyframes splashFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.leftSide,
+.rightSide {
+  animation: splashFadeUp 0.6s ease both;
+}
+
+.rightSide {
+  animation-delay: 0.12s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .leftSide,
+  .rightSide {
+    animation: none;
+  }
+}
+
+/* ---------- phones and narrow windows: stack everything ---------- */
+
+@media (max-width: 760px) {
+  .splash-container {
+    flex-direction: column;
+    gap: 28px;
+    padding: 32px 16px 24px;
+  }
+
+  .vertical-line {
+    display: none;
+  }
+
+  .splash-title {
+    font-size: 2rem;
+  }
+
+  .rightSide {
+    padding: 22px 18px 18px;
+  }
 }

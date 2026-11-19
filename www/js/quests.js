@@ -31,6 +31,9 @@ const questAdaptiveElement = document.getElementById("questAdaptive")
 const startingGap = { Easy: 2880, Medium: 1440, Hard: 720, Extreme: 360 };
 const ratingMultiplier = { 1: "2", 2: "1.2", 3: "0.5" }
 const questNotesElement = document.getElementById("questNotes")
+const questRemindInQuietElement = document.getElementById("questRemindInQuiet")
+const customIntervalContainer = document.getElementById("customIntervalContainer")
+const questRepeatEveryElement = document.getElementById("questRepeatEvery")
 const { LocalNotifications } = (typeof Capacitor !== "undefined") ? Capacitor.Plugins : {};
 let currentStep = 1
 
@@ -180,6 +183,10 @@ if (questRecurringElement) {
       daySelectorContainer.style.display =
         this.value === "weekly" ? "block" : "none";
     }
+    if (customIntervalContainer) {
+      customIntervalContainer.style.display =
+        this.value === "custom" ? "block" : "none";
+    }
   });
 }
 
@@ -206,11 +213,21 @@ if (noTimeBox) {
 // =====================
 // SAVE SYSTEM
 // =====================
+// Turns seconds into "45s", "25m" or "1h 05m" (used by the Focus Timer)
+function formatFocusTime(totalSeconds) {
+  const sec = Math.max(0, Math.floor(totalSeconds || 0));
+  if (sec < 60) return `${sec}s`;
+  const mins = Math.floor(sec / 60);
+  if (mins < 60) return `${mins}m`;
+  return `${Math.floor(mins / 60)}h ${String(mins % 60).padStart(2, "0")}m`;
+}
+
 function saveQuests() {
   const data = JSON.stringify(quests);
   localStorage.setItem(questUser + "_savedQuests", data);
   localStorage.setItem(questUser + "_savedQuests_modifiedAt", Date.now());
   syncPush();
+  requestReminderReschedule();
 }
 
 function saveSections() {
@@ -249,7 +266,9 @@ function loadQuests() {
     const parsed = JSON.parse(saved);
     const beforeCount = parsed.length;
     quests = parsed.filter((item) => {
-      return !(item.completed && item.recurring !== "weekly" && item.recurring !== "daily" && !item.adaptive && item.dueDate < todayString);
+      // Use the day it was completed. Old quests without completedOn fall back to the due date.
+      const doneOn = item.completedOn || item.dueDate || "";
+      return !(item.completed && item.recurring !== "weekly" && item.recurring !== "daily" && item.recurring !== "custom" && !item.adaptive && doneOn < todayString);
     });
 
     localStorage.setItem(questUser + "_savedQuests", JSON.stringify(quests));
@@ -316,6 +335,9 @@ function migrateQuests() {
     if (typeof quest.interval !== "number") { quest.interval = 0; changed = true; }
     if (quest.nextReview === undefined) { quest.nextReview = null; changed = true; }
     if (typeof quest.noTime !== "boolean") { quest.noTime = false; changed = true; }
+    if (typeof quest.remindInQuiet !== "boolean") { quest.remindInQuiet = false; changed = true; }
+    if (typeof quest.repeatEveryDays !== "number") { quest.repeatEveryDays = 0; changed = true; }
+    if (quest.nextDue === undefined) { quest.nextDue = null; changed = true; }
 
 
     if (quest.completed === true) {
@@ -704,10 +726,23 @@ function createQuestElement(quest) {
     info += `🔄 ${days}`;
   }
 
+  if (recurring === "custom") {
+    if (info) info += "<br>";
+    info += `🔄 Every ${quest.repeatEveryDays || 1} days`;
+    if (quest.nextDue && quest.nextDue > getTodayDateKey()) {
+      info += ` (next: ${formatDate(quest.nextDue)})`;
+    }
+  }
+
   if (!info) {
     info = quest.noTime ? "⚪ Anytime" : "No Time";
   } else if (quest.noTime) {
     info = "⚪ Anytime<br>" + info;
+  }
+
+  // Focus Timer: total time spent focusing on this quest
+  if (quest.focusSeconds > 0) {
+    info += `<br>⏱ ${formatFocusTime(quest.focusSeconds)} focused`;
   }
 
   time.innerHTML = info;
@@ -899,6 +934,13 @@ function createQuestObject() {
     interval: isEditing ? editingQuest.interval : 0,
     nextReview: isEditing ? editingQuest.nextReview : null,
     noTime: noTimeBox ? noTimeBox.checked : false,
+    remindInQuiet: questRemindInQuietElement
+      ? questRemindInQuietElement.checked
+      : (isEditing ? !!editingQuest.remindInQuiet : false),
+    repeatEveryDays: questRepeatEveryElement
+      ? Math.max(1, Math.floor(Number(questRepeatEveryElement.value)) || 1)
+      : (isEditing ? (editingQuest.repeatEveryDays || 0) : 0),
+    nextDue: isEditing ? (editingQuest.nextDue || null) : null,
   };
 }
 
@@ -936,6 +978,9 @@ function resetQuestForm() {
   }
   if (questStreakEnabledElement) questStreakEnabledElement.checked = false;
   if (questAdaptiveElement) questAdaptiveElement.checked = false;
+  if (questRemindInQuietElement) questRemindInQuietElement.checked = false;
+  if (questRepeatEveryElement) questRepeatEveryElement.value = 3;
+  if (customIntervalContainer) customIntervalContainer.style.display = "none";
 }
 
 // =====================
@@ -978,6 +1023,11 @@ function startEditingQuest(quest) {
   }
   if (questStreakEnabledElement) questStreakEnabledElement.checked = !!quest.streakEnabled;
   if (questAdaptiveElement) questAdaptiveElement.checked = !!quest.adaptive;
+  if (questRemindInQuietElement) questRemindInQuietElement.checked = !!quest.remindInQuiet;
+  if (questRepeatEveryElement) questRepeatEveryElement.value = quest.repeatEveryDays || 3;
+  if (customIntervalContainer) {
+    customIntervalContainer.style.display = quest.recurring === "custom" ? "block" : "none";
+  }
 }
 
 // =====================
@@ -1034,6 +1084,15 @@ function completeQuest(quest) {
 
   quest.status = "completed";
   quest.completed = true;
+  quest.completedOn = getTodayString();
+
+  if (quest.recurring === "custom") {
+    // "Every X days" counts from the day it was completed
+    const gap = Math.max(1, Number(quest.repeatEveryDays) || 1);
+    const next = new Date();
+    next.setDate(next.getDate() + gap);
+    quest.nextDue = getDateString(next);
+  }
 
   if (quest.recurring === "daily" || quest.recurring === "weekly") {
     const today = getTodayString();
@@ -1076,6 +1135,12 @@ function skipQuest(quest) {
   quest.completed = false;
   quest.skippedToday = true;
   quest.skippedAt = Date.now();
+
+  // Reminders: remember this skip for today only, then re-plan them
+  const reminderSkips = readReminderMap("_reminderSkips");
+  reminderSkips[quest.createdAt] = getTodayDateKey();
+  writeReminderMap("_reminderSkips", reminderSkips);
+  rescheduleQuestReminders();
 
   if (typeof renderQuests === "function") {
     renderQuests();
@@ -1234,6 +1299,16 @@ function runDailyReset() {
             `🔄 Reset quest (not on today's schedule): ${quest.name}`,
           );
         }
+      }
+    }
+
+    // === CUSTOM "EVERY X DAYS" QUESTS ===
+    if (quest.recurring === "custom" && !quest.adaptive) {
+      if (quest.completed === true && quest.nextDue && quest.nextDue <= today) {
+        quest.completed = false;
+        quest.status = "active";
+        changed = true;
+        console.log(`🔄 Custom quest due again: ${quest.name}`);
       }
     }
 
@@ -1423,6 +1498,12 @@ function isQuestScheduledToday(quest) {
   if (quest.recurring === "daily") {
     return true;
   }
+  if (quest.recurring === "custom") {
+    const todayKey = getTodayDateKey();
+    // Completed today: still show it in today's completed list
+    if (quest.completed && quest.completedOn === todayKey) return true;
+    return !quest.nextDue || quest.nextDue <= todayKey;
+  }
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const dayOfWeek = today.getDay();
@@ -1607,7 +1688,7 @@ function updateReviewSummary() {
   reviewSummary.innerHTML = `Name: ${questInput.value}
   <br>Category: ${questCategoryElement.value} Difficulty: ${questDifficultyElement.value} Priority: ${questPriority.value}
   <br>${noTimeBox && noTimeBox.checked ? "Anytime (no set time)" : `Start Time: ${formatTime(questStartTimeElement.value)} End Time: ${formatTime(questEndTimeElement.value)}`}  Due Date: ${formatDate(questDueDateElement.value)} 
-  <br>Recurring: ${questRecurringElement.value} Streak: ${questStreakEnabledElement.checked ? "yes" : "No"}`
+  <br>Recurring: ${questRecurringElement.value === "custom" ? "every " + (questRepeatEveryElement ? questRepeatEveryElement.value : "?") + " days" : questRecurringElement.value} Streak: ${questStreakEnabledElement.checked ? "yes" : "No"}`
 }
 
 
@@ -1701,6 +1782,272 @@ async function scheduleQuestNotification() {
 }
 
 // =====================================================
+// QUEST REMINDERS
+// Start reminder, re-sends if not done, action buttons, snooze, quiet hours
+// IDs: 1 = Codex, 2 = adaptive quest ready, 100000+ = quest reminders
+// =====================================================
+
+const REMINDER_ID_BASE = 100000;
+const REMINDER_ACTION_TYPE = "QUEST_ACTIONS";
+const REMINDER_DAYS_AHEAD = 1; // today + tomorrow
+const REMINDER_SLOT_TEXT = {
+  0: "Time to start this quest.",
+  1: "Still not done. Want to start it now?",
+  2: "Last reminder: this quest is still not done.",
+  3: "Snooze is over. Time to start.",
+};
+
+const defaultNotifSettings = {
+  enabled: true,
+  resendEnabled: true,
+  resendFirstMinutes: 15,
+  resendSecondMinutes: 30,
+  snoozeMinutes: 10,
+  quietEnabled: true,
+  quietStart: "23:00",
+  quietEnd: "07:00",
+};
+
+let reminderListenerAdded = false;
+let reminderBusy = false;
+let reminderQueued = false;
+let reminderTimer = null;
+
+function getNotifSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(questUser + "_notifSettings"));
+    return { ...defaultNotifSettings, ...(saved || {}) };
+  } catch (e) {
+    return { ...defaultNotifSettings };
+  }
+}
+
+function readReminderMap(suffix) {
+  try {
+    return JSON.parse(localStorage.getItem(questUser + suffix)) || {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function writeReminderMap(suffix, map) {
+  localStorage.setItem(questUser + suffix, JSON.stringify(map));
+}
+
+function timeToMinutes(timeStr) {
+  const [h, m] = timeStr.split(":").map(Number);
+  return h * 60 + m;
+}
+
+function isInQuietHours(date, settings) {
+  if (!settings.quietEnabled) return false;
+  const mins = date.getHours() * 60 + date.getMinutes();
+  const start = timeToMinutes(settings.quietStart);
+  const end = timeToMinutes(settings.quietEnd);
+  if (start === end) return false;
+  if (start < end) return mins >= start && mins < end;
+  return mins >= start || mins < end; // wraps past midnight
+}
+
+// Each quest gets its own block of notification IDs: 4 slots per day
+// slot 0 = start, 1 = first re-send, 2 = second re-send, 3 = snooze
+function getReminderId(quest, dayOffset, slot) {
+  const seed = Math.abs(Number(quest.createdAt) || 0) % 50000;
+  return REMINDER_ID_BASE + seed * 40 + dayOffset * 4 + slot;
+}
+
+function questRunsOnDate(quest, date, dayOffset) {
+  if (quest.recurring === "daily") return true;
+
+  if (quest.recurring === "custom") {
+    return !quest.nextDue || quest.nextDue <= getDateString(date);
+  }
+
+  if (quest.recurring === "weekly") {
+    if (quest.repeatDays && quest.repeatDays.length > 0) {
+      return quest.repeatDays.includes(date.getDay());
+    }
+    if (quest.dueDate) {
+      return parseDateKey(quest.dueDate).getDay() === date.getDay();
+    }
+    return true;
+  }
+
+  // One-time quest: on its due date, or today if it has no due date
+  if (quest.dueDate) return quest.dueDate === getDateString(date);
+  return dayOffset === 0;
+}
+
+function buildQuestReminders(now, settings) {
+  const todayKey = getTodayDateKey();
+  const skips = readReminderMap("_reminderSkips");
+  const snoozes = readReminderMap("_reminderSnoozes");
+
+  // Forget old skips and finished snoozes
+  Object.keys(skips).forEach((id) => {
+    if (skips[id] !== todayKey) delete skips[id];
+  });
+  Object.keys(snoozes).forEach((id) => {
+    if (snoozes[id] <= now.getTime()) delete snoozes[id];
+  });
+  writeReminderMap("_reminderSkips", skips);
+  writeReminderMap("_reminderSnoozes", snoozes);
+
+  const list = [];
+
+  for (const quest of quests) {
+    if (quest.adaptive || quest.isPrayer || quest.noTime || !quest.startTime) continue;
+
+    for (let dayOffset = 0; dayOffset <= REMINDER_DAYS_AHEAD; dayOffset++) {
+      const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + dayOffset);
+      if (!questRunsOnDate(quest, date, dayOffset)) continue;
+
+      if (dayOffset === 0) {
+        if (quest.completed || quest.cancelledToday) continue;
+        if (skips[quest.createdAt] === todayKey) continue;
+      } else {
+        // Tomorrow: daily/weekly quests reset overnight, one-time quests don't
+        const repeats = quest.recurring === "daily" || quest.recurring === "weekly" || quest.recurring === "custom";
+        if (!repeats && quest.completed) continue;
+      }
+
+      const makeNotification = (slot, at) => ({
+        id: getReminderId(quest, dayOffset, slot),
+        title: quest.name,
+        body: REMINDER_SLOT_TEXT[slot],
+        schedule: { at, allowWhileIdle: true },
+        actionTypeId: REMINDER_ACTION_TYPE,
+        extra: { questId: quest.createdAt },
+      });
+
+      // Snoozed today: only the snooze reminder, nothing else
+      if (dayOffset === 0 && snoozes[quest.createdAt]) {
+        // A snooze is something you asked for, so quiet hours don't block it
+        list.push(makeNotification(3, new Date(snoozes[quest.createdAt])));
+        continue;
+      }
+
+      const [hh, mm] = quest.startTime.split(":").map(Number);
+      const start = new Date(date.getFullYear(), date.getMonth(), date.getDate(), hh, mm, 0);
+      const slots = [{ slot: 0, at: start }];
+
+      if (settings.resendEnabled) {
+        const first = new Date(start.getTime() + settings.resendFirstMinutes * 60000);
+        const second = new Date(first.getTime() + settings.resendSecondMinutes * 60000);
+        slots.push({ slot: 1, at: first }, { slot: 2, at: second });
+      }
+
+      for (const s of slots) {
+        // Quiet hours: the start reminder always fires on time.
+        // Re-sends are muted during quiet hours, unless the quest is marked
+        // "remind me even during quiet hours".
+        if (s.slot !== 0 && !quest.remindInQuiet && isInQuietHours(s.at, settings)) continue;
+        if (s.at.getTime() <= now.getTime() + 5000) continue;
+        list.push(makeNotification(s.slot, s.at));
+      }
+    }
+  }
+
+  return list;
+}
+
+function requestReminderReschedule() {
+  clearTimeout(reminderTimer);
+  reminderTimer = setTimeout(rescheduleQuestReminders, 1000);
+}
+
+async function rescheduleQuestReminders() {
+  if (!LocalNotifications || !LocalNotifications.schedule) return;
+  if (reminderBusy) {
+    reminderQueued = true;
+    return;
+  }
+  reminderBusy = true;
+
+  try {
+    const settings = getNotifSettings();
+
+    const permission = await LocalNotifications.checkPermissions();
+    if (permission.display !== "granted") {
+      const asked = await LocalNotifications.requestPermissions();
+      if (asked.display !== "granted") return;
+    }
+
+    // Clear all quest reminders (leaves Codex id 1 and adaptive id 2 alone)
+    const pending = await LocalNotifications.getPending();
+    const ours = pending.notifications
+      .filter((n) => n.id >= REMINDER_ID_BASE)
+      .map((n) => ({ id: n.id }));
+    if (ours.length > 0) {
+      await LocalNotifications.cancel({ notifications: ours });
+    }
+
+    if (!settings.enabled) return;
+
+    const notifications = buildQuestReminders(new Date(), settings);
+    if (notifications.length > 0) {
+      await LocalNotifications.schedule({ notifications });
+    }
+  } catch (err) {
+    console.error("Reminder scheduling failed:", err);
+  } finally {
+    reminderBusy = false;
+    if (reminderQueued) {
+      reminderQueued = false;
+      requestReminderReschedule();
+    }
+  }
+}
+
+function snoozeQuestReminder(quest) {
+  const settings = getNotifSettings();
+  const snoozes = readReminderMap("_reminderSnoozes");
+  snoozes[quest.createdAt] = Date.now() + settings.snoozeMinutes * 60000;
+  writeReminderMap("_reminderSnoozes", snoozes);
+  rescheduleQuestReminders();
+}
+
+function handleReminderAction(event) {
+  const extra = event.notification && event.notification.extra;
+  if (!extra || extra.questId === undefined) return;
+
+  const quest = quests.find((q) => String(q.createdAt) === String(extra.questId));
+  if (!quest) return;
+
+  if (event.actionId === "complete") {
+    completeQuest(quest);
+  } else if (event.actionId === "snooze") {
+    snoozeQuestReminder(quest);
+  } else if (event.actionId === "skip") {
+    skipQuest(quest);
+  }
+}
+
+async function setupQuestReminders() {
+  if (reminderListenerAdded) return;
+  if (!LocalNotifications || !LocalNotifications.addListener) return;
+  reminderListenerAdded = true;
+
+  try {
+    await LocalNotifications.registerActionTypes({
+      types: [
+        {
+          id: REMINDER_ACTION_TYPE,
+          actions: [
+            { id: "complete", title: "Complete" },
+            { id: "snooze", title: "Snooze 10 min" },
+            { id: "skip", title: "Skip" },
+          ],
+        },
+      ],
+    });
+    LocalNotifications.addListener("localNotificationActionPerformed", handleReminderAction);
+  } catch (err) {
+    console.error("Reminder action setup failed:", err);
+  }
+}
+
+// =====================================================
 // INITIALIZATION
 // =====================================================
 
@@ -1730,6 +2077,8 @@ function initializeQuestSystem() {
     renderSections();
     renderCategories();
     renderQuests();
+    setupQuestReminders();
+    requestReminderReschedule();
     console.log("✅ Quest system fully reconciled. quests.length =", quests.length);
   }
 
@@ -1758,6 +2107,7 @@ document.addEventListener("dataPulled", (e) => {
   if (!e.detail.changed.includes("quests")) return;
   loadQuests();
   renderQuests();
+  requestReminderReschedule();
 });
 
 initializeQuestSystem();

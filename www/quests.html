@@ -70,6 +70,8 @@
             <input type="time" id="questStartTime">
             <label for="questEndTime">End time:</label>
             <input type="time" id="questEndTime">
+            <label for="questRemindInQuiet">🔔 Remind me even during quiet hours<input type="checkbox"
+                id="questRemindInQuiet"></label>
             <label for="questDueDate">Due date:</label>
             <input type="date" id="questDueDate">
           </div>
@@ -90,6 +92,10 @@
               <label><input type="checkbox" class="repeat-day" value="4"> Thu</label>
               <label><input type="checkbox" class="repeat-day" value="5"> Fri</label>
               <label><input type="checkbox" class="repeat-day" value="6"> Sat</label>
+            </div>
+            <div id="customIntervalContainer" hidden>
+              <label for="questRepeatEvery">Every how many days?</label>
+              <input type="number" id="questRepeatEvery" min="1" value="3">
             </div>
             <label>🔥<input type="checkbox" id="questStreakEnabled"></label>
             <label>🧠 Adaptive<input type="checkbox" id="questAdaptive"></label>

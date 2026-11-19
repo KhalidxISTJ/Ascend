@@ -23,6 +23,11 @@ const expanded = { overdue: false, upcoming: false, anytime: false };
 const PREVIEW_COUNT = 3;
 const justSignedIn = window.location.hash.includes('access_token');
 const timeTill = document.getElementById("time-till")
+// Focus Timer: quest picker (these live up here because updateDashboard runs before the timer code below)
+const focusSelect = document.getElementById("focusQuestSelect");
+const focusTotalEl = document.getElementById("focusQuestTotal");
+let focusListSignature = "";
+let focusReady = false; // becomes true once the timer code below has run
 
 function refreshUserScopedData() {
   user = localStorage.getItem("currentUserEmail");
@@ -278,6 +283,7 @@ function updateDashboard() {
   completedQuestCount.textContent = `Completed Quests: ${completed}`;
   completionRate.textContent = `Completion Rate: ${completion}%`;
 
+  refreshFocusQuestList();
 }
 
 completeCurrentQuest.onclick = function () {
@@ -333,16 +339,27 @@ window.addEventListener("questStateChanged", () => {
 whenSyncReady(() => {
   if (refreshUserScopedData()) {
     updateDashboard();
+    // If sync was already ready, the timer code below hasn't run yet; it restores itself at the end
+    if (focusReady) restoreFocusSession();
   }
 });
 
 // =====================
-// TIMER
+// TIMER (linked to a quest)
 // =====================
+// The timer counts against real clock time (endAt), so it stays correct when the
+// app is in the background or you switch pages. The running session is kept in
+// localStorage on this device only, and the focused seconds are added to the quest.
 
 let timer;
 let timeLeft = Number(timerMinutes.value) * 60;
 let running = false;
+let endAt = 0;           // when the countdown reaches 0 (ms), only while running
+let segStart = 0;        // when the current running stretch started (ms)
+let segLeft = 0;         // seconds that were left when this stretch started
+let focusQuestId = null; // quest this running stretch counts for
+let focusRestored = false;
+const FOCUS_NOTIFICATION_ID = 90001; // 1 and 2 are Codex/adaptive, 100000+ are quest reminders
 updateTimerButtons();
 
 function updateTimerDisplay() {
@@ -356,52 +373,313 @@ function updateTimerDisplay() {
 updateTimerDisplay();
 updateTimerButtons();
 
-startTimer.onclick = function () {
-  if (running) return;
+// ---------- quest picker ----------
 
-  running = true;
-  updateTimerButtons();
-  setTimerStatus("running");
+function selectedFocusQuestId() {
+  return focusSelect && focusSelect.value ? Number(focusSelect.value) : null;
+}
 
-  timer = setInterval(() => {
-    if (timeLeft <= 0) {
-      clearInterval(timer);
-      running = false;
-      updateTimerButtons();
-      alert("Time's up!");
+function findFocusQuest(id) {
+  return id ? quests.find((q) => q.createdAt === id) : null;
+}
+
+// Fills the dropdown with today's active quests. Only rebuilds when the list changed,
+// so the dropdown doesn't close on your finger while you are choosing.
+function refreshFocusQuestList() {
+  if (!focusSelect || !focusReady) return;
+  const items = getTodaysQuests()
+    .filter((quest) => quest.status === "active" && !quest.cancelledToday)
+    .map((quest) => ({ id: String(quest.createdAt), name: quest.name }));
+
+  // Keep the chosen quest in the list even if it was just completed
+  const keepId = focusQuestId ? String(focusQuestId) : focusSelect.value;
+  if (keepId && !items.some((item) => item.id === keepId)) {
+    const kept = findFocusQuest(Number(keepId));
+    if (kept) items.push({ id: keepId, name: kept.name });
+  }
+
+  const signature = JSON.stringify(items);
+  if (signature === focusListSignature) return;
+  focusListSignature = signature;
+
+  const chosen = focusSelect.value;
+  focusSelect.innerHTML = "";
+  const none = document.createElement("option");
+  none.value = "";
+  none.textContent = "— No quest —";
+  focusSelect.appendChild(none);
+  items.forEach((item) => {
+    const option = document.createElement("option");
+    option.value = item.id;
+    option.textContent = item.name;
+    focusSelect.appendChild(option);
+  });
+  focusSelect.value = items.some((item) => item.id === chosen) ? chosen : "";
+  updateFocusTotal();
+}
+
+function setFocusQuest(id) {
+  focusQuestId = id || null;
+  if (focusSelect) {
+    if (!id) {
+      focusSelect.value = "";
+    } else {
+      const text = String(id);
+      if (![...focusSelect.options].some((option) => option.value === text)) {
+        const quest = findFocusQuest(id);
+        if (quest) {
+          const option = document.createElement("option");
+          option.value = text;
+          option.textContent = quest.name;
+          focusSelect.appendChild(option);
+        }
+      }
+      focusSelect.value = text;
+      if (focusSelect.value !== text) focusQuestId = null; // quest no longer exists
+    }
+  }
+  updateFocusTotal();
+}
+
+function updateFocusTotal() {
+  if (!focusTotalEl) return;
+  const id = selectedFocusQuestId();
+  const quest = findFocusQuest(id);
+  if (!quest) {
+    focusTotalEl.textContent = "";
+    return;
+  }
+  // Include the stretch that is running right now
+  const live = running && focusQuestId === id
+    ? Math.min(segLeft, Math.max(0, Math.floor((Date.now() - segStart) / 1000)))
+    : 0;
+  const today = ((quest.focusByDay || {})[getTodayDateKey()] || 0) + live;
+  const total = (quest.focusSeconds || 0) + live;
+  focusTotalEl.textContent = `⏱ Today ${formatFocusTime(today)} · Total ${formatFocusTime(total)}`;
+}
+
+// ---------- saving focus time to the quest ----------
+
+function addFocusSeconds(questId, seconds) {
+  seconds = Math.floor(seconds);
+  if (!questId || seconds <= 0) return;
+  const quest = findFocusQuest(questId);
+  if (!quest) return;
+  const today = getTodayDateKey();
+  quest.focusSeconds = (quest.focusSeconds || 0) + seconds;
+  if (!quest.focusByDay) quest.focusByDay = {};
+  quest.focusByDay[today] = (quest.focusByDay[today] || 0) + seconds;
+  saveQuests();
+}
+
+// Ends the current running stretch: saves the seconds focused so far, returns them.
+// `now` is capped at endAt so a late wake-up never counts more than was planned.
+function closeSegment(now) {
+  const elapsed = Math.min(segLeft, Math.max(0, Math.floor((Math.min(now, endAt) - segStart) / 1000)));
+  addFocusSeconds(focusQuestId, elapsed);
+  return elapsed;
+}
+
+// ---------- notification when the session ends (works with the app closed) ----------
+
+function getFocusNotifier() {
+  return typeof LocalNotifications !== "undefined" && LocalNotifications && LocalNotifications.schedule
+    ? LocalNotifications
+    : null;
+}
+
+async function scheduleFocusNotification() {
+  const notifier = getFocusNotifier();
+  if (!notifier) return;
+  try {
+    await notifier.cancel({ notifications: [{ id: FOCUS_NOTIFICATION_ID }] });
+    const quest = findFocusQuest(focusQuestId);
+    await notifier.schedule({
+      notifications: [{
+        id: FOCUS_NOTIFICATION_ID,
+        title: "⏱ Focus session done",
+        body: quest ? `Nice work on "${quest.name}".` : "Time's up!",
+        schedule: { at: new Date(endAt), allowWhileIdle: true },
+      }],
+    });
+  } catch (error) {
+    console.log("Focus notification failed:", error);
+  }
+}
+
+async function cancelFocusNotification() {
+  const notifier = getFocusNotifier();
+  if (!notifier) return;
+  try {
+    await notifier.cancel({ notifications: [{ id: FOCUS_NOTIFICATION_ID }] });
+  } catch (error) {
+    console.log("Focus notification cancel failed:", error);
+  }
+}
+
+// ---------- remembering the session across pages / app restarts ----------
+
+function focusStorageKey() {
+  return localStorage.getItem("currentUserEmail") + "_focusSession";
+}
+
+function saveFocusSession() {
+  if (!localStorage.getItem("currentUserEmail")) return;
+  try {
+    localStorage.setItem(focusStorageKey(), JSON.stringify({
+      running, endAt, segStart, segLeft, timeLeft,
+      minutes: timerMinutes.value,
+      questId: running ? focusQuestId : selectedFocusQuestId(),
+    }));
+  } catch (error) {
+    console.log("Could not save focus session:", error);
+  }
+}
+
+function restoreFocusSession() {
+  if (running || focusRestored || !localStorage.getItem("currentUserEmail")) return;
+  let saved = null;
+  try {
+    saved = JSON.parse(localStorage.getItem(focusStorageKey()));
+  } catch (error) {
+    saved = null;
+  }
+  if (!saved) return;
+  focusRestored = true;
+
+  setFocusQuest(saved.questId);
+  if (saved.minutes !== undefined) timerMinutes.value = saved.minutes;
+
+  if (saved.running) {
+    focusQuestId = saved.questId || null;
+    segStart = saved.segStart;
+    segLeft = saved.segLeft;
+    endAt = saved.endAt;
+    if (Date.now() >= endAt) {
+      // The session ended while you were away (the notification already told you)
+      finishTimer(true);
       return;
     }
+    running = true;
+    timeLeft = Math.max(0, Math.ceil((endAt - Date.now()) / 1000));
+    timer = setInterval(tick, 500);
+    setTimerStatus("running");
+  } else {
+    timeLeft = saved.timeLeft || 0;
+    setTimerStatus(timeLeft > 0 ? "paused" : "ready");
+  }
+  updateTimerDisplay();
+  updateTimerButtons();
+}
 
-    timeLeft--;
+// ---------- the countdown ----------
+
+function tick() {
+  const now = Date.now();
+  if (now >= endAt) {
+    finishTimer(false);
+    return;
+  }
+  const left = Math.max(0, Math.ceil((endAt - now) / 1000));
+  if (left !== timeLeft) {
+    timeLeft = left;
     updateTimerDisplay();
-  }, 1000);
+    updateFocusTotal();
+  }
+}
+
+function finishTimer(quiet) {
+  clearInterval(timer);
+  closeSegment(endAt);
+  running = false;
+  timeLeft = 0;
+  updateFocusTotal();
+  updateTimerDisplay();
+  updateTimerButtons();
+  setTimerStatus("finished");
+  saveFocusSession();
+  // In the app the scheduled notification already announces it; in a browser use an alert
+  if (!quiet && !getFocusNotifier()) alert("Time's up!");
+}
+
+startTimer.onclick = function () {
+  if (running) return;
+  if (timeLeft <= 0) {
+    timerMinutes.focus();
+    return;
+  }
+
+  const now = Date.now();
+  focusQuestId = selectedFocusQuestId();
+  running = true;
+  segStart = now;
+  segLeft = timeLeft;
+  endAt = now + timeLeft * 1000;
+  timer = setInterval(tick, 500);
+
+  updateTimerButtons();
+  setTimerStatus("running");
+  scheduleFocusNotification();
+  saveFocusSession();
 };
 
 pauseTimer.onclick = function () {
+  if (!running) return;
   clearInterval(timer);
+  const elapsed = closeSegment(Date.now());
   running = false;
+  timeLeft = Math.max(0, segLeft - elapsed);
+  updateFocusTotal();
+  updateTimerDisplay();
   updateTimerButtons();
   setTimerStatus("paused");
+  cancelFocusNotification();
+  saveFocusSession();
 };
 
 resetTimer.onclick = function () {
-  clearInterval(timer);
+  if (running) {
+    clearInterval(timer);
+    closeSegment(Date.now());
+  }
   running = false;
 
-  timeLeft = Number(timerMinutes.value) * 0;
+  timeLeft = 0;
   timerMinutes.value = 0;
 
+  updateFocusTotal();
   updateTimerDisplay();
   updateTimerButtons();
   setTimerStatus("ready");
+  cancelFocusNotification();
+  saveFocusSession();
 };
 
 timerMinutes.onchange = function () {
   if (!running) {
     timeLeft = Number(timerMinutes.value) * 60;
     updateTimerDisplay();
+    updateTimerButtons();
+    setTimerStatus("ready");
+    saveFocusSession();
   }
 };
+
+// Switching quest mid-session: time so far goes to the old quest, the rest to the new one
+if (focusSelect) {
+  focusSelect.onchange = function () {
+    if (running) {
+      const now = Date.now();
+      closeSegment(now);
+      segStart = now;
+      segLeft = Math.max(0, Math.ceil((endAt - now) / 1000));
+      focusQuestId = selectedFocusQuestId();
+      scheduleFocusNotification();
+    }
+    updateFocusTotal();
+    saveFocusSession();
+  };
+}
 
 function setTimerStatus(state) {
   timerStatus.className = "timer-status";
@@ -442,6 +720,11 @@ function updateTimerButtons() {
     }
   }
 }
+
+// Pick up a session that was running before this page loaded
+focusReady = true;
+refreshFocusQuestList();
+restoreFocusSession();
 
 /* Calculates how much time is left before the day ends*/
 
