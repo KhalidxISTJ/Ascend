@@ -92,7 +92,7 @@ function openReview(deck) {
     deckList.style.display = "none"
     codexActions.style.display = "none"
     deckDetails.style.display = "flex"
-    startReview(deck)
+    showReviewSetup(deck)
 }
 
 function renderDecks() {
@@ -278,7 +278,7 @@ function showDeckDetails(deck) {
         const headerReviewBtn = document.createElement("button")
         headerReviewBtn.textContent = "Review"
         headerReviewBtn.className = "review-btn"
-        headerReviewBtn.addEventListener("click", () => { startReview(deck) })
+        headerReviewBtn.addEventListener("click", () => { showReviewSetup(deck) })
         deckHeader.appendChild(deckName)
         deckHeader.appendChild(renameBtn)
         deckHeader.appendChild(headerReviewBtn)
@@ -541,15 +541,178 @@ function previewStability(card, grade) {
     return calculateNewStabilityOnSuccess(card.stability, card.difficulty, retrievability, grade)
 }
 let reviewKeyHandler = null
+let reviewTimerInterval = null
+let reviewAutoTimeout = null
 function stopReviewKeys() {
     if (reviewKeyHandler) {
         document.removeEventListener("keydown", reviewKeyHandler)
         reviewKeyHandler = null
     }
+    // Also stop any review timer (session countdown, card countdown, auto-grade)
+    if (reviewTimerInterval) {
+        clearInterval(reviewTimerInterval)
+        reviewTimerInterval = null
+    }
+    if (reviewAutoTimeout) {
+        clearTimeout(reviewAutoTimeout)
+        reviewAutoTimeout = null
+    }
+}
+
+// =====================================================
+// REVIEW SETTINGS (the screen shown before a review starts)
+// Saved on this device only, like the session size.
+// =====================================================
+
+const REVIEW_DEFAULTS = { order: "shuffle", timerMode: "off", sessionMinutes: 10, cardSeconds: 20 }
+const reviewSettingsKey = getPrefix() + "codexReviewSettings"
+
+function getReviewSettings() {
+    let saved = null
+    try {
+        saved = JSON.parse(localStorage.getItem(reviewSettingsKey))
+    } catch (error) {
+        saved = null
+    }
+    const s = { ...REVIEW_DEFAULTS, ...(saved || {}) }
+    if (s.order !== "created") { s.order = "shuffle" }
+    if (!["off", "session", "card"].includes(s.timerMode)) { s.timerMode = "off" }
+    s.sessionMinutes = Number(s.sessionMinutes) > 0 ? Number(s.sessionMinutes) : REVIEW_DEFAULTS.sessionMinutes
+    s.cardSeconds = Number(s.cardSeconds) > 0 ? Number(s.cardSeconds) : REVIEW_DEFAULTS.cardSeconds
+    return s
+}
+
+function saveReviewSettings(settings) {
+    localStorage.setItem(reviewSettingsKey, JSON.stringify(settings))
+}
+
+function showReviewSetup(deck) {
+    stopReviewKeys()
+    deckDetails.innerHTML = ""
+
+    const backBtn = document.createElement("button")
+    backBtn.textContent = "Back"
+    backBtn.className = "back-btn"
+    backBtn.addEventListener("click", showDeckList)
+    const top = document.createElement("div")
+    top.className = "review-top"
+    top.appendChild(backBtn)
+    deckDetails.appendChild(top)
+
+    const settings = getReviewSettings()
+    const dueCount = deck.cards.filter(card => card.nextReview <= Date.now()).length
+
+    const panel = document.createElement("div")
+    panel.className = "review-setup"
+    const title = document.createElement("h3")
+    title.textContent = "Review settings"
+    const sub = document.createElement("p")
+    sub.className = "setup-sub"
+    sub.textContent = `${deck.name}: ${dueCount} ${dueCount === 1 ? "card" : "cards"} due`
+    panel.appendChild(title)
+    panel.appendChild(sub)
+
+    function makeSelect(id, options, value) {
+        const select = document.createElement("select")
+        select.id = id
+        options.forEach(([optionValue, label]) => {
+            const option = document.createElement("option")
+            option.value = optionValue
+            option.textContent = label
+            select.appendChild(option)
+        })
+        select.value = value
+        return select
+    }
+
+    function makeNumber(id, min, max, value) {
+        const input = document.createElement("input")
+        input.type = "number"
+        input.id = id
+        input.min = min
+        input.max = max
+        input.step = 1
+        input.value = value
+        input.setAttribute("inputmode", "numeric")
+        return input
+    }
+
+    function makeRow(labelText, control) {
+        const row = document.createElement("div")
+        row.className = "setup-row"
+        const label = document.createElement("label")
+        label.textContent = labelText
+        label.htmlFor = control.id
+        row.appendChild(label)
+        row.appendChild(control)
+        return row
+    }
+
+    const orderSelect = makeSelect("setup-order", [["shuffle", "Shuffled"], ["created", "Created order"]], settings.order)
+    const sizeSelect = makeSelect(
+        "setup-size",
+        [["15", "15 cards"], ["20", "20 cards"], ["30", "30 cards"], ["all", "All due"]],
+        localStorage.getItem(sessionSizeKey) || "20",
+    )
+    const timerSelect = makeSelect("setup-timer", [["off", "Off"], ["session", "Per session"], ["card", "Per card"]], settings.timerMode)
+    const minutesInput = makeNumber("setup-minutes", 1, 120, settings.sessionMinutes)
+    const secondsInput = makeNumber("setup-seconds", 3, 300, settings.cardSeconds)
+
+    const minutesRow = makeRow("Minutes for the whole review", minutesInput)
+    const secondsRow = makeRow("Seconds for each card", secondsInput)
+
+    const hint = document.createElement("p")
+    hint.className = "setup-hint"
+
+    function updateTimerRows() {
+        minutesRow.hidden = timerSelect.value !== "session"
+        secondsRow.hidden = timerSelect.value !== "card"
+        if (timerSelect.value === "session") {
+            hint.textContent = "One countdown for the whole review. When time runs out, the review ends."
+        } else if (timerSelect.value === "card") {
+            hint.textContent = "If the card is still showing its front when time runs out, the answer is shown and the card is marked Again. Flipping the card stops the timer."
+        } else {
+            hint.textContent = "No timer."
+        }
+    }
+    timerSelect.addEventListener("change", updateTimerRows)
+    updateTimerRows()
+
+    panel.appendChild(makeRow("Card order", orderSelect))
+    panel.appendChild(makeRow("Cards per review", sizeSelect))
+    panel.appendChild(makeRow("Timer", timerSelect))
+    panel.appendChild(minutesRow)
+    panel.appendChild(secondsRow)
+    panel.appendChild(hint)
+
+    const startBtn = document.createElement("button")
+    startBtn.className = "setup-start"
+    startBtn.id = "setup-start"
+    startBtn.textContent = dueCount === 0 ? "Nothing due" : "Start review"
+    startBtn.disabled = dueCount === 0
+    startBtn.addEventListener("click", () => {
+        const minutes = Math.min(120, Math.max(1, Math.round(Number(minutesInput.value) || settings.sessionMinutes)))
+        const seconds = Math.min(300, Math.max(3, Math.round(Number(secondsInput.value) || settings.cardSeconds)))
+        saveReviewSettings({
+            order: orderSelect.value,
+            timerMode: timerSelect.value,
+            sessionMinutes: minutes,
+            cardSeconds: seconds,
+        })
+        localStorage.setItem(sessionSizeKey, sizeSelect.value)
+        sessionSizeSelect.value = sizeSelect.value
+        startReview(deck)
+    })
+    panel.appendChild(startBtn)
+
+    deckDetails.appendChild(panel)
 }
 
 function startReview(deck, session = { total: null, done: 0 }) {
     stopReviewKeys()
+    // The review settings are read once per session (Review more starts a new session)
+    if (!session.settings) { session.settings = getReviewSettings() }
+    const settings = session.settings
     deckDetails.innerHTML = ""
     const backBtn = document.createElement("button")
     backBtn.textContent = "Back"
@@ -563,13 +726,22 @@ function startReview(deck, session = { total: null, done: 0 }) {
     const dueCards = deck.cards.filter(card => card.nextReview <= Date.now())
     if (session.total === null && dueCards.length > 0) {
         session.total = Math.min(dueCards.length, getSessionSize())
+        if (settings.timerMode === "session") {
+            session.endsAt = Date.now() + settings.sessionMinutes * 60 * 1000
+        }
     }
-    if (dueCards.length === 0 || session.done >= session.total) {
+    const timeUp = !!session.endsAt && Date.now() >= session.endsAt
+    if (dueCards.length === 0 || session.done >= session.total || timeUp) {
         const done = document.createElement("p")
         done.className = "review-done"
-        done.textContent = session.done > 0
-            ? `All done. You reviewed ${session.done} ${session.done === 1 ? "card" : "cards"}.`
-            : "No cards due right now"
+        const cardWord = session.done === 1 ? "card" : "cards"
+        if (session.done > 0) {
+            done.textContent = timeUp
+                ? `Time's up. You reviewed ${session.done} ${cardWord}.`
+                : `All done. You reviewed ${session.done} ${cardWord}.`
+        } else {
+            done.textContent = timeUp ? "Time's up." : "No cards due right now"
+        }
         deckDetails.appendChild(done)
         if (dueCards.length > 0) {
             const more = document.createElement("p")
@@ -585,7 +757,9 @@ function startReview(deck, session = { total: null, done: 0 }) {
         return
     }
 
-    const card = dueCards[Math.floor(Math.random() * dueCards.length)]
+    const card = settings.order === "created"
+        ? dueCards[0]
+        : dueCards[Math.floor(Math.random() * dueCards.length)]
 
     // ---------- Counter + progress ----------
     const progress = document.createElement("div")
@@ -608,8 +782,16 @@ function startReview(deck, session = { total: null, done: 0 }) {
     const review = document.createElement("p")
     review.className = "flashcard"
     review.innerHTML = card.cardFront
+    let locked = false     // true while the per-card timer is showing the answer before auto-grading
+    let cardTimer = null   // set below when the per-card timer is on
     function flip() {
+        if (locked) { return }
         review.innerHTML = review.innerHTML === card.cardFront ? card.cardBack : card.cardFront
+        // Seeing the answer stops the per-card timer
+        if (cardTimer) {
+            cardTimer.stop()
+            cardTimer = null
+        }
     }
     review.addEventListener("click", flip)
     deckDetails.appendChild(review)
@@ -619,7 +801,8 @@ function startReview(deck, session = { total: null, done: 0 }) {
     flipHint.textContent = "Tap the card to flip it"
     deckDetails.appendChild(flipHint)
 
-    function gradeCard(grade) {
+    function gradeCard(grade, fromTimer = false) {
+        if (locked && !fromTimer) { return }
         const startDifficulty = { 1: 8, 2: 6, 3: 5, 4: 3 }
         const now = Date.now()
         const newStability = previewStability(card, grade)
@@ -682,6 +865,72 @@ function startReview(deck, session = { total: null, done: 0 }) {
         }
     }
     document.addEventListener("keydown", reviewKeyHandler)
+
+    // ---------- Timers (chosen on the review settings screen) ----------
+    if (settings.timerMode === "session" && session.endsAt) {
+        const sessionLabel = document.createElement("p")
+        sessionLabel.className = "review-timer"
+        progress.appendChild(sessionLabel)
+        const tickSession = () => {
+            const left = Math.max(0, session.endsAt - Date.now())
+            const mins = Math.floor(left / 60000)
+            const secs = Math.floor((left % 60000) / 1000)
+            sessionLabel.textContent = `⏱ ${mins}:${String(secs).padStart(2, "0")} left`
+            if (left <= 0) {
+                clearInterval(reviewTimerInterval)
+                reviewTimerInterval = null
+                startReview(deck, session)   // shows the "Time's up" screen
+            }
+        }
+        tickSession()
+        reviewTimerInterval = setInterval(tickSession, 250)
+    }
+
+    if (settings.timerMode === "card") {
+        const totalMs = settings.cardSeconds * 1000
+        const cardEndsAt = Date.now() + totalMs
+        const timerBox = document.createElement("div")
+        timerBox.className = "card-timer"
+        const cardLabel = document.createElement("span")
+        cardLabel.className = "card-timer-label"
+        const track = document.createElement("div")
+        track.className = "card-timer-track"
+        const timerFill = document.createElement("div")
+        timerFill.className = "card-timer-fill"
+        track.appendChild(timerFill)
+        timerBox.appendChild(cardLabel)
+        timerBox.appendChild(track)
+        progress.appendChild(timerBox)
+
+        const tickCard = () => {
+            const left = Math.max(0, cardEndsAt - Date.now())
+            cardLabel.textContent = `⏱ ${Math.ceil(left / 1000)}s`
+            timerFill.style.width = `${left / totalMs * 100}%`
+            if (left > 0) { return }
+
+            // Time ran out with the front still showing: show the answer, then mark it Again
+            clearInterval(reviewTimerInterval)
+            reviewTimerInterval = null
+            locked = true
+            review.innerHTML = card.cardBack
+            cardLabel.textContent = "⏱ Time's up. Marked Again."
+            cardLabel.classList.add("expired")
+            gradeButtons.querySelectorAll("button").forEach((b) => { b.disabled = true })
+            reviewAutoTimeout = setTimeout(() => {
+                reviewAutoTimeout = null
+                gradeCard(1, true)
+            }, 2500)
+        }
+        tickCard()
+        reviewTimerInterval = setInterval(tickCard, 100)
+        cardTimer = {
+            stop() {
+                clearInterval(reviewTimerInterval)
+                reviewTimerInterval = null
+                cardLabel.textContent = "⏱ Answer shown"
+            },
+        }
+    }
 }
 window.testNotification = testNotification;
 function getEarliestReview() {
