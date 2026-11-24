@@ -289,13 +289,13 @@ async function refreshOverlayPermissionRow() {
   const button = document.getElementById("overlayPermBtn");
   if (!row || !text || !button) return;
 
+  row.hidden = false;
+  button.hidden = true;
   if (!isNativeApp()) {
-    row.hidden = true; // website: nothing to ask for
+    text.textContent = "Not running inside the Android app (website only), so this permission doesn't apply.";
     return;
   }
 
-  row.hidden = false;
-  button.hidden = true;
   const plugin = getOverlayPlugin();
   if (!plugin) {
     text.textContent = "Could not find the permission plugin. Rebuild the app.";
