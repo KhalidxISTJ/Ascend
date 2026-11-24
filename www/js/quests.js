@@ -392,6 +392,12 @@ function migrateQuests() {
     if (typeof quest.repeatEveryDays !== "number") { quest.repeatEveryDays = 0; changed = true; }
     if (quest.nextDue === undefined) { quest.nextDue = null; changed = true; }
     if (quest.ongoingOn === undefined) { quest.ongoingOn = null; changed = true; }
+    // Old format was a date text that expired at midnight. New format is a number (the time
+    // it was set) that stays until the quest is completed, skipped, cancelled or deleted.
+    if (typeof quest.ongoingOn === "string") {
+      quest.ongoingOn = quest.ongoingOn === getTodayDateKey() ? Date.now() : null;
+      changed = true;
+    }
     if (typeof quest.mustDo !== "boolean") { quest.mustDo = false; changed = true; }
     if (typeof quest.firstAction !== "string") { quest.firstAction = ""; changed = true; }
 
@@ -405,6 +411,14 @@ function migrateQuests() {
     }
 
     if (changed) anyChanged = true;
+  }
+
+  // Only one quest can be ongoing: if there are several, the newest one wins
+  const ongoingList = quests.filter((q) => typeof q.ongoingOn === "number");
+  if (ongoingList.length > 1) {
+    const keep = ongoingList.reduce((a, b) => (b.ongoingOn > a.ongoingOn ? b : a));
+    ongoingList.forEach((q) => { if (q !== keep) q.ongoingOn = null; });
+    anyChanged = true;
   }
 
   if (anyChanged) {
@@ -1025,6 +1039,9 @@ function renderQuests() {
 
   const sorted = sortQuests([...quests]);
 
+  // Ongoing quests go to the top of the list (stable: the rest keep their order)
+  sorted.sort((a, b) => Number(isQuestOngoing(b)) - Number(isQuestOngoing(a)));
+
   for (const quest of sorted) {
     if (quest.section !== currentSection) {
       continue;
@@ -1640,18 +1657,31 @@ function cancelQuest(quest) {
 
 // =====================
 // ONGOING ("I'm doing this right now")
-// While a quest is ongoing it sends no reminders today. It ends when the quest is
-// completed, skipped or cancelled, when he taps the button again, or at midnight
-// (it only counts for the day it was set, so it can never stay silent for days).
+// Only ONE quest can be ongoing at a time. It stays ongoing (even past midnight) until
+// the quest is completed, skipped, cancelled or deleted, or he taps the button again.
+// While it is ongoing it sends no reminders. ongoingOn holds the time it was set.
 // =====================
 
 function isQuestOngoing(quest) {
-  return !!quest && quest.ongoingOn === getTodayDateKey();
+  return !!quest && typeof quest.ongoingOn === "number" && !quest.completed;
+}
+
+// Makes this quest the ongoing one and clears any other
+function setQuestOngoing(quest) {
+  if (!quest) return;
+  for (const other of quests) {
+    if (other !== quest) other.ongoingOn = null;
+  }
+  quest.ongoingOn = Date.now();
 }
 
 function toggleQuestOngoing(quest) {
   if (!quest || quest.completed) return;
-  quest.ongoingOn = isQuestOngoing(quest) ? null : getTodayDateKey();
+  if (isQuestOngoing(quest)) {
+    quest.ongoingOn = null;
+  } else {
+    setQuestOngoing(quest);
+  }
   saveQuests(); // also re-plans the reminders (an ongoing quest gets none today)
   renderQuests();
   window.dispatchEvent(new CustomEvent("questStateChanged"));
@@ -2068,8 +2098,11 @@ function isQuestScheduledToday(quest) {
 function getCurrentQuest(offset = 0) {
   const todayQuests = getTodaysQuests();
 
+  // The Ongoing quest is always the current quest (first in line)
+  const ongoing = quests.find((quest) => isQuestOngoing(quest) && !quest.cancelledToday) || null;
+
   if (todayQuests.length === 0) {
-    return null;
+    return ongoing;
   }
 
   function getStartMinutes(quest) {
@@ -2087,7 +2120,12 @@ function getCurrentQuest(offset = 0) {
   });
 
 
-  if (eligible.length === 0) {
+  if (ongoing) {
+    const at = eligible.indexOf(ongoing);
+    if (at !== -1) eligible.splice(at, 1);
+  }
+
+  if (eligible.length === 0 && !ongoing) {
     return null;
   }
 
@@ -2102,7 +2140,8 @@ function getCurrentQuest(offset = 0) {
     return (a.order || 0) - (b.order || 0);
   });
 
-  return eligible[offset % eligible.length] || null;
+  const ordered = ongoing ? [ongoing, ...eligible] : eligible;
+  return ordered[offset % ordered.length] || null;
 }
 
 function getBacklogQuests() {
@@ -2445,6 +2484,8 @@ function buildQuestReminders(now, settings) {
   for (const quest of quests) {
     if (quest.adaptive || quest.isPrayer || quest.noTime || !quest.startTime) continue;
 
+    if (isQuestOngoing(quest)) continue; // ongoing: he is doing it right now, no reminders
+
     for (let dayOffset = 0; dayOffset <= REMINDER_DAYS_AHEAD; dayOffset++) {
       const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + dayOffset);
       if (!questRunsOnDate(quest, date, dayOffset)) continue;
@@ -2452,7 +2493,6 @@ function buildQuestReminders(now, settings) {
       if (dayOffset === 0) {
         if (quest.completed || quest.cancelledToday) continue;
         if (skips[quest.createdAt] === todayKey) continue;
-        if (isQuestOngoing(quest)) continue; // ongoing: he is doing it right now
       } else {
         // Tomorrow: daily/weekly quests reset overnight, one-time quests don't
         const repeats = quest.recurring === "daily" || quest.recurring === "weekly" || quest.recurring === "custom";

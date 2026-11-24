@@ -220,7 +220,7 @@ function handleMustDoAction(action) {
     rec.okUntil = Math.max(end, nowMs + MUSTDO_CHECKIN_MINUTES * 60000);
     rec.startedAt = 0;
     rec.checkAt = 0;
-    quest.ongoingOn = getTodayDateKey(); // show it as Ongoing and stop the normal reminders
+    setQuestOngoing(quest); // the only Ongoing quest; stops the normal reminders
     saveQuests();
     if (typeof renderQuests === "function") renderQuests();
   } else if (action === "no") {
