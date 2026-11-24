@@ -90,8 +90,46 @@
 
                     <div class="settings-row">
                         <div class="settings-text">
+                            <label class="settings-label" for="set-anytime">Anytime quest summary</label>
+                            <div class="settings-help">A reminder listing your open Anytime quests. It only comes if you
+                                still have some.</div>
+                        </div>
+                        <input type="checkbox" class="switch" id="set-anytime">
+                    </div>
+
+                    <div id="anytime-details" class="settings-group sub">
+                        <div class="settings-row">
+                            <div class="settings-text">
+                                <label class="settings-label" for="set-anytime-1">First summary</label>
+                            </div>
+                            <div class="settings-control">
+                                <input type="time" id="set-anytime-1">
+                            </div>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-text">
+                                <label class="settings-label" for="set-anytime-2">Second summary</label>
+                            </div>
+                            <div class="settings-control">
+                                <input type="time" id="set-anytime-2">
+                            </div>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-text">
+                                <label class="settings-label" for="set-anytime-3">Third summary</label>
+                            </div>
+                            <div class="settings-control">
+                                <input type="time" id="set-anytime-3">
+                            </div>
+                        </div>
+                        <p class="settings-help">A summary that falls inside your quiet hours is skipped.</p>
+                    </div>
+
+                    <div class="settings-row">
+                        <div class="settings-text">
                             <label class="settings-label" for="set-quiet">Quiet hours</label>
-                            <div class="settings-help">Mutes re-sends. Quest start reminders still arrive on time.</div>
+                            <div class="settings-help">Mutes re-sends and Anytime summaries. Quest start reminders still
+                                arrive on time.</div>
                         </div>
                         <input type="checkbox" class="switch" id="set-quiet">
                     </div>

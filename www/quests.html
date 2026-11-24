@@ -72,6 +72,13 @@
             <input type="time" id="questEndTime">
             <label for="questRemindInQuiet">🔔 Remind me even during quiet hours<input type="checkbox"
                 id="questRemindInQuiet"></label>
+            <label for="questMustDo">⚠️ Must do<input type="checkbox" id="questMustDo"></label>
+            <div id="mustDoContainer" hidden>
+              <label for="questFirstAction">First small action (about 2 minutes):</label>
+              <input type="text" id="questFirstAction" maxlength="80" placeholder="e.g. Open the zyBook">
+              <small>Needs a start time and an end time.</small>
+            </div>
+            <div id="mustDoError" class="wizard-error" hidden></div>
             <label for="questDueDate">Due date:</label>
             <input type="date" id="questDueDate">
           </div>
@@ -120,8 +127,8 @@
       <select id="sortQuests">
         <option value="date">Due Date</option>
         <option value="priority">Priority</option>
+        <option value="adaptive">Adaptive (next review soonest)</option>
         <option value="category">Category</option>
-        <option value="section">Section</option>
         <option value="difficulty">Difficulty</option>
         <option value="name">Name (A-Z)</option>
         <option value="created">Date Created</option>
@@ -150,6 +157,27 @@
       </section>
     </div>
   </main>
+
+  <!-- MANAGE SECTIONS -->
+  <div id="manageSectionsModal" class="manage-overlay" hidden>
+    <div class="manage-box">
+      <div class="manage-header">
+        <h3>Manage sections</h3>
+        <button id="manageClose" type="button" class="manage-close" title="Close">✕</button>
+      </div>
+      <p class="manage-hint">Deleting a section never deletes quests. They move to "General". Tip: hold a tab and drag
+        it to reorder.</p>
+      <ul id="manageSectionList" class="manage-list"></ul>
+      <div class="manage-add">
+        <input type="text" id="newSectionInput" placeholder="New section name" maxlength="30" />
+        <button id="addSectionBtn" type="button" class="manage-btn">Add</button>
+      </div>
+      <div class="manage-tools">
+        <h4>Tools</h4>
+        <button id="bulkSurahBtn" type="button" class="manage-btn">📖 Add Juz Amma review quests</button>
+      </div>
+    </div>
+  </div>
   <script src="js/player.js"></script>
   <script src="js/skillTree.js"></script>
   <script src="js/quests.js"></script>

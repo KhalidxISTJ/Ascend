@@ -34,23 +34,17 @@
     <hr>
 </header>
 
-<div id="update-panel" class="update-panel hidden">
-    <div class="update-content">
-        <h3 class="update-title">
-            <p>What's new in v1.0.0 alpha</p>
-            <button id="close-update-panel">Close</button>
-        </h3>
-
-        <h4>✨ New</h4>
-        <ul>
-            <li>All Day bar on Calendar</li>
-            <li>Update Panel feature</li>
-        </ul>
-
-        <h4>🐛 Fixed</h4>
-        <ul>
-            <li>Completed one-time quests lingering forever</li>
-        </ul>
+<!--What's new (the list is drawn by nav.js from js/version.js)-->
+<div id="update-panel" class="update-panel hidden" role="dialog" aria-label="What's new">
+    <div class="update-screen">
+        <div class="update-topbar">
+            <button id="update-back" class="update-back" type="button" aria-label="Back">&larr;</button>
+            <h2 class="update-heading">What's new</h2>
+        </div>
+        <div id="update-list" class="update-list"></div>
+        <div class="update-footer">
+            <button id="close-update-panel" class="update-close-btn" type="button">Close</button>
+        </div>
     </div>
 </div>
 

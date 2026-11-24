@@ -32,6 +32,10 @@ const startingGap = { Easy: 2880, Medium: 1440, Hard: 720, Extreme: 360 };
 const ratingMultiplier = { 1: "2", 2: "1.2", 3: "0.5" }
 const questNotesElement = document.getElementById("questNotes")
 const questRemindInQuietElement = document.getElementById("questRemindInQuiet")
+const questMustDoElement = document.getElementById("questMustDo")
+const questFirstActionElement = document.getElementById("questFirstAction")
+const mustDoContainer = document.getElementById("mustDoContainer")
+const mustDoError = document.getElementById("mustDoError")
 const customIntervalContainer = document.getElementById("customIntervalContainer")
 const questRepeatEveryElement = document.getElementById("questRepeatEvery")
 const { LocalNotifications } = (typeof Capacitor !== "undefined") ? Capacitor.Plugins : {};
@@ -210,6 +214,55 @@ if (noTimeBox) {
   noTimeBox.addEventListener("change", updateTimeInputsLock);
 }
 
+// =====================================================
+// MUST DO - needs a first small action and a start + end time
+// =====================================================
+
+function escapeQuestText(text) {
+  return String(text || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function showMustDoError(message) {
+  if (!mustDoError) return;
+  mustDoError.textContent = message;
+  mustDoError.hidden = !message;
+}
+
+function updateMustDoUI() {
+  const on = questMustDoElement ? questMustDoElement.checked : false;
+  if (mustDoContainer) mustDoContainer.hidden = !on;
+  if (noTimeBox) {
+    // A must-do quest needs a real time window, so it can't be an Anytime quest
+    if (on) noTimeBox.checked = false;
+    noTimeBox.disabled = on;
+    updateTimeInputsLock();
+  }
+  if (!on) showMustDoError("");
+}
+
+// Returns a message if a must-do quest is not complete yet, or "" if it is fine
+function getMustDoProblem() {
+  if (!questMustDoElement || !questMustDoElement.checked) return "";
+  if (!questFirstActionElement.value.trim()) {
+    return "Type the small first action (for example: open the zyBook).";
+  }
+  if (!questStartTimeElement.value || !questEndTimeElement.value) {
+    return "A must-do quest needs a start time and an end time.";
+  }
+  if (questEndTimeElement.value <= questStartTimeElement.value) {
+    return "The end time must be after the start time.";
+  }
+  return "";
+}
+
+if (questMustDoElement) {
+  questMustDoElement.addEventListener("change", updateMustDoUI);
+}
+
 // =====================
 // SAVE SYSTEM
 // =====================
@@ -338,6 +391,9 @@ function migrateQuests() {
     if (typeof quest.remindInQuiet !== "boolean") { quest.remindInQuiet = false; changed = true; }
     if (typeof quest.repeatEveryDays !== "number") { quest.repeatEveryDays = 0; changed = true; }
     if (quest.nextDue === undefined) { quest.nextDue = null; changed = true; }
+    if (quest.ongoingOn === undefined) { quest.ongoingOn = null; changed = true; }
+    if (typeof quest.mustDo !== "boolean") { quest.mustDo = false; changed = true; }
+    if (typeof quest.firstAction !== "string") { quest.firstAction = ""; changed = true; }
 
 
     if (quest.completed === true) {
@@ -456,69 +512,453 @@ if (sortQuestsElement) {
 // SECTION RENDER
 // =====================
 
+const manageModal = document.getElementById("manageSectionsModal");
+const manageSectionList = document.getElementById("manageSectionList");
+const manageCloseBtn = document.getElementById("manageClose");
+const newSectionInput = document.getElementById("newSectionInput");
+const addSectionBtn = document.getElementById("addSectionBtn");
+const bulkSurahBtn = document.getElementById("bulkSurahBtn");
+
+let sectionJustDragged = false;
+
 function renderSections() {
   if (!questSections) return;
+
+  // If the current section was renamed, deleted or moved by sync, fall back safely
+  if (!sections.includes(currentSection)) {
+    currentSection = sections[0] || "General";
+  }
 
   questSections.innerHTML = "";
 
   for (const section of sections) {
     const button = document.createElement("button");
+    button.type = "button";
     button.className = "section-tab";
     button.textContent = section;
+    button.dataset.section = section;
 
     if (section === currentSection) {
       button.classList.add("active");
     }
 
     button.onclick = () => {
+      if (sectionJustDragged) return;
       currentSection = section;
       renderSections();
       renderQuests();
     };
 
-    if (!defaultSections.includes(section)) {
-      const deleteBtn = document.createElement("span");
-      deleteBtn.className = "section-delete-btn";
-      deleteBtn.textContent = "✕";
-      deleteBtn.title = "Delete section";
-      deleteBtn.onclick = (e) => {
-        e.stopPropagation();
-        if (
-          !confirm(
-            `Delete section "${section}"? All quests in this section will be moved to "General".`,
-          )
-        )
-          return;
-
-        quests.forEach((q) => {
-          if (q.section === section) q.section = "General";
-        });
-        saveQuests();
-
-        sections = sections.filter((s) => s !== section);
-        saveSections();
-        renderSections();
-        renderQuests();
-      };
-      button.appendChild(deleteBtn);
-    }
-
+    enableSectionDrag(button, section);
     questSections.appendChild(button);
   }
 
   const addButton = document.createElement("button");
-  addButton.className = "section-tab add-section";
+  addButton.type = "button";
+  addButton.className = "section-tab section-tool add-section";
   addButton.textContent = "+";
+  addButton.title = "Add section";
   addButton.onclick = () => {
     const name = prompt("New section name:");
-    if (!name) return;
-    sections.push(name);
-    saveSections();
-    renderSections();
+    if (addSection(name)) {
+      renderSections();
+    }
+  };
+  questSections.appendChild(addButton);
+
+  const manageButton = document.createElement("button");
+  manageButton.type = "button";
+  manageButton.className = "section-tab section-tool";
+  manageButton.textContent = "⚙";
+  manageButton.title = "Manage sections";
+  manageButton.onclick = openManageSections;
+  questSections.appendChild(manageButton);
+}
+
+// =====================
+// DRAG TO REORDER TABS
+// Hold a tab for a moment, then drag it left or right.
+// =====================
+
+function enableSectionDrag(button, section) {
+  let timer = null;
+  let dragging = false;
+  let startX = 0;
+  let startY = 0;
+  let pointerId = null;
+  let dropTarget = null;
+  let dropAfter = false;
+
+  const clearMarks = () => {
+    questSections
+      .querySelectorAll(".drop-before, .drop-after")
+      .forEach((el) => el.classList.remove("drop-before", "drop-after"));
   };
 
-  questSections.appendChild(addButton);
+  const finish = (commit) => {
+    clearTimeout(timer);
+    timer = null;
+    if (!dragging) return;
+
+    dragging = false;
+    button.classList.remove("dragging");
+    button.style.transform = "";
+    clearMarks();
+    try {
+      button.releasePointerCapture(pointerId);
+    } catch (e) { }
+
+    // Stop the click that follows the drop from switching tabs
+    sectionJustDragged = true;
+    setTimeout(() => {
+      sectionJustDragged = false;
+    }, 60);
+
+    if (commit && dropTarget) {
+      const targetName = dropTarget.dataset.section;
+      const without = sections.filter((s) => s !== section);
+      let to = without.indexOf(targetName);
+      if (dropAfter) to += 1;
+      without.splice(to, 0, section);
+
+      if (without.join("\n") !== sections.join("\n")) {
+        sections = without;
+        saveSections();
+        renderSections();
+      }
+    }
+    dropTarget = null;
+  };
+
+  button.addEventListener("pointerdown", (e) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    startX = e.clientX;
+    startY = e.clientY;
+    pointerId = e.pointerId;
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      dragging = true;
+      button.classList.add("dragging");
+      try {
+        button.setPointerCapture(pointerId);
+      } catch (err) { }
+      if (navigator.vibrate) navigator.vibrate(15);
+    }, e.pointerType === "mouse" ? 200 : 400);
+  });
+
+  button.addEventListener("pointermove", (e) => {
+    if (!dragging) {
+      // Moved before the hold finished: the person is scrolling, not dragging
+      if (timer && Math.hypot(e.clientX - startX, e.clientY - startY) > 8) {
+        clearTimeout(timer);
+        timer = null;
+      }
+      return;
+    }
+
+    e.preventDefault();
+    button.style.transform = `translateX(${e.clientX - startX}px)`;
+
+    const tabs = [...questSections.querySelectorAll(".section-tab[data-section]")]
+      .filter((t) => t !== button);
+    clearMarks();
+    dropTarget = null;
+    if (tabs.length === 0) return;
+
+    let found = tabs.find((t) => {
+      const r = t.getBoundingClientRect();
+      return e.clientX >= r.left && e.clientX <= r.right;
+    });
+
+    if (found) {
+      const r = found.getBoundingClientRect();
+      dropAfter = e.clientX > r.left + r.width / 2;
+    } else if (e.clientX < tabs[0].getBoundingClientRect().left) {
+      found = tabs[0];
+      dropAfter = false;
+    } else if (e.clientX > tabs[tabs.length - 1].getBoundingClientRect().right) {
+      found = tabs[tabs.length - 1];
+      dropAfter = true;
+    }
+
+    if (found) {
+      dropTarget = found;
+      found.classList.add(dropAfter ? "drop-after" : "drop-before");
+    }
+  });
+
+  button.addEventListener("pointerup", () => finish(true));
+  button.addEventListener("pointercancel", () => finish(false));
+
+  // Once dragging has started, stop the phone from scrolling the page/tab row
+  button.addEventListener(
+    "touchmove",
+    (e) => {
+      if (dragging) e.preventDefault();
+    },
+    { passive: false },
+  );
+  button.addEventListener("contextmenu", (e) => {
+    if (dragging || timer) e.preventDefault();
+  });
 }
+
+// =====================
+// MANAGE SECTIONS
+// Quests are never deleted here. A deleted section's quests move to "General"
+// (or to the first other section if General itself is deleted).
+// =====================
+
+function addSection(rawName) {
+  const name = (rawName || "").trim();
+  if (!name) return false;
+  if (sections.some((s) => s.toLowerCase() === name.toLowerCase())) {
+    alert(`A section named "${name}" already exists.`);
+    return false;
+  }
+  sections.push(name);
+  saveSections();
+  return true;
+}
+
+function moveSection(name, direction) {
+  const i = sections.indexOf(name);
+  const j = i + direction;
+  if (i < 0 || j < 0 || j >= sections.length) return;
+  [sections[i], sections[j]] = [sections[j], sections[i]];
+  saveSections();
+  renderSections();
+  renderManageList();
+}
+
+function renameSection(oldName) {
+  const input = prompt("Rename section:", oldName);
+  if (input === null) return;
+  const name = input.trim();
+  if (!name || name === oldName) return;
+  if (sections.some((s) => s !== oldName && s.toLowerCase() === name.toLowerCase())) {
+    alert(`A section named "${name}" already exists.`);
+    return;
+  }
+
+  sections = sections.map((s) => (s === oldName ? name : s));
+  quests.forEach((q) => {
+    if (q.section === oldName) q.section = name;
+  });
+  if (currentSection === oldName) currentSection = name;
+
+  saveQuests();
+  saveSections();
+  renderSections();
+  renderQuests();
+  renderManageList();
+}
+
+function deleteSection(name) {
+  if (sections.length <= 1) {
+    alert("You need at least one section.");
+    return;
+  }
+
+  const target = name !== "General" ? "General" : sections.find((s) => s !== "General");
+  const count = quests.filter((q) => q.section === name).length;
+  const message = count > 0
+    ? `Delete section "${name}"? Its ${count} quest(s) will be moved to "${target}". No quests are deleted.`
+    : `Delete section "${name}"? It has no quests.`;
+  if (!confirm(message)) return;
+
+  quests.forEach((q) => {
+    if (q.section === name) q.section = target;
+  });
+  sections = sections.filter((s) => s !== name);
+  if (!sections.includes(target)) sections.push(target);
+  if (currentSection === name) currentSection = target;
+
+  saveQuests();
+  saveSections();
+  renderSections();
+  renderQuests();
+  renderManageList();
+}
+
+function renderManageList() {
+  if (!manageSectionList) return;
+  manageSectionList.innerHTML = "";
+
+  sections.forEach((section, index) => {
+    const li = document.createElement("li");
+    li.className = "manage-row";
+
+    const label = document.createElement("span");
+    label.className = "manage-name";
+    label.textContent = section;
+
+    const count = document.createElement("span");
+    count.className = "manage-count";
+    count.textContent = quests.filter((q) => q.section === section).length;
+    count.title = "Quests in this section";
+
+    const makeBtn = (text, title, handler, disabled) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "manage-btn";
+      b.textContent = text;
+      b.title = title;
+      b.disabled = !!disabled;
+      b.onclick = handler;
+      return b;
+    };
+
+    li.appendChild(label);
+    li.appendChild(count);
+    li.appendChild(makeBtn("▲", "Move up", () => moveSection(section, -1), index === 0));
+    li.appendChild(makeBtn("▼", "Move down", () => moveSection(section, 1), index === sections.length - 1));
+    li.appendChild(makeBtn("Rename", "Rename section", () => renameSection(section)));
+    const del = makeBtn("Delete", "Delete section", () => deleteSection(section));
+    del.classList.add("manage-delete");
+    li.appendChild(del);
+
+    manageSectionList.appendChild(li);
+  });
+}
+
+function openManageSections() {
+  if (!manageModal) return;
+  renderManageList();
+  manageModal.hidden = false;
+}
+
+function closeManageSections() {
+  if (manageModal) manageModal.hidden = true;
+}
+
+if (manageCloseBtn) manageCloseBtn.onclick = closeManageSections;
+
+if (manageModal) {
+  manageModal.addEventListener("click", (e) => {
+    if (e.target === manageModal) closeManageSections();
+  });
+}
+
+function submitNewSection() {
+  if (!newSectionInput) return;
+  if (addSection(newSectionInput.value)) {
+    newSectionInput.value = "";
+    renderSections();
+    renderManageList();
+  }
+}
+
+if (addSectionBtn) addSectionBtn.onclick = submitNewSection;
+
+if (newSectionInput) {
+  newSectionInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") submitNewSection();
+  });
+}
+
+// =====================
+// BULK ADD: JUZ AMMA SURAH REVIEW QUESTS
+// One adaptive quest per surah. The first few are ready now,
+// the rest unlock a few per day so they don't all arrive at once.
+// =====================
+
+const SURAH_REVIEW_LIST = [
+  [75, "Al-Qiyamah"], [76, "Al-Insan"], [77, "Al-Mursalat"],
+  [78, "An-Naba"], [79, "An-Nazi'at"], [80, "Abasa"], [81, "At-Takwir"],
+  [82, "Al-Infitar"], [83, "Al-Mutaffifin"], [84, "Al-Inshiqaq"], [85, "Al-Buruj"],
+  [86, "At-Tariq"], [87, "Al-A'la"], [88, "Al-Ghashiyah"], [89, "Al-Fajr"],
+  [90, "Al-Balad"], [91, "Ash-Shams"], [92, "Al-Layl"], [93, "Ad-Duha"],
+  [94, "Ash-Sharh"], [95, "At-Tin"], [96, "Al-Alaq"], [97, "Al-Qadr"],
+  [98, "Al-Bayyinah"], [99, "Az-Zalzalah"], [100, "Al-Adiyat"], [101, "Al-Qari'ah"],
+  [102, "At-Takathur"], [103, "Al-Asr"], [104, "Al-Humazah"], [105, "Al-Fil"],
+  [106, "Quraysh"], [107, "Al-Ma'un"], [108, "Al-Kawthar"], [109, "Al-Kafirun"],
+  [110, "An-Nasr"], [111, "Al-Masad"], [112, "Al-Ikhlas"], [113, "Al-Falaq"],
+  [114, "An-Nas"],
+];
+
+function normalizeQuestName(text) {
+  return String(text || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function addSurahReviewQuests() {
+  const perDay = 3;
+  const existing = quests.map((q) => normalizeQuestName(q.name));
+
+  // Skip surahs that already have a quest (matches the name with or without "Al-", "An-" etc.)
+  const toAdd = SURAH_REVIEW_LIST.filter(([num, name]) => {
+    const full = normalizeQuestName(name);
+    const core = normalizeQuestName(name.replace(/^(al|an|ad|ar|as|ash|at|az|adh)-/i, ""));
+    return !existing.some((n) => n.includes(full) || (core.length >= 5 && n.includes(core)));
+  });
+
+  if (toAdd.length === 0) {
+    alert("All the Surah review quests already exist.");
+    return;
+  }
+
+  const ok = confirm(
+    `Add ${toAdd.length} adaptive Surah review quests?\n\n` +
+    `The first ${perDay} are ready now. ${perDay} more unlock each day after that.`,
+  );
+  if (!ok) return;
+
+  let quranSection = sections.find((s) => s.toLowerCase().includes("quran"));
+  if (!quranSection) {
+    quranSection = "Quran";
+    sections.push(quranSection);
+    saveSections();
+  }
+
+  const colors = ["#1a73e8", "#e37400", "#e52592", "#137333", "#9334e6", "#d93025", "#00897b", "#f9ab00"];
+  const now = Date.now();
+
+  toAdd.forEach(([num, name], i) => {
+    const batch = Math.floor(i / perDay);
+    const waiting = batch > 0;
+
+    quests.push({
+      name: `Review Surah ${num}: ${name}`,
+      type: "Faith",
+      difficulty: "Easy",
+      recurring: "none",
+      repeatDays: [],
+      startTime: "",
+      endTime: "",
+      dueDate: "",
+      priority: "Medium",
+      section: quranSection,
+      completed: waiting,
+      status: waiting ? "completed" : "active",
+      skippedToday: false,
+      cancelledToday: false,
+      createdAt: now + i, // every quest needs its own unique createdAt
+      history: {},
+      isPrayer: false,
+      prayerType: null,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      streakEnabled: false,
+      adaptive: true,
+      notes: "",
+      interval: startingGap.Easy,
+      nextReview: waiting ? now + batch * 24 * 60 * 60 * 1000 : null,
+      noTime: false,
+      remindInQuiet: false,
+      repeatEveryDays: 0,
+      nextDue: null,
+    });
+  });
+
+  saveQuests();
+  scheduleQuestNotification();
+
+  currentSection = quranSection;
+  renderSections();
+  renderQuests();
+  closeManageSections();
+}
+
+if (bulkSurahBtn) bulkSurahBtn.onclick = addSurahReviewQuests;
 
 function renderCategories() {
   if (!questCategoryElement) return;
@@ -714,6 +1154,16 @@ function createQuestElement(quest) {
     info += `⏳ <span class="countdown" data-next-review="${quest.nextReview}">${formatTimeLeft(quest.nextReview)}</span>`;
   }
 
+  if (isQuestOngoing(quest)) {
+    if (info) info += "<br>";
+    info += "🟢 Ongoing";
+  }
+
+  if (quest.mustDo) {
+    if (info) info += "<br>";
+    info += "⚠️ Must do" + (quest.firstAction ? ": " + escapeQuestText(quest.firstAction) : "");
+  }
+
   // Show repeat days if weekly
   if (
     recurring === "weekly" &&
@@ -817,6 +1267,7 @@ function createQuestElement(quest) {
   del.textContent = "Delete";
   del.onclick = (e) => {
     e.stopPropagation();
+    if (!confirm(`Delete "${quest.name}"? This can't be undone.`)) return;
     quests = quests.filter((q) => q !== quest);
     saveQuests();
     renderQuests();
@@ -941,6 +1392,11 @@ function createQuestObject() {
       ? Math.max(1, Math.floor(Number(questRepeatEveryElement.value)) || 1)
       : (isEditing ? (editingQuest.repeatEveryDays || 0) : 0),
     nextDue: isEditing ? (editingQuest.nextDue || null) : null,
+    ongoingOn: isEditing ? (editingQuest.ongoingOn || null) : null,
+    mustDo: questMustDoElement ? questMustDoElement.checked : false,
+    firstAction: questMustDoElement && questMustDoElement.checked && questFirstActionElement
+      ? questFirstActionElement.value.trim()
+      : "",
   };
 }
 
@@ -979,6 +1435,9 @@ function resetQuestForm() {
   if (questStreakEnabledElement) questStreakEnabledElement.checked = false;
   if (questAdaptiveElement) questAdaptiveElement.checked = false;
   if (questRemindInQuietElement) questRemindInQuietElement.checked = false;
+  if (questMustDoElement) questMustDoElement.checked = false;
+  if (questFirstActionElement) questFirstActionElement.value = "";
+  updateMustDoUI();
   if (questRepeatEveryElement) questRepeatEveryElement.value = 3;
   if (customIntervalContainer) customIntervalContainer.style.display = "none";
 }
@@ -1024,6 +1483,9 @@ function startEditingQuest(quest) {
   if (questStreakEnabledElement) questStreakEnabledElement.checked = !!quest.streakEnabled;
   if (questAdaptiveElement) questAdaptiveElement.checked = !!quest.adaptive;
   if (questRemindInQuietElement) questRemindInQuietElement.checked = !!quest.remindInQuiet;
+  if (questMustDoElement) questMustDoElement.checked = !!quest.mustDo;
+  if (questFirstActionElement) questFirstActionElement.value = quest.firstAction || "";
+  updateMustDoUI();
   if (questRepeatEveryElement) questRepeatEveryElement.value = quest.repeatEveryDays || 3;
   if (customIntervalContainer) {
     customIntervalContainer.style.display = quest.recurring === "custom" ? "block" : "none";
@@ -1037,6 +1499,14 @@ function startEditingQuest(quest) {
 if (addQuestBtn) {
   addQuestBtn.onclick = () => {
     if (!questInput.value.trim()) {
+      return;
+    }
+
+    const mustDoProblem = getMustDoProblem();
+    if (mustDoProblem) {
+      showMustDoError(mustDoProblem);
+      currentStep = 3;
+      showStep(currentStep);
       return;
     }
 
@@ -1085,6 +1555,7 @@ function completeQuest(quest) {
   quest.status = "completed";
   quest.completed = true;
   quest.completedOn = getTodayString();
+  quest.ongoingOn = null;
 
   if (quest.recurring === "custom") {
     // "Every X days" counts from the day it was completed
@@ -1135,6 +1606,7 @@ function skipQuest(quest) {
   quest.completed = false;
   quest.skippedToday = true;
   quest.skippedAt = Date.now();
+  quest.ongoingOn = null;
 
   // Reminders: remember this skip for today only, then re-plan them
   const reminderSkips = readReminderMap("_reminderSkips");
@@ -1157,12 +1629,32 @@ function cancelQuest(quest) {
   if (!quest || quest.completed) return;
 
   quest.cancelledToday = true;
+  quest.ongoingOn = null;
   saveQuests();
   renderQuests();
 
   if (typeof updateDashboard === "function") {
     updateDashboard();
   }
+}
+
+// =====================
+// ONGOING ("I'm doing this right now")
+// While a quest is ongoing it sends no reminders today. It ends when the quest is
+// completed, skipped or cancelled, when he taps the button again, or at midnight
+// (it only counts for the day it was set, so it can never stay silent for days).
+// =====================
+
+function isQuestOngoing(quest) {
+  return !!quest && quest.ongoingOn === getTodayDateKey();
+}
+
+function toggleQuestOngoing(quest) {
+  if (!quest || quest.completed) return;
+  quest.ongoingOn = isQuestOngoing(quest) ? null : getTodayDateKey();
+  saveQuests(); // also re-plans the reminders (an ongoing quest gets none today)
+  renderQuests();
+  window.dispatchEvent(new CustomEvent("questStateChanged"));
 }
 
 function reviveDueQuests() {
@@ -1388,25 +1880,24 @@ function moveQuest(quest, direction) {
 // =====================
 
 function sortQuests(list) {
+  const difficultyOrder = { Extreme: 4, Hard: 3, Medium: 2, Easy: 1 };
+
+  // Dates and times combined into one number for the Due Date sort
+  const dueValue = (q) =>
+    new Date((q.dueDate || "9999-12-31") + "T" + (q.startTime || "23:59")).getTime();
+
+  const byPriority = (a, b) =>
+    (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0);
+
   if (currentSort === "date") {
     return list.sort((a, b) => {
       if (a.completed !== b.completed) {
         return a.completed - b.completed;
       }
-
-      const dateA = new Date(
-        (a.dueDate || "9999-12-31") + "T" + (a.startTime || "23:59"),
-      );
-      const dateB = new Date(
-        (b.dueDate || "9999-12-31") + "T" + (b.startTime || "23:59"),
-      );
-
-      if (dateA.getTime() !== dateB.getTime()) {
-        return dateA - dateB;
+      if (dueValue(a) !== dueValue(b)) {
+        return dueValue(a) - dueValue(b);
       }
-      return (
-        (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0)
-      );
+      return byPriority(a, b);
     });
   }
 
@@ -1415,16 +1906,59 @@ function sortQuests(list) {
       if (a.completed !== b.completed) {
         return a.completed - b.completed;
       }
-      return (
-        (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0)
-      );
+      return byPriority(a, b);
     });
   }
+
+  if (currentSort === "category") {
+    return list.sort((a, b) => {
+      if (a.completed !== b.completed) {
+        return a.completed - b.completed;
+      }
+      const byType = String(a.type || "").localeCompare(String(b.type || ""));
+      if (byType !== 0) return byType;
+      return byPriority(a, b);
+    });
+  }
+
+  if (currentSort === "difficulty") {
+    // Hardest first
+    return list.sort((a, b) => {
+      if (a.completed !== b.completed) {
+        return a.completed - b.completed;
+      }
+      const diff = (difficultyOrder[b.difficulty] || 0) - (difficultyOrder[a.difficulty] || 0);
+      if (diff !== 0) return diff;
+      return byPriority(a, b);
+    });
+  }
+
   if (currentSort === "name") {
     return list.sort((a, b) => {
       return a.name.localeCompare(b.name);
     });
   }
+
+  if (currentSort === "created") {
+    // Newest first
+    return list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  }
+
+  if (currentSort === "adaptive") {
+    // Adaptive quests first, soonest next review at the top. Ready now = top.
+    return list.sort((a, b) => {
+      if (a.adaptive !== b.adaptive) {
+        return a.adaptive ? -1 : 1;
+      }
+      if (a.adaptive && b.adaptive) {
+        const reviewA = a.nextReview || 0;
+        const reviewB = b.nextReview || 0;
+        if (reviewA !== reviewB) return reviewA - reviewB;
+      }
+      return a.name.localeCompare(b.name);
+    });
+  }
+
   // Default sort
   return list.sort((a, b) => {
     if (a.completed !== b.completed) {
@@ -1672,6 +2206,14 @@ if (wizardBack && wizardNext && wizardCancel) {
     }
   })
   wizardNext.addEventListener("click", () => {
+    if (currentStep === 3) {
+      const problem = getMustDoProblem();
+      if (problem) {
+        showMustDoError(problem);
+        return;
+      }
+      showMustDoError("");
+    }
     if (currentStep < 5) {
       currentStep = currentStep + 1
       showStep(currentStep)
@@ -1688,7 +2230,7 @@ function updateReviewSummary() {
   reviewSummary.innerHTML = `Name: ${questInput.value}
   <br>Category: ${questCategoryElement.value} Difficulty: ${questDifficultyElement.value} Priority: ${questPriority.value}
   <br>${noTimeBox && noTimeBox.checked ? "Anytime (no set time)" : `Start Time: ${formatTime(questStartTimeElement.value)} End Time: ${formatTime(questEndTimeElement.value)}`}  Due Date: ${formatDate(questDueDateElement.value)} 
-  <br>Recurring: ${questRecurringElement.value === "custom" ? "every " + (questRepeatEveryElement ? questRepeatEveryElement.value : "?") + " days" : questRecurringElement.value} Streak: ${questStreakEnabledElement.checked ? "yes" : "No"}`
+  <br>Recurring: ${questRecurringElement.value === "custom" ? "every " + (questRepeatEveryElement ? questRepeatEveryElement.value : "?") + " days" : questRecurringElement.value} Streak: ${questStreakEnabledElement.checked ? "yes" : "No"}${questMustDoElement && questMustDoElement.checked ? "<br>⚠️ Must do. First action: " + escapeQuestText(questFirstActionElement.value.trim()) : ""}`
 }
 
 
@@ -1784,10 +2326,13 @@ async function scheduleQuestNotification() {
 // =====================================================
 // QUEST REMINDERS
 // Start reminder, re-sends if not done, action buttons, snooze, quiet hours
-// IDs: 1 = Codex, 2 = adaptive quest ready, 100000+ = quest reminders
+// IDs: 1 = Codex, 2 = adaptive quest ready, 90001 = Focus Timer,
+//      90100-90199 = Anytime summaries, 100000+ = quest reminders
 // =====================================================
 
 const REMINDER_ID_BASE = 100000;
+const SUMMARY_ID_BASE = 90100; // Anytime summaries: base + dayOffset * 10 + which one (0, 1, 2)
+const DEFAULT_ANYTIME_TIMES = ["12:00", "17:00", "21:00"];
 const REMINDER_ACTION_TYPE = "QUEST_ACTIONS";
 const REMINDER_DAYS_AHEAD = 1; // today + tomorrow
 const REMINDER_SLOT_TEXT = {
@@ -1806,6 +2351,8 @@ const defaultNotifSettings = {
   quietEnabled: true,
   quietStart: "23:00",
   quietEnd: "07:00",
+  anytimeEnabled: true,
+  anytimeTimes: ["12:00", "17:00", "21:00"],
 };
 
 let reminderListenerAdded = false;
@@ -1905,6 +2452,7 @@ function buildQuestReminders(now, settings) {
       if (dayOffset === 0) {
         if (quest.completed || quest.cancelledToday) continue;
         if (skips[quest.createdAt] === todayKey) continue;
+        if (isQuestOngoing(quest)) continue; // ongoing: he is doing it right now
       } else {
         // Tomorrow: daily/weekly quests reset overnight, one-time quests don't
         const repeats = quest.recurring === "daily" || quest.recurring === "weekly" || quest.recurring === "custom";
@@ -1951,6 +2499,69 @@ function buildQuestReminders(now, settings) {
   return list;
 }
 
+// =====================================================
+// ANYTIME SUMMARY
+// A reminder with the Anytime quests that are still open. It is only planned when
+// there is at least one (Android cannot check at the moment the notification is
+// due, so this is re-planned every time a quest changes or the app opens).
+// =====================================================
+
+function isSummaryId(id) {
+  return Number(id) >= SUMMARY_ID_BASE && Number(id) < SUMMARY_ID_BASE + 100;
+}
+
+function getAnytimeTimes(settings) {
+  const times = settings.anytimeTimes;
+  const valid =
+    Array.isArray(times) &&
+    times.length === 3 &&
+    times.every((t) => typeof t === "string" && /^\d{2}:\d{2}$/.test(t));
+  return valid ? times : DEFAULT_ANYTIME_TIMES;
+}
+
+function openAnytimeQuestsOn(date, dayOffset) {
+  return quests.filter((quest) => {
+    if (!quest.noTime || quest.adaptive || quest.isPrayer) return false;
+    if (!questRunsOnDate(quest, date, dayOffset)) return false;
+    if (dayOffset === 0) return !quest.completed && !quest.cancelledToday;
+    // Tomorrow: repeating quests reset overnight, one-time quests don't
+    const repeats = quest.recurring === "daily" || quest.recurring === "weekly" || quest.recurring === "custom";
+    return repeats || !quest.completed;
+  });
+}
+
+function buildAnytimeSummaries(now, settings) {
+  const list = [];
+  if (!settings.anytimeEnabled) return list;
+
+  const times = getAnytimeTimes(settings);
+
+  for (let dayOffset = 0; dayOffset <= REMINDER_DAYS_AHEAD; dayOffset++) {
+    const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + dayOffset);
+    const open = openAnytimeQuestsOn(date, dayOffset);
+    if (open.length === 0) continue;
+
+    const names = open.slice(0, 3).map((q) => q.name).join(", ");
+    const more = open.length > 3 ? ` +${open.length - 3} more` : "";
+    const title = `⚪ ${open.length} Anytime quest${open.length === 1 ? "" : "s"} open`;
+
+    times.forEach((time, index) => {
+      const [hh, mm] = time.split(":").map(Number);
+      const at = new Date(date.getFullYear(), date.getMonth(), date.getDate(), hh, mm, 0);
+      if (at.getTime() <= now.getTime() + 5000) return;
+      if (isInQuietHours(at, settings)) return;
+      list.push({
+        id: SUMMARY_ID_BASE + dayOffset * 10 + index,
+        title,
+        body: names + more,
+        schedule: { at, allowWhileIdle: true },
+      });
+    });
+  }
+
+  return list;
+}
+
 function requestReminderReschedule() {
   clearTimeout(reminderTimer);
   reminderTimer = setTimeout(rescheduleQuestReminders, 1000);
@@ -1973,10 +2584,10 @@ async function rescheduleQuestReminders() {
       if (asked.display !== "granted") return;
     }
 
-    // Clear all quest reminders (leaves Codex id 1 and adaptive id 2 alone)
+    // Clear all quest reminders and Anytime summaries (leaves Codex id 1, adaptive id 2 and the Focus Timer alone)
     const pending = await LocalNotifications.getPending();
     const ours = pending.notifications
-      .filter((n) => n.id >= REMINDER_ID_BASE)
+      .filter((n) => n.id >= REMINDER_ID_BASE || isSummaryId(n.id))
       .map((n) => ({ id: n.id }));
     if (ours.length > 0) {
       await LocalNotifications.cancel({ notifications: ours });
@@ -1984,7 +2595,11 @@ async function rescheduleQuestReminders() {
 
     if (!settings.enabled) return;
 
-    const notifications = buildQuestReminders(new Date(), settings);
+    const now = new Date();
+    const notifications = [
+      ...buildQuestReminders(now, settings),
+      ...buildAnytimeSummaries(now, settings),
+    ];
     if (notifications.length > 0) {
       await LocalNotifications.schedule({ notifications });
     }
@@ -2104,7 +2719,14 @@ function initializeQuestSystem() {
 }
 
 document.addEventListener("dataPulled", (e) => {
-  if (!e.detail.changed.includes("quests")) return;
+  const changed = (e.detail && e.detail.changed) || [];
+  const sectionsChanged =
+    changed.includes("sections") || changed.includes("questSections");
+  if (!changed.includes("quests") && !sectionsChanged) return;
+  if (sectionsChanged) {
+    loadSections();
+    renderSections();
+  }
   loadQuests();
   renderQuests();
   requestReminderReschedule();

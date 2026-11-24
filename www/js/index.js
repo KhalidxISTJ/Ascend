@@ -11,6 +11,7 @@ const pauseTimer = document.getElementById("pauseTimer");
 const resetTimer = document.getElementById("resetTimer");
 const timerStatus = document.getElementById("timerStatus");
 const skipCurrentQuest = document.getElementById("skipCurrentQuest");
+const ongoingCurrentQuest = document.getElementById("ongoingCurrentQuest");
 const overdueQuestsElement = document.getElementById("overdueQuests");
 const upcomingQuestsElement = document.getElementById("upcomingQuests");
 const anytimeQuestsElement = document.getElementById("anytimeQuests")
@@ -236,8 +237,17 @@ function updateDashboard() {
       badge.textContent = `🔥x${streak}`;
       header.appendChild(badge);
     }
+    if (isQuestOngoing(mission)) {
+      const ongoingBadge = document.createElement("span");
+      ongoingBadge.className = "quest-ongoing-badge";
+      ongoingBadge.textContent = "🟢 Ongoing";
+      header.appendChild(ongoingBadge);
+    }
     currentQuestElement.append(header, `${mission.priority} Priority`);
     completeCurrentQuest.hidden = false;
+    ongoingCurrentQuest.hidden = false;
+    ongoingCurrentQuest.textContent = isQuestOngoing(mission) ? "Stop" : "Ongoing";
+    ongoingCurrentQuest.classList.toggle("active", isQuestOngoing(mission));
     skipCurrentQuest.hidden = false;
     cancelCurrentQuest.hidden = false;
     detailsCurrentQuest.hidden = false;
@@ -245,6 +255,8 @@ function updateDashboard() {
   } else {
     currentQuestElement.textContent = "None";
     completeCurrentQuest.hidden = true;
+    ongoingCurrentQuest.hidden = true;
+    ongoingCurrentQuest.classList.remove("active");
     skipCurrentQuest.hidden = true;
     cancelCurrentQuest.hidden = true;
     detailsCurrentQuest.hidden = true;
@@ -301,10 +313,23 @@ completeCurrentQuest.onclick = function () {
   updateDashboard();
 };
 
+ongoingCurrentQuest.onclick = function () {
+  const mission = getCurrentMission();
+  if (!mission) return;
+  toggleQuestOngoing(mission);
+  updateDashboard();
+};
+
 skipCurrentQuest.onclick = function () {
   const mission = getCurrentMission();
 
   if (!mission) return;
+
+  // Skipping means he is not doing it, so it is no longer ongoing
+  if (isQuestOngoing(mission)) {
+    mission.ongoingOn = null;
+    saveQuests();
+  }
 
   skipQuest(mission);
 

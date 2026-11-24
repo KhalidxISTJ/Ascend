@@ -20,6 +20,8 @@
         quietEnabled: true,
         quietStart: "23:00",
         quietEnd: "07:00",
+        anytimeEnabled: true,
+        anytimeTimes: ["12:00", "17:00", "21:00"],
     };
 
     function notifSettingsKey() {
@@ -42,13 +44,16 @@
 
     // This page can't rebuild reminders (quests.js does that when Home or Quests opens),
     // but it can switch them off right away.
-    async function cancelQuestRemindersDirectly() {
+    // Quest reminders are ids 100000+, Anytime summaries are 90100-90199 (see quests.js)
+    const isSummaryId = (id) => Number(id) >= 90100 && Number(id) < 90200;
+
+    async function cancelQuestRemindersDirectly(onlySummaries) {
         const notifier = getLocalNotifications();
         if (!notifier) return;
         try {
             const pending = await notifier.getPending();
             const ours = (pending.notifications || [])
-                .filter((item) => Number(item.id) >= 100000)
+                .filter((item) => isSummaryId(item.id) || (!onlySummaries && Number(item.id) >= 100000))
                 .map((item) => ({ id: item.id }));
             if (ours.length) await notifier.cancel({ notifications: ours });
         } catch (error) {
@@ -65,6 +70,8 @@
         const quietBox = byId("set-quiet");
         const quietStart = byId("set-quiet-start");
         const quietEnd = byId("set-quiet-end");
+        const anytimeBox = byId("set-anytime");
+        const anytimeInputs = [byId("set-anytime-1"), byId("set-anytime-2"), byId("set-anytime-3")];
         const hint = byId("notif-hint");
 
         function setHint(text) {
@@ -86,10 +93,13 @@
             quietBox.checked = s.quietEnabled;
             quietStart.value = s.quietStart;
             quietEnd.value = s.quietEnd;
+            anytimeBox.checked = s.anytimeEnabled;
+            anytimeInputs.forEach((input, i) => { input.value = s.anytimeTimes[i]; });
 
-            setGroup("notif-details", [resendBox, snooze, quietBox], !s.enabled);
+            setGroup("notif-details", [resendBox, snooze, quietBox, anytimeBox], !s.enabled);
             setGroup("resend-details", [resend1, resend2], !s.enabled || !s.resendEnabled);
             setGroup("quiet-details", [quietStart, quietEnd], !s.enabled || !s.quietEnabled);
+            setGroup("anytime-details", anytimeInputs, !s.enabled || !s.anytimeEnabled);
         }
 
         function apply(s) {
@@ -98,6 +108,7 @@
             } else if (!s.enabled) {
                 cancelQuestRemindersDirectly().then(() => setHint("Saved. Reminders turned off."));
             } else {
+                if (!s.anytimeEnabled) cancelQuestRemindersDirectly(true);
                 setHint("Saved. Reminders update when you go back to Home or Quests.");
             }
         }
@@ -128,7 +139,18 @@
             save({ [field]: input.value });
         }
 
+        function saveAnytimeTimes() {
+            if (anytimeInputs.some((input) => !input.value)) {
+                setHint("Pick a time.");
+                render();
+                return;
+            }
+            save({ anytimeTimes: anytimeInputs.map((input) => input.value) });
+        }
+
         enabledBox.addEventListener("change", () => save({ enabled: enabledBox.checked }));
+        anytimeBox.addEventListener("change", () => save({ anytimeEnabled: anytimeBox.checked }));
+        anytimeInputs.forEach((input) => input.addEventListener("change", saveAnytimeTimes));
         resendBox.addEventListener("change", () => save({ resendEnabled: resendBox.checked }));
         resend1.addEventListener("change", () => saveMinutes(resend1, "resendFirstMinutes"));
         resend2.addEventListener("change", () => saveMinutes(resend2, "resendSecondMinutes"));

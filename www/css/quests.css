@@ -227,40 +227,235 @@ h3 {
 
 .quest-sections {
   display: flex;
-  gap: 10px;
-
+  align-items: center;
+  gap: 8px;
   margin-bottom: 20px;
-
+  padding: 4px 2px;
   overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.quest-sections::-webkit-scrollbar {
+  display: none;
+}
+
+/* The tab row sits inside another .quest-sections wrapper, so don't double the spacing */
+.quest-sections .quest-sections {
+  margin-bottom: 0;
+  padding: 0;
 }
 
 .section-tab {
-  padding: 10px 18px;
+  position: relative;
+  flex: 0 0 auto;
+  padding: 9px 18px;
 
-  border: 1px solid #3a3a3a;
-  border-radius: 10px;
+  border: 1px solid #333;
+  border-radius: 999px;
 
   background: #1f1f1f;
-  color: white;
+  color: #cbd5e1;
+
+  font-size: 0.92rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
 
   cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
 
-  transition: 0.2s;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .section-tab:hover {
-  background: #2d2d2d;
+  background: #2a2a2a;
+  color: #fff;
 }
 
 .section-tab.active {
-  background: #3b82f6;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
   border-color: #3b82f6;
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 2px 10px rgba(59, 130, 246, 0.35);
+}
 
-  font-weight: bold;
+/* Drag to reorder */
+.section-tab.dragging {
+  z-index: 5;
+  transition: none;
+  cursor: grabbing;
+  opacity: 0.95;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+}
+
+.section-tab.drop-before {
+  box-shadow: -3px 0 0 0 #3b82f6;
+}
+
+.section-tab.drop-after {
+  box-shadow: 3px 0 0 0 #3b82f6;
+}
+
+/* + and gear buttons */
+.section-tool {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
 }
 
 .add-section {
   margin-left: auto;
+}
+
+/* Manage sections panel */
+.manage-overlay:not([hidden]) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.manage-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 16px;
+}
+
+.manage-box {
+  width: 100%;
+  max-width: 480px;
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: 18px;
+
+  background: #181818;
+  color: #e5e7eb;
+  border: 1px solid #333;
+  border-radius: 14px;
+}
+
+.manage-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.manage-header h3 {
+  margin: 0;
+}
+
+.manage-hint {
+  margin: 8px 0 14px;
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
+
+.manage-list {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.manage-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  background: #222;
+  border: 1px solid #333;
+  border-radius: 10px;
+}
+
+.manage-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.manage-count {
+  min-width: 24px;
+  padding: 2px 8px;
+  text-align: center;
+  font-size: 0.75rem;
+  color: #9ca3af;
+  background: #2d2d2d;
+  border-radius: 999px;
+}
+
+.manage-btn {
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  color: #e5e7eb;
+  background: #2d2d2d;
+  border: 1px solid #444;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.manage-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.manage-delete {
+  border-color: #dc3232;
+  color: #f87171;
+}
+
+.manage-close {
+  padding: 4px 10px;
+  color: #e5e7eb;
+  background: transparent;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.manage-add {
+  display: flex;
+  gap: 8px;
+}
+
+.manage-add input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 12px;
+  color: #e5e7eb;
+  background: #222;
+  border: 1px solid #444;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+.manage-tools {
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid #333;
+}
+
+.manage-tools h4 {
+  margin: 0 0 8px;
+  color: #9ca3af;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .quest-time {
@@ -361,7 +556,9 @@ h3 {
   border-radius: 3px;
   width: 90%;
   max-width: 700px;
-  height: 400px;
+  min-height: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .quest-creator:not([hidden]) {
@@ -382,4 +579,24 @@ h3 {
   flex-direction: column;
   gap: 8px;
   margin-bottom: 50px;
+}
+
+/* Must do (first small action) */
+#mustDoContainer:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border-left: 3px solid #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+  border-radius: 6px;
+}
+
+#mustDoContainer small {
+  color: #9ca3af;
+}
+
+.wizard-error:not([hidden]) {
+  color: #f87171;
+  font-size: 0.9rem;
 }
