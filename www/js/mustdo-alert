@@ -1,0 +1,258 @@
+// =====================================================
+// MUST DO ALERT SCREEN
+// A full-screen screen that shows when a Must do quest is due.
+// Buttons: Start now, Snooze (5 minutes, 3 times per quest per day). No Skip.
+// 5 minutes after Start now it asks "Still doing it?" (No or no answer = alert again).
+// Needs quests.js to be loaded first (uses quests, saveQuests, getNotifSettings...).
+// =====================================================
+
+const MUSTDO_SNOOZE_MINUTES = 5;
+const MUSTDO_MAX_SNOOZES = 3;
+const MUSTDO_CHECKIN_MINUTES = 5;
+const MUSTDO_DEFAULT_GRACE_MINUTES = 15; // wait this long after quiet hours end
+const MUSTDO_TICK_MS = 5000;
+
+let mustDoOverlay = null;
+let mustDoShownId = null; // createdAt of the quest on screen
+let mustDoShownMode = null; // "alert" or "checkin"
+
+// ---- state (one small record per quest, reset every new day) ----
+
+function mustDoNow() {
+  return new Date();
+}
+
+function readMustDoState() {
+  const map = readReminderMap("_mustDoState");
+  const today = getTodayDateKey();
+  Object.keys(map).forEach((id) => {
+    if (map[id].date !== today) delete map[id];
+  });
+  return map;
+}
+
+function getMustDoRecord(map, quest) {
+  if (!map[quest.createdAt]) {
+    map[quest.createdAt] = {
+      date: getTodayDateKey(),
+      snoozes: 0,
+      snoozedUntil: 0,
+      startedAt: 0,
+      checkAt: 0,
+      okUntil: 0,
+    };
+  }
+  return map[quest.createdAt];
+}
+
+function writeMustDoState(map) {
+  writeReminderMap("_mustDoState", map);
+}
+
+// ---- when is a quest allowed to alert? ----
+
+function mustDoStartDate(quest, now) {
+  const [hh, mm] = quest.startTime.split(":").map(Number);
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, mm, 0);
+}
+
+function mustDoEndDate(quest, now) {
+  const [hh, mm] = quest.endTime.split(":").map(Number);
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, mm, 0);
+}
+
+// Quiet hours, plus a grace period after they end (so wake alarms can ring first)
+function mustDoIsQuietNow(now, settings) {
+  if (isInQuietHours(now, settings)) return true;
+  const grace = Number.isFinite(Number(settings.mustDoGraceMinutes))
+    ? Number(settings.mustDoGraceMinutes)
+    : MUSTDO_DEFAULT_GRACE_MINUTES;
+  if (grace <= 0) return false;
+  return isInQuietHours(new Date(now.getTime() - grace * 60000), settings);
+}
+
+// Decide what to show right now: { quest, mode } or null
+function pickMustDoToShow(now) {
+  const settings = getNotifSettings();
+  if (!settings.enabled) return null;
+  if (mustDoIsQuietNow(now, settings)) return null;
+
+  const skips = readReminderMap("_reminderSkips");
+  const todayKey = getTodayDateKey();
+  const map = readMustDoState();
+  const nowMs = now.getTime();
+
+  const due = quests
+    .filter((q) => q.mustDo && q.startTime && q.endTime && !q.noTime && !q.adaptive && !q.isPrayer)
+    .filter((q) => !q.completed && !q.cancelledToday && skips[q.createdAt] !== todayKey)
+    .filter((q) => questRunsOnDate(q, now, 0))
+    .filter((q) => mustDoStartDate(q, now).getTime() <= nowMs)
+    .sort((a, b) => mustDoStartDate(a, now) - mustDoStartDate(b, now));
+
+  for (const quest of due) {
+    const rec = map[quest.createdAt];
+    if (rec) {
+      if (rec.snoozedUntil > nowMs) continue; // snoozed
+      if (rec.okUntil > nowMs) continue; // said "Yes, still doing it"
+      if (rec.startedAt && rec.checkAt > nowMs) continue; // waiting for the 5-minute check
+      if (rec.startedAt && rec.checkAt <= nowMs) return { quest, mode: "checkin" };
+    }
+    return { quest, mode: "alert" };
+  }
+  return null;
+}
+
+// ---- the screen ----
+
+function ensureMustDoOverlay() {
+  if (mustDoOverlay) return mustDoOverlay;
+
+  const style = document.createElement("style");
+  style.textContent = `
+    #mustDoOverlay { position: fixed; inset: 0; z-index: 20000; display: flex; align-items: center;
+      justify-content: center; padding: 24px; box-sizing: border-box; color: #fff; text-align: center;
+      font-family: Inter, system-ui, sans-serif;
+      background: linear-gradient(180deg, #1a2340 0%, #0a0e1a 100%); }
+    #mustDoOverlay[hidden] { display: none; }
+    #mustDoOverlay .md-box { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 14px; }
+    #mustDoOverlay .md-tag { color: #f59e0b; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.85rem; }
+    #mustDoOverlay .md-name { font-size: 2rem; font-weight: 800; line-height: 1.15; overflow-wrap: anywhere; }
+    #mustDoOverlay .md-time { color: #9ca3af; }
+    #mustDoOverlay .md-label { color: #9ca3af; font-size: 0.85rem; margin-top: 8px; }
+    #mustDoOverlay .md-action { font-size: 1.25rem; padding: 12px 14px; border-radius: 10px;
+      background: rgba(245,158,11,0.12); border-left: 3px solid #f59e0b; overflow-wrap: anywhere; }
+    #mustDoOverlay button { font: inherit; font-weight: 700; font-size: 1.1rem; border: 0; border-radius: 12px;
+      padding: 16px; cursor: pointer; color: #fff; }
+    #mustDoOverlay .md-start { background: #16a34a; }
+    #mustDoOverlay .md-snooze { background: transparent; border: 1px solid #4b5563; color: #d1d5db; font-weight: 600; }
+    #mustDoOverlay .md-no { background: transparent; border: 1px solid #4b5563; color: #d1d5db; }
+    #mustDoOverlay .md-note { color: #9ca3af; font-size: 0.85rem; }
+  `;
+  document.head.appendChild(style);
+
+  mustDoOverlay = document.createElement("div");
+  mustDoOverlay.id = "mustDoOverlay";
+  mustDoOverlay.hidden = true;
+  mustDoOverlay.setAttribute("role", "alertdialog");
+  mustDoOverlay.setAttribute("aria-modal", "true");
+  document.body.appendChild(mustDoOverlay);
+
+  mustDoOverlay.addEventListener("click", (event) => {
+    const action = event.target && event.target.dataset ? event.target.dataset.action : "";
+    if (action) handleMustDoAction(action);
+  });
+
+  return mustDoOverlay;
+}
+
+function showMustDoScreen(quest, mode) {
+  const overlay = ensureMustDoOverlay();
+  const map = readMustDoState();
+  const rec = map[quest.createdAt] || { snoozes: 0 };
+  const left = MUSTDO_MAX_SNOOZES - rec.snoozes;
+  const time = `${quest.startTime} – ${quest.endTime}`;
+  const action = quest.firstAction ? escapeQuestText(quest.firstAction) : "";
+
+  if (mode === "checkin") {
+    overlay.innerHTML = `
+      <div class="md-box">
+        <div class="md-tag">⚠️ Check-in</div>
+        <div class="md-name">Still doing it?</div>
+        <div class="md-time">${escapeQuestText(quest.name)}</div>
+        <button class="md-start" data-action="yes">Yes, I'm doing it</button>
+        <button class="md-no" data-action="no">No, not yet</button>
+        <div class="md-note">It's the honest answer that counts.</div>
+      </div>`;
+  } else {
+    const snoozeButton =
+      left > 0
+        ? `<button class="md-snooze" data-action="snooze">Snooze ${MUSTDO_SNOOZE_MINUTES} min (${left} left)</button>`
+        : `<div class="md-note">No snoozes left. Just start.</div>`;
+    overlay.innerHTML = `
+      <div class="md-box">
+        <div class="md-tag">⚠️ Must do</div>
+        <div class="md-name">${escapeQuestText(quest.name)}</div>
+        <div class="md-time">${time}</div>
+        ${action ? `<div class="md-label">Your first small action</div><div class="md-action">${action}</div>` : ""}
+        <button class="md-start" data-action="start">Start now</button>
+        ${snoozeButton}
+      </div>`;
+  }
+
+  overlay.hidden = false;
+  document.body.style.overflow = "hidden";
+  mustDoShownId = quest.createdAt;
+  mustDoShownMode = mode;
+}
+
+function hideMustDoScreen() {
+  if (mustDoOverlay) {
+    mustDoOverlay.hidden = true;
+    mustDoOverlay.innerHTML = "";
+  }
+  document.body.style.overflow = "";
+  mustDoShownId = null;
+  mustDoShownMode = null;
+}
+
+function handleMustDoAction(action) {
+  const quest = quests.find((q) => q.createdAt === mustDoShownId);
+  if (!quest) {
+    hideMustDoScreen();
+    return;
+  }
+
+  const now = mustDoNow();
+  const nowMs = now.getTime();
+  const map = readMustDoState();
+  const rec = getMustDoRecord(map, quest);
+
+  if (action === "start") {
+    rec.startedAt = nowMs;
+    rec.checkAt = nowMs + MUSTDO_CHECKIN_MINUTES * 60000;
+  } else if (action === "snooze") {
+    if (rec.snoozes >= MUSTDO_MAX_SNOOZES) return; // no more snoozes, ever
+    rec.snoozes += 1;
+    rec.snoozedUntil = nowMs + MUSTDO_SNOOZE_MINUTES * 60000;
+  } else if (action === "yes") {
+    // Quiet until the quest's own time runs out (at least 5 more minutes)
+    const end = mustDoEndDate(quest, now).getTime();
+    rec.okUntil = Math.max(end, nowMs + MUSTDO_CHECKIN_MINUTES * 60000);
+    rec.startedAt = 0;
+    rec.checkAt = 0;
+    quest.ongoingOn = getTodayDateKey(); // show it as Ongoing and stop the normal reminders
+    saveQuests();
+    if (typeof renderQuests === "function") renderQuests();
+  } else if (action === "no") {
+    rec.startedAt = 0;
+    rec.checkAt = 0;
+  }
+
+  writeMustDoState(map);
+  hideMustDoScreen();
+  checkMustDoAlerts();
+}
+
+// ---- the loop ----
+
+function checkMustDoAlerts() {
+  if (!Array.isArray(quests)) return;
+
+  const pick = pickMustDoToShow(mustDoNow());
+
+  if (!pick) {
+    if (mustDoShownId !== null) hideMustDoScreen(); // e.g. he finished it on another device
+    return;
+  }
+
+  // Already showing exactly this? Leave it alone.
+  if (mustDoShownId === pick.quest.createdAt && mustDoShownMode === pick.mode) return;
+
+  showMustDoScreen(pick.quest, pick.mode);
+}
+
+setInterval(checkMustDoAlerts, MUSTDO_TICK_MS);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) checkMustDoAlerts();
+});
+window.addEventListener("load", () => setTimeout(checkMustDoAlerts, 1500));
