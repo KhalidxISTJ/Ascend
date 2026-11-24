@@ -2098,11 +2098,13 @@ function isQuestScheduledToday(quest) {
 function getCurrentQuest(offset = 0) {
   const todayQuests = getTodaysQuests();
 
-  // The Ongoing quest is always the current quest (first in line)
+  // The Ongoing quest is always the current quest. The skip count (offset) is ignored,
+  // so an old skip can never push it out of the way.
   const ongoing = quests.find((quest) => isQuestOngoing(quest) && !quest.cancelledToday) || null;
+  if (ongoing) return ongoing;
 
   if (todayQuests.length === 0) {
-    return ongoing;
+    return null;
   }
 
   function getStartMinutes(quest) {
@@ -2120,12 +2122,7 @@ function getCurrentQuest(offset = 0) {
   });
 
 
-  if (ongoing) {
-    const at = eligible.indexOf(ongoing);
-    if (at !== -1) eligible.splice(at, 1);
-  }
-
-  if (eligible.length === 0 && !ongoing) {
+  if (eligible.length === 0) {
     return null;
   }
 
@@ -2140,8 +2137,7 @@ function getCurrentQuest(offset = 0) {
     return (a.order || 0) - (b.order || 0);
   });
 
-  const ordered = ongoing ? [ongoing, ...eligible] : eligible;
-  return ordered[offset % ordered.length] || null;
+  return eligible[offset % eligible.length] || null;
 }
 
 function getBacklogQuests() {
