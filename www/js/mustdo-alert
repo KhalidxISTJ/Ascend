@@ -262,9 +262,25 @@ window.addEventListener("load", () => setTimeout(checkMustDoAlerts, 1500));
 // Needs the AscendOverlay plugin from the android folder.
 // =====================================================
 
+let overlayPluginCache = null;
+
+function isNativeApp() {
+  return typeof Capacitor !== "undefined" && typeof Capacitor.isNativePlatform === "function" && Capacitor.isNativePlatform();
+}
+
 function getOverlayPlugin() {
-  if (typeof Capacitor === "undefined" || !Capacitor.Plugins) return null;
-  return Capacitor.Plugins.AscendOverlay || null;
+  if (overlayPluginCache) return overlayPluginCache;
+  if (typeof Capacitor === "undefined") return null;
+  // Plugins added in MainActivity are reached with registerPlugin
+  if (typeof Capacitor.registerPlugin === "function") {
+    try {
+      overlayPluginCache = Capacitor.registerPlugin("AscendOverlay");
+    } catch (e) {
+      overlayPluginCache = null;
+    }
+  }
+  if (!overlayPluginCache && Capacitor.Plugins) overlayPluginCache = Capacitor.Plugins.AscendOverlay || null;
+  return overlayPluginCache;
 }
 
 async function refreshOverlayPermissionRow() {
@@ -273,13 +289,19 @@ async function refreshOverlayPermissionRow() {
   const button = document.getElementById("overlayPermBtn");
   if (!row || !text || !button) return;
 
-  const plugin = getOverlayPlugin();
-  if (!plugin) {
-    row.hidden = true; // website or old app build: nothing to ask for
+  if (!isNativeApp()) {
+    row.hidden = true; // website: nothing to ask for
     return;
   }
 
   row.hidden = false;
+  button.hidden = true;
+  const plugin = getOverlayPlugin();
+  if (!plugin) {
+    text.textContent = "Could not find the permission plugin. Rebuild the app.";
+    return;
+  }
+
   try {
     const result = await plugin.canDraw();
     if (result.granted) {
@@ -290,7 +312,8 @@ async function refreshOverlayPermissionRow() {
       button.hidden = false;
     }
   } catch (e) {
-    text.textContent = "Could not check the permission.";
+    // registerPlugin always returns an object; if the native side is missing the call fails
+    text.textContent = "Could not check the permission (" + (e && e.message ? e.message : e) + ").";
     button.hidden = true;
   }
 }
