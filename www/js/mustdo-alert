@@ -256,3 +256,58 @@ document.addEventListener("visibilitychange", () => {
   if (!document.hidden) checkMustDoAlerts();
 });
 window.addEventListener("load", () => setTimeout(checkMustDoAlerts, 1500));
+
+// =====================================================
+// "DISPLAY OVER OTHER APPS" PERMISSION (Android app only)
+// Needs the AscendOverlay plugin from the android folder.
+// =====================================================
+
+function getOverlayPlugin() {
+  if (typeof Capacitor === "undefined" || !Capacitor.Plugins) return null;
+  return Capacitor.Plugins.AscendOverlay || null;
+}
+
+async function refreshOverlayPermissionRow() {
+  const row = document.getElementById("overlayPermRow");
+  const text = document.getElementById("overlayPermText");
+  const button = document.getElementById("overlayPermBtn");
+  if (!row || !text || !button) return;
+
+  const plugin = getOverlayPlugin();
+  if (!plugin) {
+    row.hidden = true; // website or old app build: nothing to ask for
+    return;
+  }
+
+  row.hidden = false;
+  try {
+    const result = await plugin.canDraw();
+    if (result.granted) {
+      text.textContent = "✅ Allowed to show over other apps.";
+      button.hidden = true;
+    } else {
+      text.textContent = "⚠️ Not allowed to show over other apps yet.";
+      button.hidden = false;
+    }
+  } catch (e) {
+    text.textContent = "Could not check the permission.";
+    button.hidden = true;
+  }
+}
+
+(function setupOverlayPermissionRow() {
+  const button = document.getElementById("overlayPermBtn");
+  if (button) {
+    button.addEventListener("click", async () => {
+      const plugin = getOverlayPlugin();
+      if (plugin) await plugin.requestDraw();
+    });
+  }
+  const mustDoBox = document.getElementById("questMustDo");
+  if (mustDoBox) mustDoBox.addEventListener("change", refreshOverlayPermissionRow);
+  // coming back from the Android settings screen
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) refreshOverlayPermissionRow();
+  });
+  refreshOverlayPermissionRow();
+})();

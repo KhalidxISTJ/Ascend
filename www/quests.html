@@ -77,6 +77,10 @@
               <label for="questFirstAction">First small action (about 2 minutes):</label>
               <input type="text" id="questFirstAction" maxlength="80" placeholder="e.g. Open the zyBook">
               <small>Needs a start time and an end time.</small>
+              <div id="overlayPermRow" hidden>
+                <small id="overlayPermText"></small>
+                <button type="button" id="overlayPermBtn" hidden>Allow</button>
+              </div>
             </div>
             <div id="mustDoError" class="wizard-error" hidden></div>
             <label for="questDueDate">Due date:</label>
