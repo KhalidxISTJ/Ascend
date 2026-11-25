@@ -784,6 +784,7 @@ function startReview(deck, session = { total: null, done: 0 }) {
     review.innerHTML = card.cardFront
     let locked = false     // true while the per-card timer is showing the answer before auto-grading
     let cardTimer = null   // set below when the per-card timer is on
+    let goNext = null      // set when time runs out: moves on to the next card
     function flip() {
         if (locked) { return }
         review.innerHTML = review.innerHTML === card.cardFront ? card.cardBack : card.cardFront
@@ -801,7 +802,7 @@ function startReview(deck, session = { total: null, done: 0 }) {
     flipHint.textContent = "Tap the card to flip it"
     deckDetails.appendChild(flipHint)
 
-    function gradeCard(grade, fromTimer = false) {
+    function gradeCard(grade, fromTimer = false, advance = true) {
         if (locked && !fromTimer) { return }
         const startDifficulty = { 1: 8, 2: 6, 3: 5, 4: 3 }
         const now = Date.now()
@@ -819,7 +820,7 @@ function startReview(deck, session = { total: null, done: 0 }) {
         saveDecks()
         scheduleReviewNotification()
         session.done++
-        startReview(deck, session)
+        if (advance) { startReview(deck, session) }
     }
 
     // ---------- Grade buttons ----------
@@ -859,7 +860,7 @@ function startReview(deck, session = { total: null, done: 0 }) {
         if (e.key === " " || e.key === "Enter") {
             if (tag === "BUTTON") { return }
             e.preventDefault()
-            flip()
+            if (locked && goNext) { goNext() } else { flip() }
         } else if (["1", "2", "3", "4"].includes(e.key)) {
             gradeCard(Number(e.key))
         }
@@ -908,18 +909,23 @@ function startReview(deck, session = { total: null, done: 0 }) {
             timerFill.style.width = `${left / totalMs * 100}%`
             if (left > 0) { return }
 
-            // Time ran out with the front still showing: show the answer, then mark it Again
+            // Time ran out with the front still showing: show the answer and mark it Again.
+            // The answer stays up until he taps Next, so there is time to read it.
             clearInterval(reviewTimerInterval)
             reviewTimerInterval = null
             locked = true
             review.innerHTML = card.cardBack
             cardLabel.textContent = "⏱ Time's up. Marked Again."
             cardLabel.classList.add("expired")
-            gradeButtons.querySelectorAll("button").forEach((b) => { b.disabled = true })
-            reviewAutoTimeout = setTimeout(() => {
-                reviewAutoTimeout = null
-                gradeCard(1, true)
-            }, 2500)
+            flipHint.textContent = "Read the answer, then tap Next"
+            gradeCard(1, true, false)
+            goNext = () => { startReview(deck, session) }
+            gradeButtons.style.display = "none"
+            const nextBtn = document.createElement("button")
+            nextBtn.className = "primary-btn next-btn"
+            nextBtn.textContent = "Next"
+            nextBtn.addEventListener("click", goNext)
+            gradeButtons.parentNode.insertBefore(nextBtn, gradeButtons)
         }
         tickCard()
         reviewTimerInterval = setInterval(tickCard, 100)
